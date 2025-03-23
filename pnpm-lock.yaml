@@ -12,8 +12,8 @@ dependencies:
     specifier: ^2
     version: 2.2.6
   wavesurfer.js:
-    specifier: ^7.9.1
-    version: 7.9.1
+    specifier: ^7.9.3
+    version: 7.9.3
 
 devDependencies:
   '@biomejs/biome':
@@ -2043,8 +2043,8 @@ packages:
       vite: 6.2.2
     dev: true
 
-  /wavesurfer.js@7.9.1:
-    resolution: {integrity: sha512-+pG8X9c9BrfAW8KR54OPzZcAj/57sOL08He/tc6/7Mt6NCX3IfDFwexQxXVTILggGZUOUk7tFKfny32yGrysKA==}
+  /wavesurfer.js@7.9.3:
+    resolution: {integrity: sha512-GgYIQjZYu4Q2tm+qrFhBCoQm+K7+SGqulEsKXndIjmJ4b/drA1umjgQlDc+wGotGAef/8hH/gu5f3bf19yDyxw==}
     dev: false
 
   /which@2.0.2:

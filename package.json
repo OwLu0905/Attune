@@ -15,7 +15,7 @@
   "dependencies": {
     "@tauri-apps/api": "^2",
     "@tauri-apps/plugin-opener": "^2",
-    "wavesurfer.js": "^7.9.1"
+    "wavesurfer.js": "^7.9.3"
   },
   "devDependencies": {
     "@biomejs/biome": "1.9.4",
