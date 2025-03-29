@@ -98,8 +98,41 @@
         }
     });
 
-    const updateActivateRegion = (region: Region | null) => {
-        activeRegion = region;
+    const onPlay = (item: Region) => {
+        if (!ws) return;
+
+        if (!activeRegion || activeRegion.id !== item.id) {
+            activeRegion = item;
+            item.play(true);
+        } else {
+            const currentTime = ws.getCurrentTime();
+            const startTime =
+                currentTime >= activeRegion.end
+                    ? activeRegion.start
+                    : currentTime;
+
+            ws.play(startTime, activeRegion.end);
+        }
+    };
+    const onPause = (_item: Region) => {
+        ws!.pause();
+    };
+
+    const onDeleteBuffer = (item: Region) => {
+        ws?.stop();
+        regionList = regionList.filter((i) => {
+            if (i.id !== item.id) return true;
+            item.remove();
+            return false;
+        });
+    };
+    const onDeleteSaving = (item: Region) => {
+        ws?.stop();
+        saveRegionList = saveRegionList.filter((i) => {
+            if (i.id !== item.id) return true;
+            item.remove();
+            return false;
+        });
     };
 </script>
 
@@ -146,10 +179,11 @@
         <div class="flex flex-wrap gap-2.5 tabular-nums">
             <TimeBadge
                 data={regionList}
-                {updateActivateRegion}
+                onDelete={onDeleteBuffer}
                 {activeRegion}
-                {ws}
                 {isPlaying}
+                {onPlay}
+                {onPause}
             />
         </div>
     </Card.Footer>
@@ -159,10 +193,11 @@
     <div class="flex flex-wrap gap-2.5 tabular-nums">
         <TimeBadge
             data={saveRegionList}
-            {updateActivateRegion}
+            onDelete={onDeleteSaving}
             {activeRegion}
-            {ws}
             {isPlaying}
+            {onPlay}
+            {onPause}
         />
     </div>
 </div>

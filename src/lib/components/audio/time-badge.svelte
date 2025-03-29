@@ -5,17 +5,17 @@
     import { fade } from "svelte/transition";
     import { format, addMilliseconds } from "date-fns";
     import type { Region } from "wavesurfer.js/dist/plugins/regions.js";
-    import type WaveSurfer from "wavesurfer.js";
 
     interface Props {
         data: Region[];
         activeRegion: Region | null;
-        ws: WaveSurfer | undefined;
         isPlaying: boolean;
-        updateActivateRegion: (rg: Region | null) => void;
+        onPlay: (item: Region) => void;
+        onPause: (item: Region) => void;
+        onDelete: (item: Region) => void;
     }
 
-    let { data, activeRegion, ws, isPlaying, updateActivateRegion }: Props =
+    let { data, activeRegion, isPlaying, onPlay, onPause, onDelete }: Props =
         $props();
 
     function formatDuration(seconds: number) {
@@ -25,10 +25,6 @@
         return format(date, "ss:SS");
     }
 </script>
-
-{#if ws === undefined}
-    <div>undefined</div>
-{/if}
 
 {#each data as item, i (item.id)}
     <div
@@ -46,11 +42,7 @@
                 <Trash
                     class="h-6 w-6 rounded-full px-1.5 text-destructive hover:bg-secondary"
                     onclick={() => {
-                        data = data.filter((i) => {
-                            if (i.id !== item.id) return true;
-                            item.remove();
-                            return false;
-                        });
+                        onDelete(item);
                     }}
                 />
 
@@ -59,7 +51,7 @@
                         class="h-6 w-6 select-none rounded-full px-1.5 text-primary hover:bg-secondary"
                         onclick={(e) => {
                             e.stopPropagation();
-                            ws!.pause();
+                            onPause(item);
                         }}
                     />
                 {:else}
@@ -67,21 +59,7 @@
                         class="h-6 w-6 select-none rounded-full px-1.5 text-primary hover:bg-secondary"
                         onclick={(e) => {
                             e.stopPropagation();
-
-                            if (!ws) return;
-
-                            if (!activeRegion || activeRegion.id !== item.id) {
-                                updateActivateRegion(item);
-                                item.play(true);
-                            } else {
-                                const currentTime = ws.getCurrentTime();
-                                const startTime =
-                                    currentTime >= activeRegion.end
-                                        ? activeRegion.start
-                                        : currentTime;
-
-                                ws.play(startTime, activeRegion.end);
-                            }
+                            onPlay(item);
                         }}
                     />
                 {/if}
