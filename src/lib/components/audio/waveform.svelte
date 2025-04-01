@@ -5,11 +5,15 @@
 
     import WaveSurfer from "wavesurfer.js";
     import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
+    import TimelinePlugin from "wavesurfer.js/dist/plugins/timeline.esm.js";
     import type { Region } from "wavesurfer.js/dist/plugins/regions.esm.js";
 
     import { Play, Scissors } from "@lucide/svelte";
     import { WAVESURFER_BACKEND } from "$lib/constants.js";
-    import TimeBadge from "./time-badge.svelte";
+
+    import TimeBadge from "$lib/components/audio/time-badge.svelte";
+    import SrtRegion from "$lib/components/audio/srt-region.svelte";
+    import type { SubtitleEntity } from "$lib/components/audio/srt-region.svelte";
 
     let container: HTMLElement;
     let ws: WaveSurfer | undefined = $state(undefined);
@@ -21,6 +25,7 @@
     let isEditing = $state(false);
     let removeDragSelection: (() => void) | undefined = undefined;
 
+    let currentTime = $state(0);
     let isPlaying = $state(false);
 
     const random = (min: number, max: number) =>
@@ -41,11 +46,12 @@
             container,
             progressColor: `hsl(${primaryHSL})`,
             waveColor: `hsl(${secondaryHSL})`,
-            barWidth: 4,
-            barGap: 2,
+            barWidth: 2,
+            barGap: 1,
             url: "/audio.wav",
+            height: 100,
             backend: WAVESURFER_BACKEND,
-            plugins: [regions],
+            plugins: [regions, TimelinePlugin.create()],
         });
 
         ws.on("decode", () => {
@@ -84,6 +90,10 @@
             ws.on("interaction", () => (activeRegion = null));
             ws.on("play", () => (isPlaying = true));
             ws.on("pause", () => (isPlaying = false));
+
+            ws.on("timeupdate", (ct) => {
+                currentTime = ct * 1000;
+            });
         });
     });
 
@@ -134,6 +144,11 @@
             return false;
         });
     };
+
+    const onClickText = (entry: SubtitleEntity) => {
+        ws?.pause();
+        ws?.setTime(entry.startTime / 1000);
+    };
 </script>
 
 <Card.Root>
@@ -175,16 +190,18 @@
     <Card.Content>
         <div bind:this={container}></div>
     </Card.Content>
-    <Card.Footer class="flex flex-wrap gap-2">
-        <div class="flex flex-wrap gap-2.5 tabular-nums">
-            <TimeBadge
-                data={regionList}
-                onDelete={onDeleteBuffer}
-                {activeRegion}
-                {isPlaying}
-                {onPlay}
-                {onPause}
-            />
+    <Card.Footer class="flex w-full flex-col gap-2">
+        <SrtRegion {currentTime} {onClickText} />
+        <div>{(currentTime / 1000).toFixed(2)}</div>
+        <div class="flex gap-4">
+            <div class="flex items-center gap-2">
+                <div class="h-4 w-4 rounded-full bg-emerald-200"></div>
+                <div>Ready to Record</div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="h-4 w-4 rounded-full bg-violet-200"></div>
+                <div>Current Word</div>
+            </div>
         </div>
     </Card.Footer>
 </Card.Root>
