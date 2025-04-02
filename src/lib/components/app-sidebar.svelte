@@ -38,6 +38,12 @@
                 plan: "Free",
                 link: "/",
             },
+            {
+                name: "Youtube",
+                logo: Command,
+                plan: "Pro",
+                link: "/yt",
+            },
         ],
         navMain: [
             {
