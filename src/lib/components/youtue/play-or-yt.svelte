@@ -26,9 +26,14 @@
 </script>
 
 <script lang="ts">
-    import { setContext } from "svelte";
+    import { setContext, type Snippet } from "svelte";
     import { ytKey } from "./yt-keys";
     import type { YouTubePlayerContext } from "./types";
+
+    interface Props {
+        action?: Snippet;
+        videoId: string;
+    }
 
     let playerContainer: HTMLElement | null = $state(null);
 
@@ -37,7 +42,7 @@
 
     let player: YT.Player | null = $state(null);
 
-    let { children, videoId } = $props();
+    let { videoId, action }: Props = $props();
 
     let thumbnailUrl = $derived(
         `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
@@ -86,7 +91,7 @@
     $effect(() => {
         tryAssignYouTube();
 
-        if (children || liteLoaded) {
+        if (action || liteLoaded) {
             initialize();
         }
 
@@ -105,7 +110,7 @@
     });
 </script>
 
-{#if !children && !liteLoaded}
+{#if !action && !liteLoaded}
     <!-- svelte-ignore a11y_click_events_have_key_events -->
     <div
         aria-label="Play YouTube video"
@@ -133,9 +138,9 @@
     </div>
 {/if}
 
-{#if children || liteLoaded}
+{#if action || liteLoaded}
     <div bind:this={playerContainer}></div>
-    {#if children}
-        {@render children()}
+    {#if action}
+        {@render action()}
     {/if}
 {/if}

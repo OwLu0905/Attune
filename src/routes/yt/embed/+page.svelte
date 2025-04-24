@@ -17,7 +17,9 @@
 
 {#each videos as video (video.id)}
     <PlayOrYt videoId={video.id}>
-        <ActionOrYt seekTime={video.seekTime} />
+        {#snippet action()}
+            <ActionOrYt seekTime={video.seekTime} />
+        {/snippet}
     </PlayOrYt>
 {/each}
 
