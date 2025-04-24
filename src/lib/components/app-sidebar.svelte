@@ -39,7 +39,7 @@
                 link: "/",
             },
             {
-                name: "Youtube",
+                name: "YouTube",
                 logo: Command,
                 plan: "Pro",
                 link: "/yt",

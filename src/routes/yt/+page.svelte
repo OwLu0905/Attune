@@ -78,3 +78,5 @@
     >
 </div>
 {message}
+
+<a href="/yt/embed">embed</a>
