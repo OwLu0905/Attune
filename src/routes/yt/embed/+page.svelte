@@ -7,11 +7,6 @@
             title: "Rick Astley - Never Gonna Give You Up",
             seekTime: 20,
         },
-        {
-            id: "ZTFTngOG2bg",
-            title: "Introduction to Svelte",
-            seekTime: 40,
-        },
     ]);
 </script>
 
