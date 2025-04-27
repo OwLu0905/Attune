@@ -2,7 +2,6 @@
     console.log("YouTube API Loading...");
 
     let YouTube: typeof YT.Player | null = $state(null);
-
     function tryAssignYouTube() {
         if (!YouTube && window?.YT?.Player) {
             YouTube = window.YT.Player;
@@ -26,9 +25,12 @@
 </script>
 
 <script lang="ts">
-    import { onDestroy, setContext, type Snippet } from "svelte";
+    import { getContext, onDestroy, setContext, type Snippet } from "svelte";
+
     import { ytKey } from "./yt-keys";
-    import type { YouTubePlayerContext } from "./types";
+    import { sliderValuesKey } from "./yt-keys";
+
+    import type { YouTubePlayerContext, YouTubeSliderContext } from "./types";
 
     interface Props {
         action?: Snippet;
@@ -56,6 +58,11 @@
         getError: () => initError,
     });
 
+    const { getSliderValues } =
+        getContext<YouTubeSliderContext>(sliderValuesKey);
+
+    const sliderValues = getSliderValues();
+
     function initialize() {
         if (!YouTube || player) {
             console.warn("YouTube not ready or player already initialized");
@@ -75,9 +82,10 @@
                     autoplay: !action && liteLoaded ? 1 : 0,
                 },
                 events: {
-                    onReady: () => {
+                    onReady: (event) => {
                         console.log("Ready", videoId);
                         isReady = true;
+                        sliderValues[1] = event.target.getDuration();
                     },
                     onError: (e) => {
                         console.error("YouTube player error:", e);
@@ -133,8 +141,11 @@
 {/if}
 
 {#if action || liteLoaded}
-    <div bind:this={playerContainer}></div>
-    {#if action}
+    <div
+        class="aspect-video self-center py-2"
+        bind:this={playerContainer}
+    ></div>
+    {#if action && isReady}
         {@render action()}
     {/if}
 {/if}
