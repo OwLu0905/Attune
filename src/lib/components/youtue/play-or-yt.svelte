@@ -140,10 +140,10 @@
     </div>
 {/if}
 
-<div class="max-w-[640px]">
+<div class="">
     {#if action || liteLoaded}
         <div
-            class="aspect-video self-center py-2"
+            class="aspect-video max-w-full py-2"
             bind:this={playerContainer}
         ></div>
         {#if action && isReady}
