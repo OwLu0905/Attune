@@ -25,16 +25,14 @@
     ]);
 </script>
 
-<div class="flex gap-12 px-16">
-    <Card.Root class="flex-1">
-        <Card.Content>
+<div class="grid grid-cols-12 gap-8 overflow-hidden px-4 @container">
+    <Card.Root class="col-span-12 @5xl:col-span-6">
+        <Card.Content class="w-full">
             <YtDownloadForm bind:sliderValues />
         </Card.Content>
     </Card.Root>
 
-    <div
-        class="flex flex-shrink flex-col gap-2 rounded-md bg-primary-foreground"
-    >
+    <div class="col-span-12 w-full @5xl:col-span-6">
         <PlayOrYt videoId={videos[0].id}>
             {#snippet action()}
                 <ActionOrYt bind:sliderValues />

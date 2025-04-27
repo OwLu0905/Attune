@@ -140,12 +140,14 @@
     </div>
 {/if}
 
-{#if action || liteLoaded}
-    <div
-        class="aspect-video self-center py-2"
-        bind:this={playerContainer}
-    ></div>
-    {#if action && isReady}
-        {@render action()}
+<div class="max-w-[640px]">
+    {#if action || liteLoaded}
+        <div
+            class="aspect-video self-center py-2"
+            bind:this={playerContainer}
+        ></div>
+        {#if action && isReady}
+            {@render action()}
+        {/if}
     {/if}
-{/if}
+</div>
