@@ -44,6 +44,13 @@
                 plan: "Pro",
                 link: "/yt",
             },
+
+            {
+                name: "Model",
+                logo: Command,
+                plan: "Pro",
+                link: "/model",
+            },
         ],
         navMain: [
             {
