@@ -3,6 +3,7 @@
     import Input from "@/components/ui/input/input.svelte";
     import Label from "@/components/ui/label/label.svelte";
     import { onMount } from "svelte";
+    import * as Card from "$lib/components/ui/card/index.js";
     import * as Select from "@/components/ui/select/";
 
     let value = $state("");
@@ -50,31 +51,38 @@
     }
 </script>
 
-<div class="flex flex-col gap-2">
-    <Label>Send Message</Label>
-    <div class="flex gap-2">
-        <Input bind:value class="w-[180px]" />
-        <Button onclick={sendMessage}>Send</Button>
-    </div>
-    <div>
-        <Select.Root type="single" name="langModel" bind:value={selectedValue}>
-            <Select.Trigger class="w-[180px]">
-                {triggerContent}
-            </Select.Trigger>
-            <Select.Content>
-                <Select.Group>
-                    <Select.GroupHeading>Models</Select.GroupHeading>
-                    {#each models as model (model.value)}
-                        <Select.Item value={model.value} label={model.label}>
-                            {model.label}
-                        </Select.Item>
-                    {/each}
-                </Select.Group>
-            </Select.Content>
-        </Select.Root>
-    </div>
-
-    <div>
-        Hello from the WS: {answer}
-    </div>
-</div>
+<Card.Root class="col-span-12 @5xl:col-span-6">
+    <Card.Content class="w-full">
+        <div class="flex flex-col gap-2">
+            <Label>Send Message</Label>
+            <div class="flex gap-2">
+                <Input bind:value class="w-[180px]" />
+                <Button onclick={sendMessage}>Send</Button>
+            </div>
+            <div>
+                <Select.Root
+                    type="single"
+                    name="langModel"
+                    bind:value={selectedValue}
+                >
+                    <Select.Trigger class="w-[180px]">
+                        {triggerContent}
+                    </Select.Trigger>
+                    <Select.Content>
+                        <Select.Group>
+                            <Select.GroupHeading>Models</Select.GroupHeading>
+                            {#each models as model (model.value)}
+                                <Select.Item
+                                    value={model.value}
+                                    label={model.label}
+                                >
+                                    {model.label}
+                                </Select.Item>
+                            {/each}
+                        </Select.Group>
+                    </Select.Content>
+                </Select.Root>
+            </div>
+        </div>
+    </Card.Content>
+</Card.Root>
