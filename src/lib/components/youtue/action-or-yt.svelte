@@ -16,6 +16,8 @@
         sliderValues: TSLIDER_VALUES;
     }
 
+    // TODO: fix the play button:
+    // the current version will replay the player
     let { sliderValues = $bindable() }: Props = $props();
 
     const { getPlayer, getReady } = getContext<YouTubePlayerContext>(ytKey);

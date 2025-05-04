@@ -35,6 +35,7 @@
     interface Props {
         action?: Snippet;
         videoId: string;
+        children?: Snippet;
     }
 
     let playerContainer: HTMLElement | null = $state(null);
@@ -44,7 +45,7 @@
 
     let player: YT.Player | null = $state(null);
 
-    let { videoId, action }: Props = $props();
+    let { videoId, action, children }: Props = $props();
 
     let thumbnailUrl = $derived(
         `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
@@ -140,12 +141,15 @@
     </div>
 {/if}
 
-<div class="">
+<div class="relative">
     {#if action || liteLoaded}
         <div
             class="aspect-video max-w-full py-2"
             bind:this={playerContainer}
         ></div>
+        {#if children}
+            {@render children()}
+        {/if}
         {#if action && isReady}
             {@render action()}
         {/if}

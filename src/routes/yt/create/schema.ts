@@ -1,8 +1,12 @@
 import { z } from "zod";
 
-export const ytDltSchema = z.object({
+export const ProviderEnum = z.enum(["YouTube", "Custom"]);
+
+export const ytDlpSchema = z.object({
     title: z.string().min(1).max(50),
     description: z.string().min(0).max(50).optional(),
+    url: z.string().url(),
+    privoder: ProviderEnum.default("Custom"),
     startTime: z.number().min(0),
     endTime: z
         .number({
@@ -12,4 +16,4 @@ export const ytDltSchema = z.object({
     createdAt: z.date().optional(),
 });
 
-export type ytDltFormSchema = typeof ytDltSchema;
+export type ytDlpFormSchema = typeof ytDlpSchema;

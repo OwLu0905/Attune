@@ -30,7 +30,7 @@ pub async fn download_yt_sections(
 
     let uuid = Uuid::new_v4().to_string();
 
-    // // NOTE: db to write the store the file
+    // TODO: db to write the store the file
     // let db = &app_handle.state::<DbState>().db;
 
     app_handle
@@ -42,87 +42,96 @@ pub async fn download_yt_sections(
         .sidecar("yt-dlp")
         .expect("can't find yt-dlp sidecar");
 
-    let (mut rx, _child) = yt_command
-        .args([
-            "--download-sections",
-            &format!("*{}-{}", start, end),
-            // "-f",
-            // "mp4",
-            // "-k",
-            "--extract-audio",
-            "--audio-format",
-            "mp3",
-            "-o",
-            &format!("./yt-clip/{}.%(ext)s", uuid),
-            &url,
-        ])
-        .spawn()
-        .map_err(|e| e.to_string())?;
+    let yt_command_copy = app_handle.clone();
 
-    while let Some(event) = rx.recv().await {
-        match event {
-            CommandEvent::Stdout(bytes) => {
-                if let Ok(text) = String::from_utf8(bytes) {
-                    if text.contains(&already_download_error) {
+    let handle = tauri::async_runtime::spawn(async move {
+        let (mut rx, _child) = yt_command
+            .args([
+                "--progress-template",
+                "%(progress)j",
+                "--download-sections",
+                &format!("*{}-{}", start, end),
+                // "-f",
+                // "mp4",
+                // "-k",
+                "--extract-audio",
+                "--audio-format",
+                "mp3",
+                "-o",
+                &format!("./yt-clip/{}.%(ext)s", uuid),
+                &url,
+            ])
+            .spawn()
+            .map_err(|e| e.to_string())?;
+
+        while let Some(event) = rx.recv().await {
+            match event {
+                CommandEvent::Stdout(bytes) => {
+                    if let Ok(text) = String::from_utf8(bytes) {
+                        if text.contains(&already_download_error) {
+                            app_handle
+                                .emit("download_status", DownloadStatus::AlreadyDownloaded)
+                                .map_err(|e| e.to_string())?;
+                            return Err("Video has already been downloaded".to_string());
+                        }
+
                         app_handle
-                            .emit("download_status", DownloadStatus::AlreadyDownloaded)
+                            .emit(
+                                "download_status",
+                                DownloadStatus::Progress { message: text },
+                            )
                             .map_err(|e| e.to_string())?;
-                        return Err("Video has already been downloaded".to_string());
+                    } else {
+                        dbg!("Parsing failed");
                     }
-                    dbg!(&text);
+                }
+                CommandEvent::Stderr(error_bytes) => {
+                    if let Ok(error_text) = String::from_utf8(error_bytes) {
+                        if error_text.contains("ERROR:") {
+                            app_handle.emit(
+                                "download_status",
+                                DownloadStatus::Error {
+                                    message: error_text,
+                                },
+                            )
+                        } else {
+                            // Treat as progress information
+                            app_handle.emit(
+                                "download_status",
+                                DownloadStatus::Progress {
+                                    message: error_text,
+                                },
+                            )
+                        }
+                        .map_err(|e| e.to_string())?;
+                    }
+                }
+                CommandEvent::Error(error) => {
+                    // Handle process-level errors
                     app_handle
                         .emit(
                             "download_status",
-                            DownloadStatus::Progress { message: text },
+                            DownloadStatus::Error {
+                                message: error.to_string(),
+                            },
                         )
                         .map_err(|e| e.to_string())?;
-                } else {
-                    dbg!("Parsing failed");
                 }
-            }
-            CommandEvent::Stderr(error_bytes) => {
-                if let Ok(error_text) = String::from_utf8(error_bytes) {
-                    if error_text.contains("ERROR:") {
-                        app_handle.emit(
-                            "download_status",
-                            DownloadStatus::Error {
-                                message: error_text,
-                            },
-                        )
-                    } else {
-                        // Treat as progress information
-                        app_handle.emit(
-                            "download_status",
-                            DownloadStatus::Progress {
-                                message: error_text,
-                            },
-                        )
+                CommandEvent::Terminated(payload) => {
+                    // Handle process termination
+                    if payload.code != Some(0) {
+                        return Err(format!("Process terminated with code: {:?}", payload.code));
                     }
-                    .map_err(|e| e.to_string())?;
                 }
+                _ => {}
             }
-            CommandEvent::Error(error) => {
-                // Handle process-level errors
-                app_handle
-                    .emit(
-                        "download_status",
-                        DownloadStatus::Error {
-                            message: error.to_string(),
-                        },
-                    )
-                    .map_err(|e| e.to_string())?;
-            }
-            CommandEvent::Terminated(payload) => {
-                // Handle process termination
-                if payload.code != Some(0) {
-                    return Err(format!("Process terminated with code: {:?}", payload.code));
-                }
-            }
-            _ => {}
         }
-    }
+        Ok(())
+    });
 
-    app_handle
+    let _ = handle.await.expect("Task failed");
+
+    yt_command_copy
         .emit("download_status", DownloadStatus::Finished)
         .map_err(|e| e.to_string())?;
 
