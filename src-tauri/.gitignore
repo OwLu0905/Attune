@@ -9,3 +9,8 @@
 /yt-clip/
 
 /bin/
+
+/models/
+
+*.mp3
+*.json

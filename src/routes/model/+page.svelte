@@ -2,14 +2,16 @@
     import Button from "@/components/ui/button/button.svelte";
     import Input from "@/components/ui/input/input.svelte";
     import Label from "@/components/ui/label/label.svelte";
-    import { onMount } from "svelte";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Select from "@/components/ui/select/";
+    import { invoke } from "@tauri-apps/api/core";
 
     let value = $state("");
     let ws: WebSocket | null = $state(null);
 
     let answer = $state("");
+
+    let load = $state(false);
 
     const models = [
         { id: 0, label: "base", value: "base" },
@@ -27,15 +29,17 @@
             "Select a model",
     );
 
-    onMount(() => {
-        ws = new WebSocket("ws://localhost:8017/ws/some_token");
+    $effect(() => {
+        if (load && ws === null) {
+            ws = new WebSocket("ws://localhost:8017/ws/some_token");
 
-        ws.onmessage = (event) => {
-            console.log(event.data);
-            if (typeof event.data === "string") {
-                answer = event.data;
-            }
-        };
+            ws.onmessage = (event) => {
+                console.log(event.data);
+                if (typeof event.data === "string") {
+                    answer = event.data;
+                }
+            };
+        }
     });
 
     function sendMessage() {
@@ -85,4 +89,18 @@
             </div>
         </div>
     </Card.Content>
+    <Card.Footer>
+        <Button
+            type="button"
+            variant="ghost"
+            onclick={async () => {
+                const res = await invoke("start_model");
+                console.log(res);
+
+                load = true;
+            }}>Startup</Button
+        >
+        <Button onclick={() => (load = true)}>connect</Button>
+        <div>{answer}</div>
+    </Card.Footer>
 </Card.Root>

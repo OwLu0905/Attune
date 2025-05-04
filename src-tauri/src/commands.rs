@@ -6,4 +6,3 @@ pub async fn ws_send(state: tauri::State<'_, WsState>, message: String) -> Resul
 
     Ok(())
 }
-

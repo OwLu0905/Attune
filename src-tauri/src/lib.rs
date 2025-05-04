@@ -45,7 +45,8 @@ pub fn run() {
         .invoke_handler(tauri::generate_handler![
             greet,
             yt::download_yt_sections,
-            commands::ws_send
+            commands::ws_send,
+            ws::start_model
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
