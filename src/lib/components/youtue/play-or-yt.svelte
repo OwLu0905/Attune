@@ -144,7 +144,7 @@
 <div class="relative">
     {#if action || liteLoaded}
         <div
-            class="aspect-video max-w-full py-2"
+            class="mx-auto aspect-video max-w-full py-2"
             bind:this={playerContainer}
         ></div>
         {#if children}

@@ -3,7 +3,7 @@ import { z } from "zod";
 export const ProviderEnum = z.enum(["YouTube", "Custom"]);
 
 export const ytDlpSchema = z.object({
-    title: z.string().min(1).max(50),
+    title: z.string().min(1).max(250),
     description: z.string().min(0).max(50).optional(),
     url: z.string().url(),
     privoder: ProviderEnum.default("Custom"),
