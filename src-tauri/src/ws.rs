@@ -1,33 +1,95 @@
-use std::sync::Arc;
-
+use futures_util::{SinkExt, StreamExt};
+use serde::Serialize;
+use std::{net::SocketAddr, sync::Arc};
 use tauri::AppHandle;
 use tauri_plugin_shell::{process::CommandEvent, ShellExt};
 use tokio::{
-    io::{AsyncWriteExt, WriteHalf},
-    net::TcpStream,
+    net::TcpListener,
     sync::{mpsc::unbounded_channel, Mutex},
 };
+use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
+use uuid::Uuid;
 
-pub struct Client {
-    writer: Arc<Mutex<WriteHalf<TcpStream>>>,
+pub struct WebSocketClient {
+    writer: Arc<
+        Mutex<
+            futures_util::stream::SplitSink<
+                tokio_tungstenite::WebSocketStream<
+                    tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+                >,
+                Message,
+            >,
+        >,
+    >,
 }
 
-impl Client {
-    pub async fn write(&self, s: String) {
-        self.writer
-            .lock()
-            .await
-            .write_all((s + "\n").as_bytes())
-            .await
-            .expect("cannt write data to TCP");
+impl WebSocketClient {
+    // Create a new WebSocketClient by connecting to the specified URL
+    pub async fn new(url: &str) -> Result<Self, Box<dyn std::error::Error>> {
+        // Connect to the WebSocket server
+        let (ws_stream, _) = connect_async(url).await?;
+        println!("WebSocket handshake has been successfully completed");
+
+        // Split the WebSocket stream
+        let (write, _) = ws_stream.split();
+
+        // Wrap the writer in Arc<Mutex<>> for thread-safe access
+        let writer = Arc::new(Mutex::new(write));
+
+        Ok(Self { writer })
+    }
+
+    // Send a binary message to the WebSocket server
+    pub async fn send_message(&self, data: Vec<u8>) -> Result<(), Box<dyn std::error::Error>> {
+        let mut writer = self.writer.lock().await;
+        writer.send(Message::Binary(data)).await?;
+        Ok(())
+    }
+
+    // Send a text message to the WebSocket server
+    pub async fn send_text(&self, text: String) -> Result<(), Box<dyn std::error::Error>> {
+        let mut writer = self.writer.lock().await;
+        writer.send(Message::Text(text)).await?;
+        Ok(())
+    }
+    pub async fn send_json<T>(&self, data: &T) -> Result<(), Box<dyn std::error::Error>>
+    where
+        T: Serialize,
+    {
+        let json_string = serde_json::to_string(data)?;
+        self.send_text(json_string).await
     }
 }
 
-pub async fn spwan(app_handle: &AppHandle) -> u32 {
-    let command = app_handle.shell().sidecar("whip").expect("no sidecar");
+async fn find_free_port() -> Option<u16> {
+    // Bind to port 0, which tells the OS to assign a free port
+    let addr = SocketAddr::from(([127, 0, 0, 1], 0));
 
-    let (port_tx, mut port_rx) = unbounded_channel::<u32>();
-    let (mut rx, _child) = command.spawn().expect("spawn failed");
+    match TcpListener::bind(addr).await {
+        Ok(listener) => {
+            // Get the assigned port
+            if let Ok(addr) = listener.local_addr() {
+                return Some(addr.port());
+            }
+            None
+        }
+        Err(_) => None,
+    }
+}
+
+pub async fn spwan(app_handle: &AppHandle) -> (u16, String) {
+    let token = Uuid::new_v4().to_string();
+    let command = app_handle
+        .shell()
+        .sidecar("whip")
+        .expect("whip sidecar does not exist");
+
+    let valid_port = find_free_port().await.expect("port error");
+    let (port_tx, mut port_rx) = unbounded_channel::<u16>();
+    let (mut rx, _child) = command
+        .args(["--port", &format!("{}", valid_port), "--token", &token])
+        .spawn()
+        .expect("spawn failed");
 
     tauri::async_runtime::spawn(async move {
         let mut port_parsed = false;
@@ -35,16 +97,31 @@ pub async fn spwan(app_handle: &AppHandle) -> u32 {
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(bytes) => {
+                    if let Ok(text) = String::from_utf8(bytes) {
+                        dbg!("Send To", text);
+                    }
+                }
+                CommandEvent::Stderr(bytes) => {
                     if !port_tx.is_closed() && !port_parsed {
-                        if let Ok(port) = String::from_utf8_lossy(&bytes).trim().parse() {
-                            port_tx.send(port).expect("unable to send port");
-                            port_parsed = true;
+                        if let Ok(text) = String::from_utf8(bytes) {
+                            if text.contains("Uvicorn") {
+                                dbg!("RUN: ", text);
+                                port_tx.send(valid_port).expect("unable to send port");
+                                port_parsed = true;
+                            } else {
+                                dbg!("Std Error:", text);
+                            }
                             continue;
                         }
                     }
-                    dbg!("{}", String::from_utf8_lossy(&bytes).trim());
                 }
-                _ => {}
+                CommandEvent::Error(error) => {
+                    dbg!("Error:", error);
+                }
+
+                _ => {
+                    dbg!("Unkoown Error");
+                }
             }
         }
     });
@@ -53,52 +130,17 @@ pub async fn spwan(app_handle: &AppHandle) -> u32 {
         .recv()
         .await
         .expect("couldn't receive daemon port number");
+
     port_rx.close();
 
-    port
+    (port, String::from(token))
 }
 
-pub async fn connect(port: u32) -> Client {
-    let addr = format!("127.0.0.1:{}", port);
-    let stream = TcpStream::connect(addr).await.expect("connect failed");
+pub async fn connect(port: u16, token: String) -> WebSocketClient {
+    dbg!(port);
+    let url = format!("ws://127.0.0.1:{}/ws/{}", port, token);
 
-    // NOTE:
-    let (_read_stream, write_stream) = tokio::io::split(stream);
+    let client = WebSocketClient::new(&url).await.expect("Failed to connect");
 
-    Client {
-        writer: Arc::new(Mutex::new(write_stream)),
-    }
-}
-
-#[tauri::command(rename_all = "snake_case")]
-pub async fn start_model(app_handle: AppHandle) -> Result<String, String> {
-    let model_command = app_handle
-        .shell()
-        .sidecar("whip")
-        .expect("no model sidecar");
-
-    tauri::async_runtime::spawn(async move {
-        let (mut rx, _child) = model_command.spawn().expect("model start failed");
-
-        while let Some(event) = rx.recv().await {
-            match event {
-                CommandEvent::Stdout(bytes) => {
-                    if let Ok(text) = String::from_utf8(bytes) {
-                        dbg!("Out:", text);
-                    }
-                }
-
-                CommandEvent::Stderr(bytes) => {
-                    if let Ok(text) = String::from_utf8(bytes) {
-                        dbg!("Error:", text);
-                    }
-                }
-                _ => {
-                    // dbg!(event);
-                }
-            }
-        }
-    });
-
-    Ok("Model server ...".to_string())
+    client
 }

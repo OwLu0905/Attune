@@ -1,8 +1,27 @@
+use serde::Serialize;
+
 use crate::WsState;
 
-#[tauri::command]
-pub async fn ws_send(state: tauri::State<'_, WsState>, message: String) -> Result<(), String> {
-    state.ws_client.write(message).await;
+#[derive(Serialize)]
+struct MessagePayload {
+    message_type: String,
+    file_name: String,
+    message: String,
+}
 
-    Ok(())
+#[tauri::command(rename_all = "snake_case")]
+pub async fn ws_send(
+    state: tauri::State<'_, WsState>,
+    message_type: String,
+    file_name: String,
+    message: String,
+) -> Result<String, String> {
+    let data = MessagePayload {
+        message_type,
+        file_name,
+        message,
+    };
+    let _ = state.ws_client.send_json::<MessagePayload>(&data).await;
+
+    Ok(format!("OK!!!"))
 }

@@ -30,3 +30,6 @@ uuid = { version = "1.11.0", features = [
 ] }
 tauri-plugin-shell = "2"
 tokio = { version = "1.44.2", features = ["full"] }
+tokio-tungstenite = "*"
+futures-util = "0.3"
+futures-channel = "0.3"

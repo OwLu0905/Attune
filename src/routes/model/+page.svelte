@@ -29,29 +29,16 @@
             "Select a model",
     );
 
-    $effect(() => {
-        if (load && ws === null) {
-            ws = new WebSocket("ws://localhost:8017/ws/some_token");
-
-            ws.onmessage = (event) => {
-                console.log(event.data);
-                if (typeof event.data === "string") {
-                    answer = event.data;
-                }
-            };
-        }
-    });
-
-    function sendMessage() {
-        if (!ws) return;
-        ws.send(
-            JSON.stringify({
+    async function sendMessage() {
+        try {
+            await invoke("ws_send", {
                 message_type: "transcribe",
                 file_name: value,
                 message: "hello",
-            }),
-        );
-        answer = "";
+            });
+        } catch (err) {
+            console.log(err);
+        }
     }
 </script>
 
@@ -96,8 +83,6 @@
             onclick={async () => {
                 const res = await invoke("start_model");
                 console.log(res);
-
-                load = true;
             }}>Startup</Button
         >
         <Button onclick={() => (load = true)}>connect</Button>
