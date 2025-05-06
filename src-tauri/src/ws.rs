@@ -1,6 +1,6 @@
 use futures_util::{SinkExt, StreamExt};
-use serde::Serialize;
-use std::{net::SocketAddr, sync::Arc};
+use serde::{Deserialize, Serialize};
+use std::{future::Future, net::SocketAddr, sync::Arc};
 use tauri::AppHandle;
 use tauri_plugin_shell::{process::CommandEvent, ShellExt};
 use tokio::{
@@ -9,6 +9,8 @@ use tokio::{
 };
 use tokio_tungstenite::{connect_async, tungstenite::protocol::Message};
 use uuid::Uuid;
+
+type CustomResult<T> = std::result::Result<T, Box<dyn std::error::Error + Send + Sync + 'static>>;
 
 pub struct WebSocketClient {
     writer: Arc<
@@ -21,43 +23,154 @@ pub struct WebSocketClient {
             >,
         >,
     >,
+    // Add a reader field to store the receiving half of the split WebSocket
+    reader: Arc<
+        Mutex<
+            futures_util::stream::SplitStream<
+                tokio_tungstenite::WebSocketStream<
+                    tokio_tungstenite::MaybeTlsStream<tokio::net::TcpStream>,
+                >,
+            >,
+        >,
+    >,
+}
+
+impl Clone for WebSocketClient {
+    fn clone(&self) -> Self {
+        Self {
+            writer: Arc::clone(&self.writer),
+            reader: Arc::clone(&self.reader),
+        }
+    }
 }
 
 impl WebSocketClient {
     // Create a new WebSocketClient by connecting to the specified URL
-    pub async fn new(url: &str) -> Result<Self, Box<dyn std::error::Error>> {
+    pub async fn new(url: &str) -> CustomResult<Self> {
         // Connect to the WebSocket server
         let (ws_stream, _) = connect_async(url).await?;
         println!("WebSocket handshake has been successfully completed");
 
         // Split the WebSocket stream
-        let (write, _) = ws_stream.split();
+        let (write, read) = ws_stream.split();
 
-        // Wrap the writer in Arc<Mutex<>> for thread-safe access
+        // Wrap both halves in Arc<Mutex<>> for thread-safe access
         let writer = Arc::new(Mutex::new(write));
+        let reader = Arc::new(Mutex::new(read));
 
-        Ok(Self { writer })
+        Ok(Self { writer, reader })
     }
 
     // Send a binary message to the WebSocket server
-    pub async fn send_message(&self, data: Vec<u8>) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn send_message(&self, data: Vec<u8>) -> CustomResult<()> {
         let mut writer = self.writer.lock().await;
         writer.send(Message::Binary(data)).await?;
         Ok(())
     }
 
     // Send a text message to the WebSocket server
-    pub async fn send_text(&self, text: String) -> Result<(), Box<dyn std::error::Error>> {
+    pub async fn send_text(&self, text: String) -> CustomResult<()> {
         let mut writer = self.writer.lock().await;
         writer.send(Message::Text(text)).await?;
         Ok(())
     }
-    pub async fn send_json<T>(&self, data: &T) -> Result<(), Box<dyn std::error::Error>>
+
+    pub async fn send_json<T>(&self, data: &T) -> CustomResult<()>
     where
         T: Serialize,
     {
         let json_string = serde_json::to_string(data)?;
         self.send_text(json_string).await
+    }
+
+    // Receive a message from the WebSocket server
+    pub async fn receive_message(&self) -> CustomResult<Option<Message>> {
+        let mut reader = self.reader.lock().await;
+        match reader.next().await {
+            Some(Ok(msg)) => Ok(Some(msg)),
+            Some(Err(e)) => Err(Box::new(e)),
+            None => Ok(None), // Connection closed
+        }
+    }
+
+    // Helper method to receive and parse JSON messages
+    pub async fn receive_json<T>(&self) -> CustomResult<Option<T>>
+    where
+        T: for<'de> Deserialize<'de>,
+    {
+        if let Some(msg) = self.receive_message().await? {
+            match msg {
+                Message::Text(text) => {
+                    let parsed = serde_json::from_str(&text)?;
+                    Ok(Some(parsed))
+                }
+                Message::Binary(bin) => {
+                    let parsed = serde_json::from_slice(&bin)?;
+                    Ok(Some(parsed))
+                }
+                _ => Ok(None), // Ignore other message types
+            }
+        } else {
+            Ok(None) // Connection closed
+        }
+    }
+
+    pub async fn listen<F, Fut>(&self, mut callback: F) -> CustomResult<()>
+    where
+        F: FnMut(Message) -> Fut,
+        Fut: Future<Output = CustomResult<()>>,
+    {
+        loop {
+            match self.receive_message().await? {
+                Some(msg) => {
+                    callback(msg).await?;
+                }
+                None => {
+                    println!("WebSocket connection closed");
+                    break;
+                }
+            }
+        }
+        Ok(())
+    }
+
+    pub async fn start_listening(&self) -> CustomResult<()> {
+        println!("Started listening for WebSocket messages");
+
+        self.listen(|msg| async move {
+            match msg {
+                Message::Text(text) => {
+                    println!("Received text message: {}", text);
+                    match serde_json::from_str::<serde_json::Value>(&text) {
+                        Ok(json) => {
+                            println!("Parsed JSON: {:?}", json);
+                        }
+                        Err(e) => {
+                            println!("Not a valid JSON: {}", e);
+                        }
+                    }
+                }
+                Message::Binary(data) => {
+                    println!("Received binary message, {} bytes", data.len());
+                }
+                Message::Ping(_) => {
+                    println!("Received ping");
+                }
+                Message::Pong(_) => {
+                    println!("Received pong");
+                }
+                Message::Close(frame) => {
+                    println!("Received close frame: {:?}", frame);
+                }
+                _ => {
+                    println!("Received other message type");
+                }
+            }
+
+            // Return with the correct error type
+            Ok(())
+        })
+        .await
     }
 }
 
@@ -142,5 +255,13 @@ pub async fn connect(port: u16, token: String) -> WebSocketClient {
 
     let client = WebSocketClient::new(&url).await.expect("Failed to connect");
 
+    let listener_client = client.clone();
+
+    tokio::spawn(async move {
+        listener_client
+            .start_listening()
+            .await
+            .expect("Listening task failed");
+    });
     client
 }

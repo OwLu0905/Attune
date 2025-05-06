@@ -23,11 +23,6 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_sql::Builder::new().build())
-        .invoke_handler(tauri::generate_handler![
-            greet,
-            yt::download_yt_sections,
-            commands::ws_send,
-        ])
         .setup(|app| {
             // let app_handle_db = app.handle().clone();
             let app_handle_ws = app.handle().clone();
@@ -47,6 +42,11 @@ pub fn run() {
 
             Ok(())
         })
+        .invoke_handler(tauri::generate_handler![
+            greet,
+            yt::download_yt_sections,
+            commands::ws_send,
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
