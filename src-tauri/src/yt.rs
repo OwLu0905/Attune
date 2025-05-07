@@ -33,6 +33,7 @@ pub async fn download_yt_sections(
     let uuid = Uuid::new_v4().to_string();
 
     let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
+
     // TODO: db to write the store the file let db = &app_handle.state::<DbState>().db;
 
     app_handle
@@ -60,7 +61,7 @@ pub async fn download_yt_sections(
                 "--audio-format",
                 "mp3",
                 "-o",
-                &format!("{}/audio/{}.%(ext)s", data_path, uuid),
+                &format!("{}/{}/audio.%(ext)s", data_path, uuid),
                 &url,
             ])
             .spawn()
@@ -138,23 +139,4 @@ pub async fn download_yt_sections(
         .map_err(|e| e.to_string())?;
 
     Ok("Download completed successfully".to_string())
-}
-
-#[tauri::command(rename_all = "snake_case")]
-pub async fn _download_yt_sections_block(app: AppHandle, url: String) {
-    let shell = app.shell();
-    let output = tauri::async_runtime::block_on(async move {
-        let url_arg = url.as_str();
-        shell
-            .command("yt-dlp")
-            .args(["--download-sections", "*1:10-1:25", "-f", "mp4", url_arg])
-            .output()
-            .await
-            .unwrap()
-    });
-    if output.status.success() {
-        println!("Result: {:?}", String::from_utf8(output.stdout));
-    } else {
-        println!("Exit with code: {}", output.status.code().unwrap());
-    }
 }

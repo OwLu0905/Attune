@@ -1,6 +1,6 @@
 import os
 from faster_whisper import WhisperModel
-# import ctranslate2
+import ctranslate2
 
 import argparse
 import json
@@ -9,6 +9,7 @@ from faster_whisper.transcribe import Iterable, Segment
 
 
 def get_device_config():
+    # TODO: check if nvcc is available
     # if ctranslate2.get_cuda_device_count() > 0:
     #     return "cuda", "float16"
     # else:

@@ -32,7 +32,7 @@
     async function sendMessage() {
         try {
             await invoke("start_transcribe", {
-                file_name: value,
+                file_name: "c27ad6af-05aa-4012-8026-1361f9dfebd1",
                 model: "base.en",
             });
         } catch (err) {

@@ -15,15 +15,14 @@ pub async fn start_transcribe(
         .sidecar("whip_v2")
         .expect("whip_v2 sidecar does not exist");
 
-    let file_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
     let model_path = get_model_path(&app_handle).unwrap_or(format!("/"));
+
     let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
-    let name = "test_data";
 
     let (mut rx, _child) = command
         .args([
             "--file",
-            &format!("{}/audio/{}", file_path, file_name),
+            &format!("{}/{}/audio.mp3", data_path, file_name),
             "--model",
             &model,
             "--model_path",
@@ -31,7 +30,7 @@ pub async fn start_transcribe(
             "--lang",
             "en",
             "--output",
-            &format!("{}/transcribe/{}", data_path, name),
+            &format!("{}/{}/subtitle", data_path, file_name),
         ])
         .spawn()
         .expect("spawn failed");
@@ -53,10 +52,8 @@ pub async fn start_transcribe(
                     dbg!("Error:", error);
                 }
                 CommandEvent::Terminated(payload) => {
-                    // Handle process termination
                     if payload.code != Some(0) {
                         dbg!(format!("Process terminated with code: {:?}", payload.code));
-                        // return Err(format!("Process terminated with code: {:?}", payload.code));
                     }
                 }
                 _ => {
