@@ -9,12 +9,17 @@ export class YtDownloadManager {
 
     async initialize() {
         this.unlisten = await listen<DownloadStatus>(
-            DOWNLOAD_YT_EVENT.download_section,
+            DOWNLOAD_YT_EVENT.status,
             (event) => {
                 const status = event.payload;
+                console.log(status);
                 this.handdleStatusUpdate(status);
             },
         );
+    }
+
+    get getMessage() {
+        return this.message;
     }
 
     handdleStatusUpdate(status: DownloadStatus) {

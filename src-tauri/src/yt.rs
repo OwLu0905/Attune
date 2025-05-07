@@ -3,6 +3,8 @@ use tauri::{AppHandle, Emitter};
 use tauri_plugin_shell::{process::CommandEvent, ShellExt};
 use uuid::Uuid;
 
+use crate::config::get_data_path;
+
 // use crate::DbState;
 
 #[derive(Serialize, Clone)]
@@ -30,8 +32,8 @@ pub async fn download_yt_sections(
 
     let uuid = Uuid::new_v4().to_string();
 
-    // TODO: db to write the store the file
-    // let db = &app_handle.state::<DbState>().db;
+    let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
+    // TODO: db to write the store the file let db = &app_handle.state::<DbState>().db;
 
     app_handle
         .emit("download_status", DownloadStatus::Started)
@@ -47,8 +49,8 @@ pub async fn download_yt_sections(
     let handle = tauri::async_runtime::spawn(async move {
         let (mut rx, _child) = yt_command
             .args([
-                "--progress-template",
-                "%(progress)j",
+                // "--progress-template",
+                // "%(progress)j",
                 "--download-sections",
                 &format!("*{}-{}", start, end),
                 // "-f",
@@ -58,7 +60,7 @@ pub async fn download_yt_sections(
                 "--audio-format",
                 "mp3",
                 "-o",
-                &format!("./yt-clip/{}.%(ext)s", uuid),
+                &format!("{}/audio/{}.%(ext)s", data_path, uuid),
                 &url,
             ])
             .spawn()

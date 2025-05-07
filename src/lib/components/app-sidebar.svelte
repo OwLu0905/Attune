@@ -17,7 +17,7 @@
         user: {
             name: "Kian",
             email: "owlu0905@example.com",
-            avatar: "/avatars/shadcn.jpg",
+            avatar: "/o_o.jpg",
         },
         topics: [
             {

@@ -31,10 +31,9 @@
 
     async function sendMessage() {
         try {
-            await invoke("ws_send", {
-                message_type: "transcribe",
+            await invoke("start_transcribe", {
                 file_name: value,
-                message: "hello",
+                model: "base.en",
             });
         } catch (err) {
             console.log(err);
@@ -77,15 +76,15 @@
         </div>
     </Card.Content>
     <Card.Footer>
-        <Button
-            type="button"
-            variant="ghost"
-            onclick={async () => {
-                const res = await invoke("start_model");
-                console.log(res);
-            }}>Startup</Button
-        >
-        <Button onclick={() => (load = true)}>connect</Button>
-        <div>{answer}</div>
+        <!-- <Button -->
+        <!--     type="button" -->
+        <!--     variant="ghost" -->
+        <!--     onclick={async () => { -->
+        <!--         const res = await invoke("start_model"); -->
+        <!--         console.log(res); -->
+        <!--     }}>Startup</Button -->
+        <!-- > -->
+        <!-- <Button onclick={() => (load = true)}>connect</Button> -->
+        <!-- <div>{answer}</div> -->
     </Card.Footer>
 </Card.Root>

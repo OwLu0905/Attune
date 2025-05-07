@@ -31,7 +31,6 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-		"externalBin": [ "bin/yt-dlp/yt-dlp", "bin/whisper/whip" ],
-		"resources":  {"bin/whisper/_internal/": "_internal/"}
+		"externalBin": [ "bin/yt-dlp/yt-dlp", "bin/whisper/whip_v2" ]
   }
 }

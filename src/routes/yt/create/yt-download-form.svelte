@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { untrack } from "svelte";
+    import { onMount, untrack } from "svelte";
+    import { invoke } from "@tauri-apps/api/core";
 
     import * as Form from "$lib/components/ui/form/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
@@ -12,6 +13,9 @@
     import { superForm, defaults } from "sveltekit-superforms";
     import { zod, zodClient } from "sveltekit-superforms/adapters";
 
+    import { YtDownloadManager } from "@/components/youtue/yt-download-manager.svelte";
+    import { DOWNLOAD_YT_EVENT } from "@/types/yt-download";
+
     import type { TSLIDER_VALUES } from "@/components/youtue/types";
     import type { YtOembUrlInfo } from "./types";
 
@@ -22,23 +26,31 @@
 
     let { sliderValues = $bindable(), urlInfo = $bindable() }: Props = $props();
 
-    async function sleep() {
-        return new Promise((res) => setTimeout(res, 5000));
-    }
+    let yt_download_manager = new YtDownloadManager();
     const form = superForm(defaults(zod(ytDlpSchema)), {
         SPA: true,
         validators: zodClient(ytDlpSchema),
         async onUpdate({ form }) {
-            const _currentSliderValues = $state.snapshot(sliderValues);
             if (form.valid) {
-                // TODO: Call an external API with form.data, await the result and update form
-                console.log(form.data, _currentSliderValues);
-                await sleep();
+                // TODO: db handle
+                await invoke(DOWNLOAD_YT_EVENT.download_section, {
+                    start: form.data.startTime,
+                    end: form.data.endTime,
+                    url: form.data.url,
+                });
             }
         },
     });
 
     const { form: formData, enhance, delayed } = form;
+
+    onMount(() => {
+        yt_download_manager.initialize();
+
+        return () => {
+            yt_download_manager.cleanup();
+        };
+    });
 
     $effect(() => {
         let start = sliderValues[0];
@@ -161,4 +173,5 @@
 
         Submit
     </Form.Button>
+    <div class="truncate">{yt_download_manager.getMessage}</div>
 </form>
