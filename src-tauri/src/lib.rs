@@ -1,13 +1,17 @@
+use db::{setup_db, Db};
+use tauri::Manager;
+
 pub mod commands;
 mod config;
+mod db;
 mod model;
+mod server;
 pub mod ws;
 mod yt;
 
-// pub struct DbState {
-//     db: String,
-// }
-
+pub struct DbState {
+    db: Db,
+}
 pub struct WsState {
     ws_client: ws::WebSocketClient,
 }
@@ -20,23 +24,21 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    tauri::Builder::default()
+    let mut builder = tauri::Builder::default().plugin(tauri_plugin_opener::init());
+
+    builder = builder
+        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_shell::init())
-        .plugin(tauri_plugin_sql::Builder::new().build())
+        .plugin(tauri_plugin_sql::Builder::new().build());
+
+    builder
         .setup(|app| {
             // let app_handle_db = app.handle().clone();
-            // let app_handle_ws = app.handle().clone();
-
-            // tauri::async_runtime::block_on(async move {
-            //     let db = "db_state".to_string();
-            //     app_handle_db.manage(DbState { db });
-            // });
             //
-            // tauri::async_runtime::spawn(async move {
-            //     let (port, token) = ws::spwan(&app_handle_cd).await;
-            //     let token_copy = token.clone();
-            //     let ws_client = ws::connect(port, token_copy).await;
-            //     app_handle_ws.manage(WsState { ws_client });
+            // tauri::async_runtime::block_on(async move {
+            //     let db = setup_db(&app).await;
+            //
+            //     app_handle_db.manage(DbState { db });
             // });
 
             Ok(())
@@ -45,7 +47,8 @@ pub fn run() {
             greet,
             yt::download_yt_sections,
             model::start_transcribe,
-            // commands::ws_send,
+            server::start_oauth_server,
+            server::stop_oauth_server
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

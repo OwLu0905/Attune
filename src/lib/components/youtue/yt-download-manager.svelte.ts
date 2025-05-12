@@ -1,7 +1,14 @@
+import { invoke } from "@tauri-apps/api/core";
 import { listen } from "@tauri-apps/api/event";
 import type { UnlistenFn } from "@tauri-apps/api/event";
-import type { DownloadStatus } from "@/types/yt-download";
-import { DOWNLOAD_STATUS_EVENT, DOWNLOAD_YT_EVENT } from "@/types/yt-download";
+
+import {
+    DOWNLOAD_STATUS_EVENT,
+    DOWNLOAD_YT_EVENT,
+    type DownloadStatus,
+} from "@/types/yt-download";
+
+import type { DownloadSectionParam } from "./types";
 
 export class YtDownloadManager {
     message = $state("");
@@ -13,7 +20,7 @@ export class YtDownloadManager {
             (event) => {
                 const status = event.payload;
                 console.log(status);
-                this.handdleStatusUpdate(status);
+                this.handleStatusUpdate(status);
             },
         );
     }
@@ -22,7 +29,7 @@ export class YtDownloadManager {
         return this.message;
     }
 
-    handdleStatusUpdate(status: DownloadStatus) {
+    handleStatusUpdate(status: DownloadStatus) {
         switch (status.type) {
             case DOWNLOAD_STATUS_EVENT.started:
                 this.message = "Download Started";
@@ -45,9 +52,18 @@ export class YtDownloadManager {
         }
     }
 
+    async handleDownload({ start, end, url }: DownloadSectionParam) {
+        await invoke(DOWNLOAD_YT_EVENT.download_section, {
+            start,
+            end,
+            url,
+        });
+    }
+
     cleanup() {
         if (this.unlisten) {
             this.unlisten();
+            this.unlisten = undefined;
         }
     }
 }

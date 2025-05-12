@@ -33,3 +33,11 @@ tokio = { version = "1.44.2", features = ["full"] }
 tokio-tungstenite = "*"
 futures-util = "0.3"
 futures-channel = "0.3"
+sqlx = { version = "0.8.5", features = ["sqlite", "runtime-tokio"] }
+futures = "0.3.31"
+tauri-plugin-deep-link = "2"
+axum = "0.8.4"
+tauri-plugin-oauth = "2"
+
+[target."cfg(any(target_os = \"macos\", windows, target_os = \"linux\"))".dependencies]
+tauri-plugin-single-instance = { version = "2.0.0", features = ["deep-link"] }

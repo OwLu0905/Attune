@@ -8,3 +8,9 @@ export type YouTubePlayerContext = {
 export type YouTubeSliderContext = {
     getSliderValues: () => TSLIDER_VALUES;
 };
+
+export type DownloadSectionParam = {
+    start: number;
+    end: number;
+    url: string;
+};

@@ -11,13 +11,27 @@
         Settings2,
         SquareTerminal,
     } from "@lucide/svelte";
+</script>
 
-    // This is sample data.
-    const data = {
+<script lang="ts">
+    import { page } from "$app/state";
+    import type { ComponentProps } from "svelte";
+    import NavUser from "$lib/components/nav-user.svelte";
+    import * as Sidebar from "$lib/components/ui/sidebar/index.js";
+    import TopicSwitcher from "$lib/components/topic-switcher.svelte";
+    import EchoSidebar from "$lib/components/sidebar/echo-sidebar.svelte";
+    import NovelSidebar from "$lib/components/sidebar/novel-sidebar.svelte";
+    import DefaultSidebar from "$lib/components/sidebar/default-sidebar.svelte";
+    import { getUserContext } from "@/user/userService.svelte";
+
+    let { getUser } = getUserContext();
+    const user = getUser();
+
+    const data = $derived({
         user: {
-            name: "Kian",
-            email: "owlu0905@example.com",
-            avatar: "/o_o.jpg",
+            name: user?.name || "Guest",
+            email: user?.email || "",
+            avatar: user.picture || "",
         },
         topics: [
             {
@@ -156,18 +170,7 @@
                 icon: Map,
             },
         ],
-    };
-</script>
-
-<script lang="ts">
-    import { page } from "$app/state";
-    import type { ComponentProps } from "svelte";
-    import NavUser from "$lib/components/nav-user.svelte";
-    import * as Sidebar from "$lib/components/ui/sidebar/index.js";
-    import TopicSwitcher from "$lib/components/topic-switcher.svelte";
-    import EchoSidebar from "$lib/components/sidebar/echo-sidebar.svelte";
-    import NovelSidebar from "$lib/components/sidebar/novel-sidebar.svelte";
-    import DefaultSidebar from "$lib/components/sidebar/default-sidebar.svelte";
+    });
 
     let {
         ref = $bindable(null),

@@ -3,6 +3,8 @@
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
     import * as Sidebar from "$lib/components/ui/sidebar/index.js";
     import { useSidebar } from "$lib/components/ui/sidebar/index.js";
+    import { getUserContext } from "@/user/userService.svelte";
+    import { LogIn } from "@lucide/svelte";
     import BadgeCheck from "@lucide/svelte/icons/badge-check";
     import Bell from "@lucide/svelte/icons/bell";
     import ChevronsUpDown from "@lucide/svelte/icons/chevrons-up-down";
@@ -13,6 +15,9 @@
     let { user }: { user: { name: string; email: string; avatar: string } } =
         $props();
     const sidebar = useSidebar();
+
+    const { getUser, setUser } = getUserContext();
+    const userInfo = getUser();
 </script>
 
 <Sidebar.Menu>
@@ -28,7 +33,7 @@
                         <Avatar.Root class="h-8 w-8 rounded-lg">
                             <Avatar.Image src={user.avatar} alt={user.name} />
                             <Avatar.Fallback class="rounded-lg"
-                                >CN</Avatar.Fallback
+                                >Hi</Avatar.Fallback
                             >
                         </Avatar.Root>
                         <div
@@ -56,7 +61,7 @@
                         <Avatar.Root class="h-8 w-8 rounded-lg">
                             <Avatar.Image src={user.avatar} alt={user.name} />
                             <Avatar.Fallback class="rounded-lg"
-                                >CN</Avatar.Fallback
+                                >Hi</Avatar.Fallback
                             >
                         </Avatar.Root>
                         <div
@@ -92,10 +97,29 @@
                     </DropdownMenu.Item>
                 </DropdownMenu.Group>
                 <DropdownMenu.Separator />
-                <DropdownMenu.Item>
-                    <LogOut />
-                    Log out
-                </DropdownMenu.Item>
+
+                {#if !userInfo.token}
+                    <a href="/login">
+                        <DropdownMenu.Item>
+                            <LogIn />
+                            Log In
+                        </DropdownMenu.Item>
+                    </a>
+                {:else}
+                    <DropdownMenu.Item
+                        onclick={() => {
+                            setUser({
+                                token: null,
+                                name: null,
+                                email: null,
+                                picture: null,
+                            });
+                        }}
+                    >
+                        <LogOut />
+                        Log Out
+                    </DropdownMenu.Item>
+                {/if}
             </DropdownMenu.Content>
         </DropdownMenu.Root>
     </Sidebar.MenuItem>

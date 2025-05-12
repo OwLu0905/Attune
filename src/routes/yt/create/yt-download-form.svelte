@@ -1,6 +1,5 @@
 <script lang="ts">
     import { onMount, untrack } from "svelte";
-    import { invoke } from "@tauri-apps/api/core";
 
     import * as Form from "$lib/components/ui/form/index.js";
     import { Input } from "$lib/components/ui/input/index.js";
@@ -14,7 +13,6 @@
     import { zod, zodClient } from "sveltekit-superforms/adapters";
 
     import { YtDownloadManager } from "@/components/youtue/yt-download-manager.svelte";
-    import { DOWNLOAD_YT_EVENT } from "@/types/yt-download";
 
     import type { TSLIDER_VALUES } from "@/components/youtue/types";
     import type { YtOembUrlInfo } from "./types";
@@ -33,7 +31,7 @@
         async onUpdate({ form }) {
             if (form.valid) {
                 // TODO: db handle
-                await invoke(DOWNLOAD_YT_EVENT.download_section, {
+                await yt_download_manager.handleDownload({
                     start: form.data.startTime,
                     end: form.data.endTime,
                     url: form.data.url,
