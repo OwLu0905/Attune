@@ -28,7 +28,7 @@ pub async fn setup_db(app: &App) -> Db {
         .unwrap();
 
     // TODO: add migrate
-    // sqlx::migrate!("./migrations").run(&db).await.unwrap();
+    sqlx::migrate!("./migrations").run(&db).await.unwrap();
 
     db
 }

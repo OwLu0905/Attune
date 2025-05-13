@@ -98,7 +98,7 @@
                 </DropdownMenu.Group>
                 <DropdownMenu.Separator />
 
-                {#if !userInfo.token}
+                {#if !userInfo.access_token}
                     <a href="/login">
                         <DropdownMenu.Item>
                             <LogIn />
@@ -109,7 +109,8 @@
                     <DropdownMenu.Item
                         onclick={() => {
                             setUser({
-                                token: null,
+                                userId: null,
+                                access_token: null,
                                 name: null,
                                 email: null,
                                 picture: null,

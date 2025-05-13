@@ -38,6 +38,8 @@ futures = "0.3.31"
 tauri-plugin-deep-link = "2"
 axum = "0.8.4"
 tauri-plugin-oauth = "2"
+tauri-plugin-store = "2"
+chrono = "0.4.41"
 
 [target."cfg(any(target_os = \"macos\", windows, target_os = \"linux\"))".dependencies]
 tauri-plugin-single-instance = { version = "2.0.0", features = ["deep-link"] }

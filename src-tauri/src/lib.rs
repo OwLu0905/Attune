@@ -5,6 +5,7 @@ pub mod commands;
 mod config;
 mod db;
 mod model;
+mod query;
 mod server;
 pub mod ws;
 mod yt;
@@ -24,7 +25,9 @@ fn greet(name: &str) -> String {
 
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
-    let mut builder = tauri::Builder::default().plugin(tauri_plugin_opener::init());
+    let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_store::Builder::new().build())
+        .plugin(tauri_plugin_opener::init());
 
     builder = builder
         .plugin(tauri_plugin_deep_link::init())
@@ -33,13 +36,13 @@ pub fn run() {
 
     builder
         .setup(|app| {
-            // let app_handle_db = app.handle().clone();
+            let app_handle_db = app.handle().clone();
             //
-            // tauri::async_runtime::block_on(async move {
-            //     let db = setup_db(&app).await;
-            //
-            //     app_handle_db.manage(DbState { db });
-            // });
+            tauri::async_runtime::block_on(async move {
+                let db = setup_db(&app).await;
+
+                app_handle_db.manage(DbState { db });
+            });
 
             Ok(())
         })
@@ -48,7 +51,8 @@ pub fn run() {
             yt::download_yt_sections,
             model::start_transcribe,
             server::start_oauth_server,
-            server::stop_oauth_server
+            server::stop_oauth_server,
+            query::commands::handle_login,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

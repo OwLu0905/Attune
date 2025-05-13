@@ -54,8 +54,32 @@ export class GoogleOAuth {
                     const status = event.payload;
 
                     const data = await this.handleVerifyFlow(status);
+
                     if (data) {
-                        fn(data);
+                        const session_token: string = await invoke(
+                            "handle_login",
+                            {
+                                sub: data.sub,
+                                email: data.email,
+                                name: data.name,
+                                picture: data.picture,
+                                email_verified: data.email_verified,
+                                access_token: data.access_token,
+                                access_token_expires_at:
+                                    data.access_token_expires_at,
+                                refresh_token: data.refresh_token,
+                                refresh_token_expires_at:
+                                    data.refresh_token_expires_at,
+                            },
+                        );
+
+                        fn({
+                            access_token: session_token,
+                            userId: data.sub,
+                            email: data.email,
+                            name: data.name,
+                            picture: data.picture,
+                        });
                     }
                 },
             );
@@ -73,14 +97,19 @@ export class GoogleOAuth {
                     const data = await this.getAuthInfo(code);
                     const userInfo = await this.getUserInfo(data.access_token);
 
-                    // TODO: store in db?
-
-                    // return data;
                     return {
-                        name: userInfo.name,
-                        token: data.access_token,
+                        sub: userInfo.sub,
                         email: userInfo.email,
+                        name: userInfo.name,
                         picture: userInfo.picture,
+                        email_verified: userInfo.email_verified,
+                        access_token: data.access_token,
+                        access_token_expires_at:
+                            Math.floor(Date.now() / 1000) + data.expires_in,
+                        refresh_token: data.refresh_token,
+                        // TODO:
+                        refresh_token_expires_at:
+                            Math.floor(Date.now() / 1000) + data.expires_in,
                     };
 
                 case OAUTH_STATUS_EVENT.error:

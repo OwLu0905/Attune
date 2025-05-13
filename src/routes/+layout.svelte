@@ -16,7 +16,8 @@
     let url = $derived(page.url);
 
     let user: UserInfo = $state({
-        token: null,
+        userId: null,
+        access_token: null,
         name: null,
         email: null,
         picture: null,

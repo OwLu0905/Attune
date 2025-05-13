@@ -138,5 +138,5 @@ pub async fn download_yt_sections(
         .emit("download_status", DownloadStatus::Finished)
         .map_err(|e| e.to_string())?;
 
-    Ok("Download completed successfully".to_string())
+    Ok("Download completed".to_string())
 }
