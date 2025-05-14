@@ -8,6 +8,7 @@ use crate::db::Db;
 pub type Timestamp = i64;
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct User {
     pub id: String,
     pub name: String,
@@ -25,6 +26,7 @@ pub struct User {
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Account {
     pub id: String,
 
@@ -64,6 +66,7 @@ pub struct Account {
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Session {
     pub id: String,
 
@@ -83,6 +86,7 @@ pub struct Session {
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
 pub struct Verification {
     id: String,
     identifier: String,
@@ -108,11 +112,58 @@ struct AppSettings {
     auto_login: bool,
 }
 
+#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[serde(rename_all = "camelCase")]
+pub struct SessionWithUser {
+    user_id: String,
+    access_token: String,
+    name: String,
+    email: String,
+    picture: Option<String>,
+}
+
 pub async fn get_user_by_id(db: &Db, user_id: &str) -> Result<Option<User>, sqlx::Error> {
     sqlx::query_as::<_, User>("SELECT * FROM user WHERE id = ?")
         .bind(user_id)
         .fetch_optional(db)
         .await
+}
+
+pub async fn get_user_by_session_token(
+    db: &Db,
+    session_token: &str,
+) -> Result<Option<SessionWithUser>, sqlx::Error> {
+    let result = sqlx::query_as::<_, SessionWithUser>(
+        r#"
+        SELECT 
+            u.id as "user_id", 
+            s.token as "access_token", 
+            u.name as "name",
+            u.email as "email",
+            u.image as "picture"
+        FROM session s 
+        JOIN user u ON s.userId = u.id
+        WHERE s.token = ? AND s.expiresAt > unixepoch()
+        "#,
+    )
+    .bind(session_token)
+    .fetch_optional(db)
+    .await?;
+
+    if result.is_none() {
+        // Delete the session if it exists but is expired or user can't be found
+        sqlx::query(
+            r#"
+            DELETE FROM session
+            WHERE token = ?
+            "#,
+        )
+        .bind(session_token)
+        .execute(db)
+        .await?;
+    }
+
+    Ok(result)
 }
 
 pub async fn create_user(
@@ -160,7 +211,7 @@ pub async fn create_account(
     .bind(refresh_token_expires_at)
     .execute(db)
     .await
-    .expect("account errrrrrrrrrrrrrrrR");
+    .expect("account error");
 
     let account = sqlx::query_as::<_, Account>("SELECT * FROM account WHERE id = ?")
         .bind(id)

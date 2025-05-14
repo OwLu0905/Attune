@@ -53,6 +53,7 @@ pub fn run() {
             server::start_oauth_server,
             server::stop_oauth_server,
             query::commands::handle_login,
+            query::commands::check_persist_user,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

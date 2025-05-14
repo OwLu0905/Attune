@@ -74,7 +74,7 @@ export class GoogleOAuth {
                         );
 
                         fn({
-                            access_token: session_token,
+                            accessToken: session_token,
                             userId: data.sub,
                             email: data.email,
                             name: data.name,

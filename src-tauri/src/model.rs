@@ -1,4 +1,3 @@
-use serde::{Deserialize, Serialize};
 use tauri::AppHandle;
 use tauri_plugin_shell::{process::CommandEvent, ShellExt};
 

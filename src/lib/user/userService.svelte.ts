@@ -4,7 +4,7 @@ export const userKey = Symbol("user");
 
 export type UserInfo = {
     userId: string | null;
-    access_token: string | null;
+    accessToken: string | null;
     name: string | null;
     email: string | null;
     picture: string | null;

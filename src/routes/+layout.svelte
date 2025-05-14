@@ -1,12 +1,14 @@
 <script lang="ts">
     import "../app.css";
+    import { page } from "$app/state";
+    import { onMount } from "svelte";
+    import { invoke } from "@tauri-apps/api/core";
+
     import AppSidebar from "$lib/components/app-sidebar.svelte";
     import { Separator } from "$lib/components/ui/separator";
     import { Toaster } from "$lib/components/ui/sonner/index.js";
     import * as Sidebar from "$lib/components/ui/sidebar";
     import * as Breadcrumb from "$lib/components/ui/breadcrumb";
-    import { page } from "$app/state";
-
     import {
         setUserContext,
         type UserInfo,
@@ -17,7 +19,7 @@
 
     let user: UserInfo = $state({
         userId: null,
-        access_token: null,
+        accessToken: null,
         name: null,
         email: null,
         picture: null,
@@ -26,11 +28,25 @@
     setUserContext({
         getUser: () => user,
         setUser: (userData) => {
-            user.token = userData.token;
+            user.userId = userData.userId;
+            user.accessToken = userData.accessToken;
             user.name = userData.name;
             user.email = userData.email;
             user.picture = userData.picture;
         },
+    });
+
+    onMount(async () => {
+        try {
+            const userData: UserInfo = await invoke("check_persist_user");
+            user.userId = userData.userId;
+            user.accessToken = userData.accessToken;
+            user.name = userData.name;
+            user.email = userData.email;
+            user.picture = userData.picture;
+        } catch (error) {
+            console.error("Guest");
+        }
     });
 
     let mainRoute = $derived.by(() => {
@@ -46,7 +62,7 @@
     let isAuth = $derived(pathname.includes("/login"));
 </script>
 
-{#if isAuth && !user.token}
+{#if isAuth && !user.accessToken}
     <div class="flex flex-col gap-4">
         {@render children()}
     </div>

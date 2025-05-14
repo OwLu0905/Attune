@@ -16,12 +16,12 @@
     function setUserInfo(user: UserInfo) {
         setUser({
             userId: user.userId,
-            access_token: user.access_token,
+            accessToken: user.accessToken,
             name: user.name,
             email: user.email,
             picture: user.picture,
         });
-        if (user.access_token) {
+        if (user.accessToken) {
             goto("/");
         }
     }
@@ -34,7 +34,7 @@
     });
 </script>
 
-{#if user.access_token}
+{#if user.accessToken}
     <div>Hi</div>
 {:else}
     <div

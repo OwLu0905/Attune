@@ -2,7 +2,11 @@ use tauri::AppHandle;
 
 use crate::DbState;
 
-use super::{oauth::handle_google_auth, store::store_session_token, user::Timestamp};
+use super::{
+    oauth::handle_google_auth,
+    store::{get_session_token, store_session_token},
+    user::{get_user_by_session_token, SessionWithUser, Timestamp},
+};
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn handle_login(
@@ -42,4 +46,19 @@ pub async fn handle_login(
         }
         Err(er) => Err(er),
     }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn check_persist_user(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+) -> Result<Option<SessionWithUser>, String> {
+    let db = &state.db;
+    let session_token = get_session_token(&app_handle)?;
+
+    let user_info = get_user_by_session_token(db, &session_token)
+        .await
+        .expect("Failed to get user");
+
+    Ok(user_info)
 }
