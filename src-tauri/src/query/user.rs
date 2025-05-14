@@ -1,9 +1,12 @@
 use chrono::{Duration, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
+use tauri::AppHandle;
 use uuid::Uuid;
 
 use crate::db::Db;
+
+use super::store::delete_store_token;
 
 pub type Timestamp = i64;
 
@@ -131,6 +134,7 @@ pub async fn get_user_by_id(db: &Db, user_id: &str) -> Result<Option<User>, sqlx
 
 pub async fn get_user_by_session_token(
     db: &Db,
+    app_handle: AppHandle,
     session_token: &str,
 ) -> Result<Option<SessionWithUser>, sqlx::Error> {
     let result = sqlx::query_as::<_, SessionWithUser>(
@@ -151,10 +155,21 @@ pub async fn get_user_by_session_token(
     .await?;
 
     if result.is_none() {
-        // Delete the session if it exists but is expired or user can't be found
         sqlx::query(
             r#"
             DELETE FROM session
+            WHERE token = ?
+            "#,
+        )
+        .bind(session_token)
+        .execute(db)
+        .await?;
+        let _ = delete_store_token(&app_handle).unwrap();
+    } else {
+        sqlx::query(
+            r#"
+            UPDATE session
+            SET expiresAt = unixepoch() + 86400
             WHERE token = ?
             "#,
         )
@@ -224,10 +239,9 @@ pub async fn create_account(
 pub async fn create_session(db: &Db, user_id: &str) -> Result<String, sqlx::Error> {
     let id = Uuid::new_v4().to_string();
     let token = Uuid::new_v4().to_string();
-
     let now = Utc::now();
-    let expires_at = now + Duration::seconds(3599 as i64);
-    let expires_at_str = expires_at.to_rfc3339();
+    let expires_at = now + Duration::seconds(86400 as i64);
+    let expires_at_timestamp = expires_at.timestamp();
 
     sqlx::query(
         r#"
@@ -246,9 +260,23 @@ pub async fn create_session(db: &Db, user_id: &str) -> Result<String, sqlx::Erro
     .bind(&id)
     .bind(user_id)
     .bind(&token)
-    .bind(&expires_at_str)
+    .bind(&expires_at_timestamp)
     .execute(db)
     .await?;
 
     Ok(token)
+}
+
+pub async fn delete_session(db: &Db, session_token: &str) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        DELETE FROM session
+        WHERE token = ?
+        "#,
+    )
+    .bind(session_token)
+    .execute(db)
+    .await?;
+
+    Ok(())
 }

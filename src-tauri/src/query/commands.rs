@@ -4,8 +4,8 @@ use crate::DbState;
 
 use super::{
     oauth::handle_google_auth,
-    store::{get_session_token, store_session_token},
-    user::{get_user_by_session_token, SessionWithUser, Timestamp},
+    store::{delete_store_token, get_store_token, set_store_token},
+    user::{delete_session, get_user_by_session_token, SessionWithUser, Timestamp},
 };
 
 #[tauri::command(rename_all = "snake_case")]
@@ -41,7 +41,7 @@ pub async fn handle_login(
 
     match session_token {
         Ok(token) => {
-            let _ = store_session_token(app_handle, &token).expect("Failed to store session token");
+            let _ = set_store_token(app_handle, &token).expect("Failed to store session token");
             Ok(token)
         }
         Err(er) => Err(er),
@@ -54,11 +54,26 @@ pub async fn check_persist_user(
     state: tauri::State<'_, DbState>,
 ) -> Result<Option<SessionWithUser>, String> {
     let db = &state.db;
-    let session_token = get_session_token(&app_handle)?;
+    let session_token = get_store_token(&app_handle)?;
 
-    let user_info = get_user_by_session_token(db, &session_token)
+    let user_info = get_user_by_session_token(db, app_handle, &session_token)
         .await
         .expect("Failed to get user");
 
     Ok(user_info)
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn logout_user(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+) -> Result<(), String> {
+    let db = &state.db;
+    let session_token = delete_store_token(&app_handle)?;
+
+    if let Some(token) = session_token {
+        let _ = delete_session(db, &token);
+    }
+
+    Ok(())
 }

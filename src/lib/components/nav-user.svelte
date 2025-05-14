@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { invoke } from "@tauri-apps/api/core";
     import * as Avatar from "$lib/components/ui/avatar/index.js";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
     import * as Sidebar from "$lib/components/ui/sidebar/index.js";
@@ -107,14 +108,20 @@
                     </a>
                 {:else}
                     <DropdownMenu.Item
-                        onclick={() => {
-                            setUser({
-                                userId: null,
-                                accessToken: null,
-                                name: null,
-                                email: null,
-                                picture: null,
-                            });
+                        onclick={async () => {
+                            try {
+                                await invoke("logout_user");
+                            } catch (error) {
+                                console.error(error);
+                            } finally {
+                                setUser({
+                                    userId: null,
+                                    accessToken: null,
+                                    name: null,
+                                    email: null,
+                                    picture: null,
+                                });
+                            }
                         }}
                     >
                         <LogOut />

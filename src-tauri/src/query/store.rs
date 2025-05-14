@@ -7,7 +7,7 @@ struct SessionTokenStore {
     session_token: String,
 }
 
-pub fn store_session_token(app_handle: AppHandle, session_token: &str) -> Result<(), String> {
+pub fn set_store_token(app_handle: AppHandle, session_token: &str) -> Result<(), String> {
     let store = app_handle
         .store("cookie.json")
         .expect("Failed to open store");
@@ -25,7 +25,7 @@ pub fn store_session_token(app_handle: AppHandle, session_token: &str) -> Result
     Ok(())
 }
 
-pub fn get_session_token(app_handle: &AppHandle) -> Result<String, String> {
+pub fn get_store_token(app_handle: &AppHandle) -> Result<String, String> {
     let store = app_handle
         .store("cookie.json")
         .expect("Failed to open store");
@@ -43,4 +43,28 @@ pub fn get_session_token(app_handle: &AppHandle) -> Result<String, String> {
     }
 
     // store.close_resource();
+}
+
+pub fn delete_store_token(app_handle: &AppHandle) -> Result<Option<String>, String> {
+    let store = app_handle
+        .store("cookie.json")
+        .expect("Failed to open store");
+
+    let session = match store.get("session_token") {
+        Some(stored_value) => {
+            let retrived_session: SessionTokenStore =
+                serde_json::from_value(stored_value).expect("Failed to deserialize session data");
+
+            let session_token = retrived_session.session_token;
+
+            Some(session_token)
+        }
+        None => None,
+    };
+
+    let _ = store.delete("session_token");
+
+    let _ = store.save().expect("Failed to save data");
+
+    Ok(session)
 }
