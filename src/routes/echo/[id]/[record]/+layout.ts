@@ -3,4 +3,3 @@
 // See: https://v2.tauri.app/start/frontend/sveltekit/ for more info
 export const prerender = false;
 export const ssr = false;
-export const csr = true;
