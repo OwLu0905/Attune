@@ -55,6 +55,8 @@ pub fn run() {
             query::commands::handle_login,
             query::commands::check_persist_user,
             query::commands::logout_user,
+            query::commands::handle_create_audio,
+            query::commands::handle_get_audio_list,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

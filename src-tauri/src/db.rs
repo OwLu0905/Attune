@@ -27,8 +27,17 @@ pub async fn setup_db(app: &App) -> Db {
         .await
         .unwrap();
 
+    // Drop and recreate schema
+    // let err = sqlx::query("DROP SCHEMA public CASCADE; CREATE SCHEMA public;")
+    //     .execute(&db)
+    //     .await
+    //     .map_err(|e| e.to_string());
+
     // TODO: add migrate
-    sqlx::migrate!("./migrations").run(&db).await.unwrap();
+    let _ = sqlx::migrate!("./migrations")
+        .run(&db)
+        .await
+        .map_err(|e| e.to_string());
 
     db
 }

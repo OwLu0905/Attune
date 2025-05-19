@@ -16,7 +16,9 @@
 
     import type { TSLIDER_VALUES } from "@/components/youtue/types";
     import type { YtOembUrlInfo } from "./types";
-
+    import { invoke } from "@tauri-apps/api/core";
+    import { getUserContext } from "@/user/userService.svelte";
+    import { toast } from "svelte-sonner";
     interface Props {
         sliderValues: TSLIDER_VALUES;
         urlInfo: YtOembUrlInfo | null;
@@ -24,18 +26,46 @@
 
     let { sliderValues = $bindable(), urlInfo = $bindable() }: Props = $props();
 
+    let { getUser } = getUserContext();
+
+    const user = getUser();
+
     let yt_download_manager = new YtDownloadManager();
     const form = superForm(defaults(zod(ytDlpSchema)), {
         SPA: true,
         validators: zodClient(ytDlpSchema),
         async onUpdate({ form }) {
-            if (form.valid) {
-                // TODO: db handle
-                await yt_download_manager.handleDownload({
-                    start: form.data.startTime,
-                    end: form.data.endTime,
-                    url: form.data.url,
-                });
+            try {
+                const urlInfoSnapshot = $state.snapshot(urlInfo);
+                if (form.valid) {
+                    const data = form.data;
+                    await yt_download_manager.handleDownload({
+                        start: data.startTime,
+                        end: data.endTime,
+                        url: data.url,
+                    });
+
+                    let audioId = await invoke("handle_create_audio", {
+                        token: user.accessToken,
+                        title: data.title,
+                        description: data.description,
+                        url: data.url,
+                        thumbnail: urlInfoSnapshot?.embedInfo.thumbnail_url,
+                        start_time: data.startTime,
+                        end_time: data.endTime,
+                        provider: urlInfoSnapshot?.embedInfo.provider_name,
+                    });
+
+                    toast.success("Download completed!!", {
+                        description: "check",
+                        action: {
+                            label: "Undo",
+                            onClick: () => console.info("Undo"),
+                        },
+                    });
+                }
+            } catch (error) {
+                console.error(error);
             }
         },
     });

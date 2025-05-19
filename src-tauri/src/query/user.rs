@@ -118,8 +118,8 @@ struct AppSettings {
 #[derive(Debug, Serialize, Deserialize, FromRow)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionWithUser {
-    user_id: String,
-    access_token: String,
+    pub user_id: String,
+    pub access_token: String,
     name: String,
     email: String,
     picture: Option<String>,
