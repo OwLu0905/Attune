@@ -52,8 +52,12 @@ export class YtDownloadManager {
         }
     }
 
-    async handleDownload({ start, end, url }: DownloadSectionParam) {
-        await invoke(DOWNLOAD_YT_EVENT.download_section, {
+    async handleDownload({
+        start,
+        end,
+        url,
+    }: DownloadSectionParam): Promise<string> {
+        return await invoke(DOWNLOAD_YT_EVENT.download_section, {
             start,
             end,
             url,

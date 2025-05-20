@@ -39,14 +39,15 @@
                 const urlInfoSnapshot = $state.snapshot(urlInfo);
                 if (form.valid) {
                     const data = form.data;
-                    await yt_download_manager.handleDownload({
+                    const audioId = await yt_download_manager.handleDownload({
                         start: data.startTime,
                         end: data.endTime,
                         url: data.url,
                     });
 
-                    let audioId = await invoke("handle_create_audio", {
+                    await invoke("handle_create_audio", {
                         token: user.accessToken,
+                        audio_id: audioId,
                         title: data.title,
                         description: data.description,
                         url: data.url,

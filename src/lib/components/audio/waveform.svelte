@@ -15,6 +15,12 @@
     import SrtRegion from "$lib/components/audio/srt-region.svelte";
     import type { SubtitleEntity } from "$lib/components/audio/srt-region.svelte";
 
+    interface Props {
+        audioPath: BlobPart;
+        subTitle: 0 | 1;
+    }
+    let { audioPath, subTitle }: Props = $props();
+
     let container: HTMLElement;
     let ws: WaveSurfer | undefined = $state(undefined);
     let activeRegion: Region | null = $state(null);
@@ -48,11 +54,13 @@
             waveColor: `hsl(${secondaryHSL})`,
             barWidth: 2,
             barGap: 1,
-            url: "/audio.wav",
             height: 100,
             backend: WAVESURFER_BACKEND,
             plugins: [regions, TimelinePlugin.create()],
         });
+        const blob = new Blob([audioPath], { type: "audio/mp3" });
+        const audioURL = URL.createObjectURL(blob);
+        ws.load(audioURL);
 
         ws.on("decode", () => {
             if (ws === undefined) return;
@@ -191,7 +199,14 @@
         <div bind:this={container}></div>
     </Card.Content>
     <Card.Footer class="flex w-full flex-col gap-2">
-        <SrtRegion {currentTime} {onClickText} />
+        {#if subTitle === 0}
+            <div>
+                <span>no subTitle </span>
+                <Button>Transcribe !</Button>
+            </div>
+        {:else}
+            <SrtRegion {currentTime} {onClickText} />
+        {/if}
         <div>{(currentTime / 1000).toFixed(2)}</div>
         <div class="flex gap-4">
             <div class="flex items-center gap-2">

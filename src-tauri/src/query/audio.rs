@@ -1,6 +1,5 @@
 use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
-use uuid::Uuid;
 
 use crate::db::Db;
 
@@ -72,6 +71,7 @@ pub struct AudioExerciseTypes {
 pub async fn create_audio(
     db: &Db,
     user_id: &str,
+    audio_id: &str,
     title: &str,
     description: Option<&str>,
     url: &str,
@@ -80,9 +80,7 @@ pub async fn create_audio(
     end_time: i16,
     provider: &str,
     tag: Option<&str>,
-) -> Result<String, sqlx::Error> {
-    let audio_id = Uuid::new_v4().to_string();
-
+) -> Result<(), sqlx::Error> {
     sqlx::query(
         r#"
         INSERT INTO audio (
@@ -115,7 +113,7 @@ pub async fn create_audio(
     .execute(db)
     .await?;
 
-    Ok(audio_id)
+    Ok(())
 }
 
 pub async fn get_audios(db: &Db, user_id: &str) -> Result<Vec<AudioListItem>, sqlx::Error> {
@@ -125,4 +123,13 @@ pub async fn get_audios(db: &Db, user_id: &str) -> Result<Vec<AudioListItem>, sq
         .await?;
 
     Ok(audios)
+}
+
+pub async fn get_audio(db: &Db, audio_id: &str) -> Result<AudioListItem, sqlx::Error> {
+    let audio = sqlx::query_as::<_, AudioListItem>("SELECT id, title, description, url, thumbnail, startTime, endTime, provider, tag, transcribe, lastUsedAt FROM audio WHERE id = ?  ORDER BY lastUsedAt DESC")
+        .bind(audio_id)
+        .fetch_one(db)
+        .await?;
+
+    Ok(audio)
 }

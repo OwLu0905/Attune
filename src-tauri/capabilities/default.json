@@ -19,6 +19,15 @@
         }
       ]
     },
-    "store:default"
+    {
+      "identifier": "fs:scope",
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/data/**/*"
+        }
+      ]
+    },
+    "store:default",
+    "fs:default"
   ]
 }

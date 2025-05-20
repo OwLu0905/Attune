@@ -3,7 +3,7 @@ use tauri::AppHandle;
 use crate::{query::audio::AudioListItem, DbState};
 
 use super::{
-    audio::{create_audio, get_audios},
+    audio::{create_audio, get_audio, get_audios},
     oauth::handle_google_auth,
     store::{delete_store_token, get_store_token, set_store_token},
     user::{delete_session, get_user_by_session_token, SessionWithUser, Timestamp},
@@ -83,6 +83,7 @@ pub async fn logout_user(
 pub async fn handle_create_audio(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
+    audio_id: &str,
     token: &str,
     title: &str,
     description: Option<&str>,
@@ -92,7 +93,7 @@ pub async fn handle_create_audio(
     end_time: i16,
     provider: &str,
     tag: Option<&str>,
-) -> Result<String, String> {
+) -> Result<(), String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, app_handle, token)
@@ -100,9 +101,10 @@ pub async fn handle_create_audio(
         .expect("create audio failed: invalid user");
 
     if let Some(user) = user_info {
-        let audio_id = create_audio(
+        create_audio(
             db,
             &user.user_id,
+            &audio_id,
             title,
             description,
             url,
@@ -114,7 +116,7 @@ pub async fn handle_create_audio(
         )
         .await
         .expect("create audio failed: invalid paramsters");
-        return Ok(audio_id);
+        return Ok(());
     } else {
         return Err("Failed to create auido".to_string());
     }
@@ -139,5 +141,28 @@ pub async fn handle_get_audio_list(
         return Ok(audio_list);
     } else {
         return Err("Failed to get auido list".to_string());
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn handle_get_audio_item(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: &str,
+    audio_id: &str,
+) -> Result<AudioListItem, String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, app_handle, token)
+        .await
+        .expect("get audio item failed: invalid user");
+
+    if let Some(_) = user_info {
+        let audio_item = get_audio(db, audio_id)
+            .await
+            .expect("get audio item failed: invalid paramsters");
+        return Ok(audio_item);
+    } else {
+        return Err("Failed to get auido item".to_string());
     }
 }

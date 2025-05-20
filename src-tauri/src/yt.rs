@@ -5,8 +5,6 @@ use uuid::Uuid;
 
 use crate::config::get_data_path;
 
-// use crate::DbState;
-
 #[derive(Serialize, Clone)]
 #[serde(tag = "type")] // This makes the variant name appear as "type"
 enum DownloadStatus {
@@ -31,10 +29,9 @@ pub async fn download_yt_sections(
     let already_download_error = format!("has already been downloaded");
 
     let uuid = Uuid::new_v4().to_string();
+    let uuid_copy = uuid.clone();
 
     let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
-
-    // TODO: db to write the store the file let db = &app_handle.state::<DbState>().db;
 
     app_handle
         .emit("download_status", DownloadStatus::Started)
@@ -138,5 +135,5 @@ pub async fn download_yt_sections(
         .emit("download_status", DownloadStatus::Finished)
         .map_err(|e| e.to_string())?;
 
-    Ok("Download completed".to_string())
+    Ok(uuid_copy)
 }

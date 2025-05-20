@@ -1,4 +1,4 @@
-<script>
+<script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
     import Button from "@/components/ui/button/button.svelte";
     import * as Card from "$lib/components/ui/card/index.js";
@@ -6,26 +6,30 @@
     import { Upload } from "@lucide/svelte";
     import Badge from "@/components/ui/badge/badge.svelte";
 
+    import type { AudioItem } from "@/types/audio";
+
     const { getUser } = getUserContext();
 
     const user = getUser();
 
-    let audioList = $state([]);
+    let audioList: AudioItem[] = $state([]);
 
-    $effect(async () => {
-        try {
-            if (!user.accessToken) {
-                return;
+    $effect(() => {
+        async function getAudioList() {
+            try {
+                if (!user.accessToken) {
+                    return;
+                }
+                audioList = await invoke("handle_get_audio_list", {
+                    token: user.accessToken,
+                });
+            } catch (error) {
+                console.error(error);
             }
-            audioList = await invoke("handle_get_audio_list", {
-                token: user.accessToken,
-            });
-        } catch (error) {
-            console.error(error);
         }
-    });
 
-    $inspect(audioList);
+        getAudioList();
+    });
 </script>
 
 <a href="/yt/create">
@@ -49,9 +53,9 @@
             </Card.Header>
             <Card.Content>
                 <div class="flex flex-col gap-1">
-                    <p class="truncate text-base">
+                    <a class="truncate text-base" href="/echo/{audio.id}">
                         {audio.title}
-                    </p>
+                    </a>
                     <p class="truncate text-sm text-secondary-foreground">
                         {audio.description || "no"}
                     </p>

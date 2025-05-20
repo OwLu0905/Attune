@@ -26,6 +26,7 @@ fn greet(name: &str) -> String {
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     let mut builder = tauri::Builder::default()
+        .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init());
 
@@ -57,6 +58,7 @@ pub fn run() {
             query::commands::logout_user,
             query::commands::handle_create_audio,
             query::commands::handle_get_audio_list,
+            query::commands::handle_get_audio_item,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
