@@ -32,7 +32,7 @@
     async function sendMessage() {
         try {
             await invoke("start_transcribe", {
-                file_name: "c27ad6af-05aa-4012-8026-1361f9dfebd1",
+                audio_id: "12582434-ddcf-413a-b7b2-22a5992b7642",
                 model: "base.en",
             });
         } catch (err) {

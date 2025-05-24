@@ -45,12 +45,27 @@ pub async fn download_yt_sections(
     let yt_command_copy = app_handle.clone();
 
     let handle = tauri::async_runtime::spawn(async move {
+        // let (mut rx, _child) = yt_command
+        //     .args([
+        //         "--download-sections",
+        //         &format!("*{}-{}", start, end),
+        //         // "-f",
+        //         // "mp4",
+        //         // "-k",
+        //         "--extract-audio",
+        //         "--audio-format",
+        //         "mp3",
+        //         "-o",
+        //         &format!("{}/{}/audio.%(ext)s", data_path, uuid),
+        //         &url,
+        //     ])
+        //     .spawn()
+        //     .map_err(|e| e.to_string())?;
+
         let (mut rx, _child) = yt_command
             .args([
-                // "--progress-template",
-                // "%(progress)j",
-                "--download-sections",
-                &format!("*{}-{}", start, end),
+                // "--download-sections",
+                // &format!("*{}-{}", start, end),
                 // "-f",
                 // "mp4",
                 // "-k",

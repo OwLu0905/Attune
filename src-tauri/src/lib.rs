@@ -59,6 +59,7 @@ pub fn run() {
             query::commands::handle_create_audio,
             query::commands::handle_get_audio_list,
             query::commands::handle_get_audio_item,
+            query::commands::handle_update_audio_transcribe,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

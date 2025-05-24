@@ -133,3 +133,17 @@ pub async fn get_audio(db: &Db, audio_id: &str) -> Result<AudioListItem, sqlx::E
 
     Ok(audio)
 }
+
+pub async fn update_audio_transcribe(
+    db: &Db,
+    audio_id: &str,
+) -> Result<AudioListItem, sqlx::Error> {
+    sqlx::query("UPDATE audio SET transcribe = 1 WHERE id = ?")
+        .bind(audio_id)
+        .execute(db)
+        .await?;
+
+    let audio = get_audio(db, audio_id).await?;
+
+    Ok(audio)
+}

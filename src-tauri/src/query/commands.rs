@@ -3,7 +3,7 @@ use tauri::AppHandle;
 use crate::{query::audio::AudioListItem, DbState};
 
 use super::{
-    audio::{create_audio, get_audio, get_audios},
+    audio::{create_audio, get_audio, get_audios, update_audio_transcribe},
     oauth::handle_google_auth,
     store::{delete_store_token, get_store_token, set_store_token},
     user::{delete_session, get_user_by_session_token, SessionWithUser, Timestamp},
@@ -161,6 +161,29 @@ pub async fn handle_get_audio_item(
         let audio_item = get_audio(db, audio_id)
             .await
             .expect("get audio item failed: invalid paramsters");
+        return Ok(audio_item);
+    } else {
+        return Err("Failed to get auido item".to_string());
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn handle_update_audio_transcribe(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: &str,
+    audio_id: &str,
+) -> Result<AudioListItem, String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, app_handle, token)
+        .await
+        .expect("update audio item failed: invalid user");
+
+    if let Some(_) = user_info {
+        let audio_item = update_audio_transcribe(db, audio_id)
+            .await
+            .expect("update audio item failed: invalid paramsters");
         return Ok(audio_item);
     } else {
         return Err("Failed to get auido item".to_string());

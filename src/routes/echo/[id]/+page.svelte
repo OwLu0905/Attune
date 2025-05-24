@@ -1,11 +1,12 @@
 <script lang="ts">
     import { page } from "$app/state";
     import { invoke } from "@tauri-apps/api/core";
-    import { readFile, BaseDirectory } from "@tauri-apps/plugin-fs";
     import { getUserContext } from "@/user/userService.svelte";
-    import { getAudioSubtitlePath } from "@/utils";
+    import { getAudioFile } from "@/utils";
 
     import Waveform from "@/components/audio/waveform.svelte";
+
+    import type { Attachment } from "svelte/attachments";
     import type { AudioItem } from "@/types/audio";
 
     const { getUser } = getUserContext();
@@ -29,15 +30,7 @@
                     audio_id: audioId,
                 });
 
-                const path = await getAudioSubtitlePath(audioId);
-
-                if (!path) return;
-
-                const audioUrl = path[0];
-
-                audioPath = await readFile(`data/${audioUrl}/audio.mp3`, {
-                    baseDir: BaseDirectory.AppLocalData,
-                });
+                audioPath = await getAudioFile(audioId);
             } catch (error) {
                 console.error(error);
             }
@@ -45,8 +38,6 @@
 
         getAudioItem();
     });
-
-    $inspect(audioPath);
 </script>
 
 {#if audioPath === undefined || !audioItem}
@@ -54,7 +45,7 @@
 {:else}
     <div class="relative flex flex-col overflow-hidden">
         <div class="flex h-full w-full shrink grow flex-col overflow-scroll">
-            <Waveform subTitle={audioItem!.transcribe} {audioPath} />
+            <Waveform {audioItem} {audioPath} />
         </div>
     </div>
 {/if}

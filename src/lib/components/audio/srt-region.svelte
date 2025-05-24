@@ -1,130 +1,123 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { SRT_DATA } from "../../../data/demo-srt";
 
-    export type SubtitleEntity = {
-        index: number;
-        startTime: number;
-        endTime: number;
-        text: string;
-        highlighted: string | null;
-        rawText: string;
-    };
+    import type { SubtitleSegment } from "./types";
+    import type { AudioItem } from "@/types/audio";
+    import type { Attachment } from "svelte/attachments";
+    import { cn, getSubtitleFile } from "@/utils";
+    import ScrollArea from "../ui/scroll-area/scroll-area.svelte";
 
-    let subtitlesByText: {
-        text: string;
-        entries: SubtitleEntity[];
-        startTime: number;
-        endTime: number;
-    }[] = $state([]);
+    let subtitlesByText: SubtitleSegment[] = $state([]);
 
     interface Props {
+        audioItem: AudioItem;
         currentTime: number;
-        onClickText: (e: SubtitleEntity) => void;
+        isPlaying: boolean;
+        onClickText: (e: SubtitleSegment["words"][0]) => void;
     }
 
-    let { currentTime, onClickText }: Props = $props();
+    let { audioItem, currentTime, onClickText, isPlaying }: Props = $props();
 
-    function srtTimeToMilliseconds(srtTime: string) {
-        // 將時間碼解析為小時、分鐘、秒和毫秒
-        const [time, millisec] = srtTime.split(",");
-        const [hours, minutes, seconds] = time.split(":").map(Number);
+    let scrollMap = new Set();
 
-        // 計算總毫秒數
-        return (
-            hours * 3600000 + // 小時轉毫秒
-            minutes * 60000 + // 分鐘轉毫秒
-            seconds * 1000 + // 秒轉毫秒
-            parseInt(millisec, 10) // 已經是毫秒
-        );
-    }
-    function parseSRT(srtContent: string) {
-        const entries: SubtitleEntity[] = [];
-        const blocks = srtContent.trim().split(/\n\s*\n/);
-
-        for (const block of blocks) {
-            const lines = block.split("\n") as [
-                index: string,
-                timeCode: string,
-                text: string,
-            ];
-
-            if (lines.length < 3) continue;
-
-            const index = parseInt(lines[0], 10);
-            const timecodeMatch = lines[1].match(
-                /(\d{2}:\d{2}:\d{2},\d{3}) --> (\d{2}:\d{2}:\d{2},\d{3})/,
-            );
-
-            if (!timecodeMatch) continue;
-
-            const startTimeMilliseconds = srtTimeToMilliseconds(
-                timecodeMatch[1],
-            );
-            const endTimeMilliseconds = srtTimeToMilliseconds(timecodeMatch[2]);
-
-            const rawText = lines.slice(2).join("\n");
-
-            // Extract the highlighted word/phrase
-            const highlightMatch = rawText.match(/<u>(.*?)<\/u>/);
-            const highlighted = highlightMatch ? highlightMatch[1] : null;
-
-            const text = rawText.replace(/<\/?u>/g, "").trim();
-
-            entries.push({
-                index,
-                startTime: startTimeMilliseconds,
-                endTime: endTimeMilliseconds,
-                text,
-                highlighted,
-                rawText,
-            });
-        }
-
-        return entries;
-    }
-    function groupSubtitlesByText(subtitles: SubtitleEntity[]) {
-        const textGroups = new Map<string, SubtitleEntity[]>();
-
-        subtitles.forEach((entry) => {
-            if (!textGroups.has(entry.text)) {
-                textGroups.set(entry.text, []);
-            }
-            textGroups.get(entry.text)?.push(entry);
-        });
-
-        return Array.from(textGroups.entries()).map(([text, entries]) => ({
-            text,
-            entries: entries.sort((a, b) => a.startTime - b.startTime),
-            startTime: entries[0].startTime,
-            endTime: entries.at(-1)!.endTime,
-        }));
-    }
+    // $effect(() => {
+    //     return () => {
+    //         if (isPlaying) {
+    //             scrollMap = new Set();
+    //         }
+    //     };
+    // });
 
     onMount(async () => {
-        const data = parseSRT(SRT_DATA);
-
-        subtitlesByText = groupSubtitlesByText(data);
+        subtitlesByText = await getSubtitleFile(audioItem.id);
+        // const data = parseSRT(SRT_DATA);
+        //
+        // subtitlesByText = groupSubtitlesByText(data);
     });
+
+    const observeVisibility = (isCurrent: boolean): Attachment => {
+        return (node) => {
+            const observer = new IntersectionObserver(
+                (entries, observer) => {
+                    const entry = entries[0];
+                    const currentNode = scrollMap.has(node);
+                    if (entry.isIntersecting && isCurrent && !currentNode) {
+                        node.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                        });
+                        scrollMap.add(node);
+                        observer.unobserve(node);
+                    }
+                },
+                {
+                    threshold: 0.1,
+                    rootMargin: "0px",
+                },
+            );
+            observer.observe(node);
+            return () => {
+                observer.disconnect();
+            };
+        };
+    };
 </script>
 
-<div
-    class="text-md flex w-full flex-row flex-wrap gap-0.5 bg-stone-100 px-4 py-2 tabular-nums"
->
-    {#each subtitlesByText as i (i.text)}
+{#snippet subtitleScrollArea(entry: SubtitleSegment["words"][0])}
+    <button
+        onclick={() => onClickText(entry)}
+        class={cn(
+            "tansition-all inline px-0.5 tracking-wide duration-300 ease-in-out hover:underline",
+            entry.end > currentTime && currentTime >= entry.start
+                ? "rounded-2xl bg-violet-300 ring-1 ring-violet-400"
+                : "",
+        )}
+    >
+        {entry.word}
+    </button>
+{/snippet}
+
+{#snippet subtitleStaticArea(entry: SubtitleSegment["words"][0])}
+    <button
+        onclick={() => onClickText(entry)}
+        class={"tansition-all inline px-0.5 tracking-wide duration-300 ease-in-out hover:underline"}
+    >
+        {entry.word}
+    </button>
+{/snippet}
+
+<!-- prettier-ignore -->
+{#snippet subtitleArea(words: SubtitleSegment['words'], isCurrent: boolean)}
+    {#if isCurrent}
         <div
-            class={`tansition-all flex flex-row flex-wrap rounded-lg duration-100  ease-in-out ${i.endTime > currentTime && currentTime >= i.startTime ? "bg-emerald-200" : ""}`}
+            class={cn(
+                "tansition-all m-1 flex flex-row flex-wrap gap-0.5 rounded-lg p-1 duration-100  ease-in-out",
+                isCurrent
+                    ? "bg-primary/20"
+                    : "",
+            )}
+						{@attach observeVisibility(isCurrent)}
         >
-            {#each i.entries as entry (entry.index)}
-                <button
-                    onclick={() => {
-                        onClickText(entry);
-                    }}
-                    class={`tansition-all px-1.5 duration-300 ease-in-out hover:underline ${entry.endTime > currentTime && currentTime >= entry.startTime ? "rounded-2xl bg-violet-300 ring ring-violet-400" : ""} inline tracking-wide last:after:text-red-500 last:after:content-['.']`}
-                >
-                    {entry.highlighted}
-                </button>
+            {#each words as entry, index (index)}
+                {@render subtitleScrollArea(entry)}
             {/each}
         </div>
+    {:else}
+        <div class={"m-1 flex flex-row flex-wrap gap-0.5 p-1"}>
+            {#each words as entry, index (index)}
+                {@render subtitleStaticArea(entry)}
+            {/each}
+        </div>
+    {/if}
+{/snippet}
+
+<ScrollArea
+    class="text-md flex max-h-80 w-full max-w-96 flex-col gap-0.5 overflow-auto bg-stone-100 px-4 py-2 tabular-nums"
+>
+    {#each subtitlesByText as i, index (i?.text)}
+        {@render subtitleArea(
+            i.words,
+            i.end > currentTime && currentTime >= i.start,
+        )}
     {/each}
-</div>
+</ScrollArea>

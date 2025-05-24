@@ -60,7 +60,7 @@
                         {audio.description || "no"}
                     </p>
                     <div>
-                        {#if audio.transcribe === 0}
+                        {#if audio.transcribe === 1}
                             <Badge variant="outline">
                                 <span>script</span>
                             </Badge>
