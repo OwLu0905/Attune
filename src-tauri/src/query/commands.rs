@@ -1,13 +1,22 @@
+use crate::{config::get_data_path, query::audio::AudioListItem, DbState};
+use std::io::ErrorKind;
 use tauri::AppHandle;
-
-use crate::{query::audio::AudioListItem, DbState};
+use tokio::fs::remove_dir_all;
 
 use super::{
-    audio::{create_audio, get_audio, get_audios, update_audio_transcribe},
+    audio::{create_audio, delete_audio, get_audio, get_audios, update_audio_transcribe},
     oauth::handle_google_auth,
     store::{delete_store_token, get_store_token, set_store_token},
     user::{delete_session, get_user_by_session_token, SessionWithUser, Timestamp},
 };
+
+async fn remove_dir_all_safe(path: &str) -> tokio::io::Result<()> {
+    match remove_dir_all(path).await {
+        Ok(()) => Ok(()),
+        Err(e) if e.kind() == ErrorKind::NotFound => Ok(()), // File doesn't exist, that's fine
+        Err(e) => Err(e),                                    // Some other error occurred
+    }
+}
 
 #[tauri::command(rename_all = "snake_case")]
 pub async fn handle_login(
@@ -57,7 +66,7 @@ pub async fn check_persist_user(
     let db = &state.db;
     let session_token = get_store_token(&app_handle)?;
 
-    let user_info = get_user_by_session_token(db, app_handle, &session_token)
+    let user_info = get_user_by_session_token(db, &app_handle, &session_token)
         .await
         .expect("Failed to get user");
 
@@ -96,7 +105,7 @@ pub async fn handle_create_audio(
 ) -> Result<(), String> {
     let db = &state.db;
 
-    let user_info = get_user_by_session_token(db, app_handle, token)
+    let user_info = get_user_by_session_token(db, &app_handle, token)
         .await
         .expect("create audio failed: invalid user");
 
@@ -130,7 +139,7 @@ pub async fn handle_get_audio_list(
 ) -> Result<Vec<AudioListItem>, String> {
     let db = &state.db;
 
-    let user_info = get_user_by_session_token(db, app_handle, token)
+    let user_info = get_user_by_session_token(db, &app_handle, token)
         .await
         .expect("get audio list failed: invalid user");
 
@@ -153,12 +162,12 @@ pub async fn handle_get_audio_item(
 ) -> Result<AudioListItem, String> {
     let db = &state.db;
 
-    let user_info = get_user_by_session_token(db, app_handle, token)
+    let user_info = get_user_by_session_token(db, &app_handle, token)
         .await
         .expect("get audio item failed: invalid user");
 
-    if let Some(_) = user_info {
-        let audio_item = get_audio(db, audio_id)
+    if let Some(user) = user_info {
+        let audio_item = get_audio(db, &user.user_id, audio_id)
             .await
             .expect("get audio item failed: invalid paramsters");
         return Ok(audio_item);
@@ -176,16 +185,43 @@ pub async fn handle_update_audio_transcribe(
 ) -> Result<AudioListItem, String> {
     let db = &state.db;
 
-    let user_info = get_user_by_session_token(db, app_handle, token)
+    let user_info = get_user_by_session_token(db, &app_handle, token)
         .await
         .expect("update audio item failed: invalid user");
 
-    if let Some(_) = user_info {
-        let audio_item = update_audio_transcribe(db, audio_id)
+    if let Some(user) = user_info {
+        let audio_item = update_audio_transcribe(db, &user.user_id, audio_id)
             .await
             .expect("update audio item failed: invalid paramsters");
         return Ok(audio_item);
     } else {
-        return Err("Failed to get auido item".to_string());
+        return Err("Failed to update auido item".to_string());
+    }
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn handle_delete_audio(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: &str,
+    audio_id: &str,
+) -> Result<Vec<AudioListItem>, String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, &app_handle, token)
+        .await
+        .expect("delete audio item failed: invalid user");
+
+    if let Some(user) = user_info {
+        let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
+        let check_dir = &format!("{}/{}", data_path, audio_id);
+        remove_dir_all_safe(check_dir).await.unwrap();
+
+        let audio_list = delete_audio(db, &user.user_id, audio_id)
+            .await
+            .expect("delete audio failed: invalid paramsters");
+        return Ok(audio_list);
+    } else {
+        return Err("Failed to delete auido item".to_string());
     }
 }

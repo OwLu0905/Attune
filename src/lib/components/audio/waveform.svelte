@@ -15,10 +15,11 @@
 
     import TimeBadge from "$lib/components/audio/time-badge.svelte";
     import SrtRegion from "$lib/components/audio/srt-region.svelte";
+    import Slider from "@/components/ui/slider/slider.svelte";
+    import { getUserContext } from "@/user/userService.svelte";
 
     import type { SubtitleSegment } from "./types";
     import type { AudioItem } from "@/types/audio";
-    import { getUserContext } from "@/user/userService.svelte";
 
     interface Props {
         audioPath: BlobPart;
@@ -40,6 +41,7 @@
     let isPlaying = $state(false);
     let isReady = $state(false);
     let isTranscribing = $state(false);
+    let volume = $state(50);
 
     const random = (min: number, max: number) =>
         Math.random() * (max - min) + min;
@@ -64,14 +66,14 @@
             waveColor: `hsl(${secondaryHSL})`,
             barWidth: 2,
             barGap: 1,
-            height: 100,
+            height: 60,
             // backend: WAVESURFER_BACKEND,
             plugins: [regions, TimelinePlugin.create()],
         });
         const blob = new Blob([audioPath], { type: "audio/mp3" });
         const audioURL = URL.createObjectURL(blob);
         ws.load(audioURL);
-        ws.setVolume(0.3);
+        ws.setVolume(0.5);
 
         ws.on("decode", () => {
             if (ws === undefined) return;
@@ -127,7 +129,7 @@
         }
     });
 
-    const onPlay = (item: Region) => {
+    const onPlay = async (item: Region) => {
         if (!ws) return;
 
         if (!activeRegion || activeRegion.id !== item.id) {
@@ -140,7 +142,7 @@
                     ? activeRegion.start
                     : currentTime;
 
-            ws.play(startTime, activeRegion.end);
+            await ws.play(startTime, activeRegion.end);
         }
     };
     const onPause = (_item: Region) => {
@@ -164,9 +166,32 @@
         });
     };
 
-    const onClickText = (entry: SubtitleSegment["words"][0]) => {
+    const onClickText = async (
+        entry: SubtitleSegment["words"][0],
+        toPlay: boolean = false,
+    ) => {
         ws?.pause();
         ws?.setTime(entry.start);
+        if (toPlay) {
+            await ws?.play();
+        }
+    };
+
+    const onPlaySubtitleSegment = async (
+        seg: SubtitleSegment,
+        pause: boolean = false,
+    ) => {
+        if (!ws) return;
+
+        if (pause) {
+            ws?.pause();
+        } else {
+            ws?.pause();
+            await ws.play(seg.start, seg.end);
+            ws.once("pause", () => {
+                ws?.setTime(seg.start);
+            });
+        }
     };
 
     async function getSubtitle() {
@@ -175,7 +200,7 @@
 
             await invoke("start_transcribe", {
                 audio_id: audioItem.id,
-                model: "distil-large-v3",
+                model: "medium.en",
             });
             audioItem = await invoke("handle_update_audio_transcribe", {
                 token: user.accessToken,
@@ -192,7 +217,7 @@
 <Card.Root>
     <Card.Header class="flex flex-row justify-between">
         <div class="flex flex-col gap-1.5">
-            <Card.Title>{audioItem.title}</Card.Title>
+            <Card.Title>{audioItem.title} {audioItem.id}</Card.Title>
             <Card.Description>{audioItem.description}</Card.Description>
         </div>
         <div class="flex items-center gap-2">
@@ -237,6 +262,18 @@
     </Card.Header>
     <Card.Content>
         <div bind:this={container}></div>
+        <Slider
+            type="single"
+            max={100}
+            step={1}
+            min={0}
+            bind:value={volume}
+            class="max-w-[70%] py-4"
+            onValueCommit={(e) => {
+                ws?.setVolume(e / 100);
+                console.log(e);
+            }}
+        />
     </Card.Content>
 
     <Card.Footer class="flex w-full flex-col items-start gap-2">
@@ -258,17 +295,23 @@
                 </Button>
             </div>
         {:else}
-            <SrtRegion {audioItem} {currentTime} {onClickText} {isPlaying} />
+            <SrtRegion
+                {audioItem}
+                {currentTime}
+                {onClickText}
+                {onPlaySubtitleSegment}
+                {isPlaying}
+            />
         {/if}
-        <div>{currentTime.toFixed(2)}</div>
         <div class="flex gap-4">
-            <div class="flex items-center gap-2">
-                <div class="h-4 w-4 rounded-full bg-emerald-200"></div>
-                <div>Ready to Record</div>
+            <div class="flex gap-4">
+                <div class="flex items-center gap-2">
+                    <div class="h-4 w-4 rounded-full bg-violet-200"></div>
+                    <div class="text-sm">Current Segment</div>
+                </div>
             </div>
-            <div class="flex items-center gap-2">
-                <div class="h-4 w-4 rounded-full bg-violet-200"></div>
-                <div>Current Word</div>
+            <div class="text-sm tabular-nums">
+                {currentTime.toFixed(2)}(sec)
             </div>
         </div>
     </Card.Footer>

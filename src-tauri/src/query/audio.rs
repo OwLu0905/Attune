@@ -125,8 +125,13 @@ pub async fn get_audios(db: &Db, user_id: &str) -> Result<Vec<AudioListItem>, sq
     Ok(audios)
 }
 
-pub async fn get_audio(db: &Db, audio_id: &str) -> Result<AudioListItem, sqlx::Error> {
-    let audio = sqlx::query_as::<_, AudioListItem>("SELECT id, title, description, url, thumbnail, startTime, endTime, provider, tag, transcribe, lastUsedAt FROM audio WHERE id = ?  ORDER BY lastUsedAt DESC")
+pub async fn get_audio(
+    db: &Db,
+    user_id: &str,
+    audio_id: &str,
+) -> Result<AudioListItem, sqlx::Error> {
+    let audio = sqlx::query_as::<_, AudioListItem>("SELECT id, title, description, url, thumbnail, startTime, endTime, provider, tag, transcribe, lastUsedAt FROM audio WHERE userId = ? AND id = ?  ORDER BY lastUsedAt DESC")
+        .bind(user_id)
         .bind(audio_id)
         .fetch_one(db)
         .await?;
@@ -136,14 +141,31 @@ pub async fn get_audio(db: &Db, audio_id: &str) -> Result<AudioListItem, sqlx::E
 
 pub async fn update_audio_transcribe(
     db: &Db,
+    user_id: &str,
     audio_id: &str,
 ) -> Result<AudioListItem, sqlx::Error> {
-    sqlx::query("UPDATE audio SET transcribe = 1 WHERE id = ?")
+    sqlx::query("UPDATE audio SET transcribe = 1 WHERE userId = ? AND id = ?")
+        .bind(user_id)
         .bind(audio_id)
         .execute(db)
         .await?;
 
-    let audio = get_audio(db, audio_id).await?;
+    let audio = get_audio(db, user_id, audio_id).await?;
 
     Ok(audio)
+}
+
+pub async fn delete_audio(
+    db: &Db,
+    user_id: &str,
+    audio_id: &str,
+) -> Result<Vec<AudioListItem>, sqlx::Error> {
+    sqlx::query("DELETE FROM audio WHERE userId = ? AND id = ?")
+        .bind(user_id)
+        .bind(audio_id)
+        .execute(db)
+        .await?;
+
+    let audios = get_audios(db, user_id).await?;
+    Ok(audios)
 }

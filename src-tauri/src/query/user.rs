@@ -134,7 +134,7 @@ pub async fn get_user_by_id(db: &Db, user_id: &str) -> Result<Option<User>, sqlx
 
 pub async fn get_user_by_session_token(
     db: &Db,
-    app_handle: AppHandle,
+    app_handle: &AppHandle,
     session_token: &str,
 ) -> Result<Option<SessionWithUser>, sqlx::Error> {
     let result = sqlx::query_as::<_, SessionWithUser>(

@@ -64,7 +64,12 @@ def transcribe(
     )
 
     segments, _ = model.transcribe(
-        file_path, beam_size=5, language=lang, word_timestamps=True, log_progress=True
+        file_path,
+        beam_size=5,
+        language=lang,
+        word_timestamps=True,
+        vad_filter=True,
+        log_progress=True,
     )
 
     segments_data = handle_segments(segments=segments)

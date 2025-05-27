@@ -5,7 +5,7 @@ a = Analysis(
     ['main.py'],
     pathex=[],
     binaries=[],
-    datas=[],
+    datas=[('./.venv/lib/python3.12/site-packages/faster_whisper/assets', 'faster_whisper/assets')],
     hiddenimports=[],
     hookspath=[],
     hooksconfig={},

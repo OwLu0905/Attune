@@ -42,11 +42,19 @@ get along, so we shut typescript up by casting `value` to `never`.
                 index={thumb}
                 class="block size-4 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
             >
-                <span
-                    class="absolute -left-1/2 top-4 text-xs font-light tabular-nums"
-                >
-                    {simpleFormatSecondsToMMSS((value as number[])[thumb])}
-                </span>
+                {#if restProps.type === "multiple"}
+                    <span
+                        class="absolute -left-1/2 top-4 text-xs font-light tabular-nums"
+                    >
+                        {simpleFormatSecondsToMMSS((value as number[])[thumb])}
+                    </span>
+                {:else}
+                    <span
+                        class="absolute left-1/2 top-4 -translate-x-1/2 text-xs font-light tabular-nums"
+                    >
+                        {value}
+                    </span>
+                {/if}
             </SliderPrimitive.Thumb>
         {/each}
     {/snippet}

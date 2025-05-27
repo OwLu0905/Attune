@@ -3,8 +3,10 @@
     import Button from "@/components/ui/button/button.svelte";
     import * as Card from "$lib/components/ui/card/index.js";
     import { getUserContext } from "@/user/userService.svelte";
-    import { Upload } from "@lucide/svelte";
+    import { Trash, Upload } from "@lucide/svelte";
     import Badge from "@/components/ui/badge/badge.svelte";
+
+    import * as AlertDialog from "@/components/ui/alert-dialog";
 
     import type { AudioItem } from "@/types/audio";
 
@@ -69,7 +71,57 @@
                 </div>
             </Card.Content>
             <Card.Footer>
-                <span></span>
+                <AlertDialog.Root>
+                    <AlertDialog.Trigger>
+                        <Trash class="w-4 text-destructive" />
+                    </AlertDialog.Trigger>
+                    <AlertDialog.Content>
+                        <AlertDialog.Header>
+                            <AlertDialog.Title
+                                >Are you absolutely sure?</AlertDialog.Title
+                            >
+                            <AlertDialog.Description>
+                                This action cannot be undone. This will
+                                permanently delete the audio and remove your
+                                data from our servers.
+                            </AlertDialog.Description>
+                        </AlertDialog.Header>
+                        <AlertDialog.Footer>
+                            <AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+                            <AlertDialog.Action
+                                onclick={async () => {
+                                    try {
+                                        audioList = await invoke(
+                                            "handle_delete_audio",
+                                            {
+                                                token: user.accessToken,
+                                                audio_id: audio.id,
+                                            },
+                                        );
+                                    } catch (error) {
+                                        console.error(error);
+                                    }
+                                }}>Continue</AlertDialog.Action
+                            >
+                        </AlertDialog.Footer>
+                    </AlertDialog.Content>
+                </AlertDialog.Root>
+                <span>
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onclick={async () => {
+                            try {
+                                await invoke("handle_delete_audio", {
+                                    token: user.accessToken,
+                                    audio_id: audio.id,
+                                });
+                            } catch (error) {
+                                console.error(error);
+                            }
+                        }}
+                    ></Button>
+                </span>
                 <span class="ml-auto text-xs">
                     {audio.lastUsedAt}
                 </span>

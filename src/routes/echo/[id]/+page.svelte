@@ -15,9 +15,9 @@
 
     let audioId = $derived(page.params.id);
 
-    let audioItem: AudioItem | undefined = $state(undefined);
+    let audioItem: AudioItem | undefined = $state.raw(undefined);
 
-    let audioPath: Uint8Array | undefined = $state(undefined);
+    let audioPath: Uint8Array | undefined = $state.raw(undefined);
 
     $effect(() => {
         async function getAudioItem() {
