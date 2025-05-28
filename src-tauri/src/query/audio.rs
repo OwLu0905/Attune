@@ -35,7 +35,7 @@ pub struct Audio {
     updated_at: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AudioListItem {
     pub id: String,
@@ -56,6 +56,18 @@ pub struct AudioListItem {
     // created_at: String,
     // #[sqlx(rename = "updatedAt")]
     // updated_at: String,
+}
+
+// Audio with exercise types
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+#[serde(rename_all = "camelCase")]
+pub struct AudioItem {
+    #[serde(flatten)]
+    #[sqlx(flatten)]
+    pub audio: AudioListItem,
+
+    #[sqlx(rename = "exerciseType")]
+    pub exercise_type: Option<String>,
 }
 
 #[derive(Debug, Serialize, Deserialize, FromRow)]
@@ -125,25 +137,43 @@ pub async fn get_audios(db: &Db, user_id: &str) -> Result<Vec<AudioListItem>, sq
     Ok(audios)
 }
 
-pub async fn get_audio(
-    db: &Db,
-    user_id: &str,
-    audio_id: &str,
-) -> Result<AudioListItem, sqlx::Error> {
-    let audio = sqlx::query_as::<_, AudioListItem>("SELECT id, title, description, url, thumbnail, startTime, endTime, provider, tag, transcribe, lastUsedAt FROM audio WHERE userId = ? AND id = ?  ORDER BY lastUsedAt DESC")
+pub async fn get_audio(db: &Db, user_id: &str, audio_id: &str) -> Result<AudioItem, sqlx::Error> {
+    let audio = sqlx::query_as::<_, AudioItem>(
+        r#"
+        SELECT 
+            a.id, 
+            a.title, 
+            a.description,
+            a.url,
+            a.thumbnail,
+            a.startTime,
+            a.endTime,
+            a.provider,
+            a.tag,
+            a.transcribe,
+            a.lastUsedAt,
+            GROUP_CONCAT(aet.exerciseType) as exerciseType
+        FROM audio a
+        LEFT JOIN audio_exercise_types aet ON a.id = aet.audioId
+        WHERE a.userId = ? AND a.id = ?  
+        GROUP BY a.id, a.title, a.description, a.url, a.thumbnail, a.startTime, a.endTime, a.provider, a.tag, a.transcribe, a.lastUsedAt
+        ORDER BY lastUsedAt DESC
+        "#
+
+    )
         .bind(user_id)
         .bind(audio_id)
         .fetch_one(db)
-        .await?;
+        .await.map_err(|e| e.to_string());
 
-    Ok(audio)
+    Ok(audio.unwrap())
 }
 
 pub async fn update_audio_transcribe(
     db: &Db,
     user_id: &str,
     audio_id: &str,
-) -> Result<AudioListItem, sqlx::Error> {
+) -> Result<AudioItem, sqlx::Error> {
     sqlx::query("UPDATE audio SET transcribe = 1 WHERE userId = ? AND id = ?")
         .bind(user_id)
         .bind(audio_id)

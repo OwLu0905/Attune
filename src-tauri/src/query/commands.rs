@@ -1,4 +1,8 @@
-use crate::{config::get_data_path, query::audio::AudioListItem, DbState};
+use crate::{
+    config::get_data_path,
+    query::audio::{AudioItem, AudioListItem},
+    DbState,
+};
 use std::io::ErrorKind;
 use tauri::AppHandle;
 use tokio::fs::remove_dir_all;
@@ -159,7 +163,7 @@ pub async fn handle_get_audio_item(
     state: tauri::State<'_, DbState>,
     token: &str,
     audio_id: &str,
-) -> Result<AudioListItem, String> {
+) -> Result<AudioItem, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
@@ -182,7 +186,7 @@ pub async fn handle_update_audio_transcribe(
     state: tauri::State<'_, DbState>,
     token: &str,
     audio_id: &str,
-) -> Result<AudioListItem, String> {
+) -> Result<AudioItem, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)

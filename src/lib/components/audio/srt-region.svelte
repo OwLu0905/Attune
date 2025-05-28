@@ -16,6 +16,7 @@
         audioItem: AudioItem;
         currentTime: number;
         isPlaying: boolean;
+        hidden: boolean;
         onPlaySubtitleSegment: (e: SubtitleSegment, pause: boolean) => void;
         onClickText: (e: SubtitleSegment["words"][0], toPlay?: boolean) => void;
     }
@@ -26,6 +27,7 @@
         onClickText,
         onPlaySubtitleSegment,
         isPlaying,
+        hidden = true,
     }: Props = $props();
 
     let scrollMap = new SvelteSet();
@@ -78,7 +80,10 @@
     };
 </script>
 
-{#snippet subtitleScrollArea(entry: SubtitleSegment["words"][0])}
+{#snippet subtitleScrollArea(
+    entry: SubtitleSegment["words"][0],
+    hidden: boolean,
+)}
     <button
         onclick={(e) => {
             e.stopPropagation();
@@ -91,11 +96,18 @@
                 : "",
         )}
     >
-        {entry.word}
+        {#if hidden}
+            {new Array(entry.word.length + 1).join("_")}
+        {:else}
+            {entry.word}
+        {/if}
     </button>
 {/snippet}
 
-{#snippet subtitleStaticArea(entry: SubtitleSegment["words"][0])}
+{#snippet subtitleStaticArea(
+    entry: SubtitleSegment["words"][0],
+    hidden: boolean,
+)}
     <button
         onclick={(e) => {
             e.stopPropagation();
@@ -103,12 +115,16 @@
         }}
         class={"tansition-all inline px-0.5 tracking-wide duration-300 ease-in-out hover:underline"}
     >
-        {entry.word}
+        {#if hidden}
+            {new Array(entry.word.length + 1).join("_")}
+        {:else}
+            {entry.word}
+        {/if}
     </button>
 {/snippet}
 
 <!-- prettier-ignore -->
-{#snippet subtitleArea(seg: SubtitleSegment, isCurrent: boolean)}
+{#snippet subtitleArea(seg: SubtitleSegment, isCurrent: boolean, hidden:boolean )}
 	<div class="flex flex-row justify-between">
     {#if isCurrent }
         <div
@@ -121,20 +137,20 @@
 						{@attach observeVisibility(isCurrent)}
         >
             {#each seg.words as entry, index (index)}
-                {@render subtitleScrollArea(entry)}
+                {@render subtitleScrollArea(entry, hidden)}
             {/each}
         </div>
     {:else}
         <div class={"m-1 flex flex-row flex-wrap gap-0.5 p-1"}>
             {#each seg.words as entry, index (index)}
-                {@render subtitleStaticArea(entry)}
+                {@render subtitleStaticArea(entry, hidden)}
             {/each}
         </div>
     {/if}
 		<div class="m-2">
 	{#if isPlaying && isCurrent}
 			<Button size="sm" variant="ghost" onclick={()=>{
-				onPlaySubtitleSegment(seg, true)
+				// onPlaySubtitleSegment(seg, true)
 			}}>
 			<Pause />
 			</Button>
@@ -154,6 +170,10 @@
     class="text-md flex max-h-80 w-full max-w-96 flex-col gap-0.5 overflow-auto bg-stone-100 px-4 py-2 tabular-nums"
 >
     {#each subtitlesByText as i, index (index)}
-        {@render subtitleArea(i, i.end > currentTime && currentTime >= i.start)}
+        {@render subtitleArea(
+            i,
+            i.end > currentTime && currentTime >= i.start,
+            true,
+        )}
     {/each}
 </ScrollArea>

@@ -5,4 +5,5 @@ export type AudioItem = {
     description: string;
     transcribe: 0 | 1;
     lastUsedAt: string;
+    exerciseType: string;
 };

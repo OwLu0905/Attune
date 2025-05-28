@@ -41,7 +41,7 @@
     let isPlaying = $state(false);
     let isReady = $state(false);
     let isTranscribing = $state(false);
-    let volume = $state(50);
+    let volume = $state(10);
 
     const random = (min: number, max: number) =>
         Math.random() * (max - min) + min;
@@ -52,70 +52,78 @@
     const user = getUser();
 
     onMount(() => {
-        const computedStyle = getComputedStyle(document.documentElement);
-        const primaryHSL = computedStyle.getPropertyValue("--primary").trim();
-        const secondaryHSL = computedStyle
-            .getPropertyValue("--secondary")
-            .trim();
+        async function load() {
+            const computedStyle = getComputedStyle(document.documentElement);
+            const primaryHSL = computedStyle
+                .getPropertyValue("--primary")
+                .trim();
+            const secondaryHSL = computedStyle
+                .getPropertyValue("--secondary")
+                .trim();
 
-        regions = RegionsPlugin.create();
+            regions = RegionsPlugin.create();
 
-        ws = WaveSurfer.create({
-            container,
-            progressColor: `hsl(${primaryHSL})`,
-            waveColor: `hsl(${secondaryHSL})`,
-            barWidth: 2,
-            barGap: 1,
-            height: 60,
-            // backend: WAVESURFER_BACKEND,
-            plugins: [regions, TimelinePlugin.create()],
-        });
-        const blob = new Blob([audioPath], { type: "audio/mp3" });
-        const audioURL = URL.createObjectURL(blob);
-        ws.load(audioURL);
-        ws.setVolume(0.5);
-
-        ws.on("decode", () => {
-            if (ws === undefined) return;
-            isReady = true;
-            regions.on("region-created", (region) => {
-                regionList.push(region);
+            ws = WaveSurfer.create({
+                container,
+                progressColor: `hsl(${primaryHSL})`,
+                waveColor: `hsl(${secondaryHSL})`,
+                barWidth: 2,
+                barGap: 1,
+                height: 60,
+                // backend: WAVESURFER_BACKEND,
+                plugins: [regions, TimelinePlugin.create()],
             });
+            const blob = new Blob([audioPath], { type: "audio/mp3" });
 
-            regions.on("region-out", (region) => {
-                if (activeRegion?.id === region.id) {
-                    activeRegion = null;
-                }
-            });
+            ws.on("decode", () => {
+                if (ws === undefined) return;
 
-            regions.on("region-updated", (region) => {
-                ws!.pause();
+                regions.on("region-created", (region) => {
+                    regionList.push(region);
+                });
 
-                regionList = regionList.map((i) => {
-                    if (i.id === region.id) {
-                        return region;
+                regions.on("region-out", (region) => {
+                    if (activeRegion?.id === region.id) {
+                        activeRegion = null;
                     }
-                    return i;
+                });
+
+                regions.on("region-updated", (region) => {
+                    ws!.pause();
+
+                    regionList = regionList.map((i) => {
+                        if (i.id === region.id) {
+                            return region;
+                        }
+                        return i;
+                    });
+                });
+
+                regions.on("region-clicked", (region, e) => {
+                    e.stopPropagation();
+                    activeRegion = region;
+                    region.play(true);
+                    region.setOptions({
+                        color: randomColor(),
+                    });
+                });
+
+                ws.on("interaction", () => (activeRegion = null));
+                ws.on("play", () => (isPlaying = true));
+                ws.on("pause", () => (isPlaying = false));
+
+                ws.on("ready", () => {
+                    ws?.setVolume(0.5);
+                    isReady = true;
+                });
+                ws.on("timeupdate", (ct) => {
+                    currentTime = ct;
                 });
             });
 
-            regions.on("region-clicked", (region, e) => {
-                e.stopPropagation();
-                activeRegion = region;
-                region.play(true);
-                region.setOptions({
-                    color: randomColor(),
-                });
-            });
-
-            ws.on("interaction", () => (activeRegion = null));
-            ws.on("play", () => (isPlaying = true));
-            ws.on("pause", () => (isPlaying = false));
-
-            ws.on("timeupdate", (ct) => {
-                currentTime = ct;
-            });
-        });
+            await ws.loadBlob(blob);
+        }
+        load();
     });
 
     $effect(() => {
@@ -186,7 +194,6 @@
         if (pause) {
             ws?.pause();
         } else {
-            ws?.pause();
             await ws.play(seg.start, seg.end);
             ws.once("pause", () => {
                 ws?.setTime(seg.start);
@@ -301,6 +308,7 @@
                 {onClickText}
                 {onPlaySubtitleSegment}
                 {isPlaying}
+                hidden={false}
             />
         {/if}
         <div class="flex gap-4">

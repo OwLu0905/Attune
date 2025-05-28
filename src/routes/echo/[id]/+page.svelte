@@ -6,8 +6,8 @@
 
     import Waveform from "@/components/audio/waveform.svelte";
 
-    import type { Attachment } from "svelte/attachments";
     import type { AudioItem } from "@/types/audio";
+    import AudioPlayerFlow from "@/components/audio/audio-player-flow.svelte";
 
     const { getUser } = getUserContext();
 
@@ -45,7 +45,8 @@
 {:else}
     <div class="relative flex flex-col overflow-hidden">
         <div class="flex h-full w-full shrink grow flex-col overflow-scroll">
-            <Waveform {audioItem} {audioPath} />
+            <!-- <Waveform {audioItem} {audioPath} /> -->
+            <AudioPlayerFlow {audioItem} {audioPath} />
         </div>
     </div>
 {/if}
