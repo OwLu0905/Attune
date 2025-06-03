@@ -17,7 +17,7 @@
 
     import { AudioPlayer } from "./audio-player.svelte";
     import { getSubtitleFile } from "@/utils";
-    import ClozeCard from "./cloze-card.svelte";
+    import DictationCard from "./dictation-card.svelte";
     import SegmentField from "./segment-field.svelte";
 
     import type { SubtitleSegment } from "./types";
@@ -210,7 +210,7 @@
 
             <Tabs.Content value="swiper">
                 {#if tabValue === "swiper"}
-                    <ClozeCard
+                    <DictationCard
                         {questionId}
                         {audioPlayer}
                         {onPause}
