@@ -4,10 +4,9 @@
     import { getUserContext } from "@/user/userService.svelte";
     import { getAudioFile } from "@/utils";
 
-    import Waveform from "@/components/audio/waveform.svelte";
+    import AudioPlayerCard from "@/components/audio/audio-player-card.svelte";
 
     import type { AudioItem } from "@/types/audio";
-    import AudioPlayerFlow from "@/components/audio/audio-player-flow.svelte";
 
     const { getUser } = getUserContext();
 
@@ -45,8 +44,7 @@
 {:else}
     <div class="relative flex flex-col overflow-hidden">
         <div class="flex h-full w-full shrink grow flex-col overflow-scroll">
-            <!-- <Waveform {audioItem} {audioPath} /> -->
-            <AudioPlayerFlow {audioItem} {audioPath} />
+            <AudioPlayerCard {audioItem} {audioPath} />
         </div>
     </div>
 {/if}

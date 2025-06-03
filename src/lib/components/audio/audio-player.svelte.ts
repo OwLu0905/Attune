@@ -8,7 +8,7 @@ const randomColor = () =>
     `rgba(${random(0, 255)}, ${random(0, 255)}, ${random(0, 255)}, 0.5)`;
 
 export class AudioPlayer {
-    ws: WaveSurfer | undefined = $state(undefined);
+    ws: WaveSurfer | undefined = $state.raw(undefined);
     activeRegion: Region | null = $state(null);
     regions: RegionsPlugin = RegionsPlugin.create();
     volume = $state(10);
@@ -66,11 +66,17 @@ export class AudioPlayer {
     async onPlayPause() {
         this.ws!.playPause();
     }
-    async onPlay(item: Region) {
+    async onPlay() {
         this.ws!.play();
     }
-    async onPause(item: Region) {
+    async onPause() {
         this.ws!.pause();
+    }
+    onStop() {
+        this.ws!.stop();
+    }
+    async onPlaySection(start: number, end: number) {
+        this.ws!.play(start, end);
     }
     getVolume() {
         return this.ws!.getVolume();
