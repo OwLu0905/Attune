@@ -19,14 +19,14 @@ export class AudioPlayer {
     isTranscribing = $state(false);
 
     computedStyle = getComputedStyle(document.documentElement);
-    primaryHSL = this.computedStyle.getPropertyValue("--primary").trim();
-    secondaryHSL = this.computedStyle.getPropertyValue("--secondary").trim();
+    primaryOklch = this.computedStyle.getPropertyValue("--primary").trim();
+    secondaryOklch = this.computedStyle.getPropertyValue("--secondary").trim();
 
     constructor(container: HTMLElement) {
         this.ws = WaveSurfer.create({
             container,
-            progressColor: `hsl(${this.primaryHSL})`,
-            waveColor: `hsl(${this.secondaryHSL})`,
+            progressColor: `${this.primaryOklch}`,
+            waveColor: `${this.secondaryOklch}`,
             barWidth: 2,
             barGap: 1,
             height: 60,
