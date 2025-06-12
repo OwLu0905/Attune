@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { WithElementRef, WithoutChildren } from "bits-ui";
+    import type { WithElementRef, WithoutChildren } from "$lib/utils.js";
     import type { HTMLAttributes } from "svelte/elements";
     import { cn } from "$lib/utils.js";
 
@@ -14,6 +14,6 @@
 
 <div
     bind:this={ref}
-    class={cn("animate-pulse rounded-md bg-primary/10", className)}
+    class={cn("bg-primary/10 animate-pulse rounded-md", className)}
     {...restProps}
 ></div>

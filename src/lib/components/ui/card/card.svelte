@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { WithElementRef } from "bits-ui";
+    import type { WithElementRef } from "$lib/utils.js";
     import type { HTMLAttributes } from "svelte/elements";
     import { cn } from "$lib/utils.js";
 
@@ -14,7 +14,7 @@
 <div
     bind:this={ref}
     class={cn(
-        "rounded-xl border bg-card text-card-foreground shadow",
+        "bg-card text-card-foreground rounded-xl border shadow-sm",
         className,
     )}
     {...restProps}

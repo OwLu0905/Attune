@@ -33,7 +33,7 @@
         class="cursor-pointer gap-1 rounded-xl border border-foreground/20 px-4 py-2.5 text-xs text-foreground transition-all duration-150 ease-linear hover:border-primary/20 hover:bg-primary/10"
     >
         <div class="flex items-center gap-2">
-            <TimerIcon class="w-[0.75rem]" />
+            <TimerIcon class="w-3" />
             <time class="min-w-32 text-xs">
                 {formatDuration(item.start)} - {formatDuration(item.end)}
                 <span class="text-secondary-foreground/40">(s)</span>

@@ -100,7 +100,7 @@
                 <form class="flex flex-col gap-2" onsubmit={handleSubmit}>
                     <Label
                         for="videoId"
-                        class="data-[error]:text-destructive"
+                        class="data-error:text-destructive"
                         data-error={errMsg}>Youtube Url</Label
                     >
                     <div class="flex gap-2">

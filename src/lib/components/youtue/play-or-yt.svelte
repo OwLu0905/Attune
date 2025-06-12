@@ -124,7 +124,7 @@
         onclick={() => {
             liteLoaded = true;
         }}
-        class="relative aspect-video h-[360px] w-[640px] max-w-full cursor-pointer overflow-hidden bg-[#000] bg-cover bg-center bg-repeat"
+        class="relative aspect-video h-[360px] w-[640px] max-w-full cursor-pointer overflow-hidden bg-black bg-cover bg-center bg-repeat"
         style="background-image:url({thumbnailUrl});"
     >
         <div

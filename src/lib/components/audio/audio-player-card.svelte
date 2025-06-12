@@ -152,7 +152,7 @@
                     >
                         <div class="flex flex-col gap-0">
                             {#each subtitles as i, index (index)}
-                                <div class="flex w-full gap-4 p-2 shadow-sm">
+                                <div class="flex w-full gap-4 p-2 shadow-xs">
                                     <span
                                         class="w-4 shrink-0 text-right text-sm leading-6"
                                         >{index + 1}</span

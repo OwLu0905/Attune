@@ -1,8 +1,6 @@
 <script lang="ts">
-    import {
-        Slider as SliderPrimitive,
-        type WithoutChildrenOrChild,
-    } from "bits-ui";
+    import { Slider as SliderPrimitive } from "bits-ui";
+    import type { WithoutChildrenOrChild } from "$lib/utils.js";
     import { cn, simpleFormatSecondsToMMSS } from "$lib/utils.js";
 
     let {
@@ -23,7 +21,7 @@ get along, so we shut typescript up by casting `value` to `never`.
     bind:value={value as never}
     {orientation}
     class={cn(
-        "relative mb-6 flex touch-none select-none items-center data-[orientation='vertical']:h-full data-[orientation='vertical']:min-h-44 data-[orientation='horizontal']:w-full data-[orientation='vertical']:w-auto data-[orientation='vertical']:flex-col",
+        "relative mb-6 flex touch-none items-center select-none data-[orientation='horizontal']:w-full data-[orientation='vertical']:h-full data-[orientation='vertical']:min-h-44 data-[orientation='vertical']:w-auto data-[orientation='vertical']:flex-col",
         className,
     )}
     {...restProps}
@@ -31,26 +29,26 @@ get along, so we shut typescript up by casting `value` to `never`.
     {#snippet children({ thumbs })}
         <span
             data-orientation={orientation}
-            class="relative grow overflow-hidden rounded-full bg-primary/20 data-[orientation='horizontal']:h-1.5 data-[orientation='vertical']:h-full data-[orientation='horizontal']:w-full data-[orientation='vertical']:w-1.5"
+            class="bg-primary/20 relative grow overflow-hidden rounded-full data-[orientation='horizontal']:h-1.5 data-[orientation='horizontal']:w-full data-[orientation='vertical']:h-full data-[orientation='vertical']:w-1.5"
         >
             <SliderPrimitive.Range
-                class="absolute bg-primary data-[orientation='horizontal']:h-full data-[orientation='vertical']:w-full"
+                class="bg-primary absolute data-[orientation='horizontal']:h-full data-[orientation='vertical']:w-full"
             />
         </span>
         {#each thumbs as thumb (thumb)}
             <SliderPrimitive.Thumb
                 index={thumb}
-                class="block size-4 rounded-full border border-primary/50 bg-background shadow transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50"
+                class="border-primary/50 bg-background focus-visible:ring-ring block size-4 rounded-full border shadow-sm transition-colors focus-visible:ring-1 focus-visible:outline-hidden disabled:pointer-events-none disabled:opacity-50"
             >
                 {#if restProps.type === "multiple"}
                     <span
-                        class="absolute -left-1/2 top-4 text-xs font-light tabular-nums"
+                        class="absolute top-4 -left-1/2 text-xs font-light tabular-nums"
                     >
                         {simpleFormatSecondsToMMSS((value as number[])[thumb])}
                     </span>
                 {:else}
                     <span
-                        class="absolute left-1/2 top-4 -translate-x-1/2 text-xs font-light tabular-nums"
+                        class="absolute top-4 left-1/2 -translate-x-1/2 text-xs font-light tabular-nums"
                     >
                         {value}
                     </span>

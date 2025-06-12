@@ -1,5 +1,5 @@
 <script lang="ts">
-    import type { WithElementRef } from "bits-ui";
+    import type { WithElementRef } from "$lib/utils.js";
     import type { HTMLAttributes } from "svelte/elements";
     import { cn } from "$lib/utils.js";
 
@@ -16,7 +16,7 @@
     role="link"
     aria-disabled="true"
     aria-current="page"
-    class={cn("font-normal text-foreground", className)}
+    class={cn("text-foreground font-normal", className)}
     {...restProps}
 >
     {@render children?.()}
