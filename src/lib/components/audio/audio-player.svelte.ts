@@ -11,7 +11,6 @@ export class AudioPlayer {
     ws: WaveSurfer | undefined = $state.raw(undefined);
     activeRegion: Region | null = $state(null);
     regions: RegionsPlugin = RegionsPlugin.create();
-    volume = $state(10);
     currentTime = $state(0);
 
     isPlaying = $state(false);
@@ -83,6 +82,9 @@ export class AudioPlayer {
     }
     onSetVolume(sv: number) {
         this.ws!.setVolume(sv);
+    }
+    onSetPlaybackRate(speed: number) {
+        this.ws!.setPlaybackRate(speed, true);
     }
     destory() {
         this.ws?.destroy();

@@ -41,7 +41,7 @@
     let isPlaying = $state(false);
     let isReady = $state(false);
     let isTranscribing = $state(false);
-    let volume = $state(10);
+    let volume = $state(50);
 
     const random = (min: number, max: number) =>
         Math.random() * (max - min) + min;
@@ -278,7 +278,6 @@
             class="max-w-[70%] py-4"
             onValueCommit={(e) => {
                 ws?.setVolume(e / 100);
-                console.log(e);
             }}
         />
     </Card.Content>

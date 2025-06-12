@@ -41,7 +41,7 @@
     </Button>
 </a>
 
-<div class="grid grid-cols-12 gap-2 @container">
+<div class="@container grid grid-cols-12 gap-2">
     {#each audioList as audio (audio.id)}
         <Card.Root
             class="col-span-12 @sm:col-span-6 @xl:col-span-4 @3xl:col-span-3"
@@ -58,8 +58,8 @@
                     <a class="truncate text-base" href="/echo/{audio.id}">
                         {audio.title}
                     </a>
-                    <p class="truncate text-sm text-secondary-foreground">
-                        {audio.description || "no"}
+                    <p class="text-secondary-foreground truncate text-sm">
+                        {audio.description || "none"}
                     </p>
                     <div>
                         {#if audio.transcribe === 1}
@@ -73,7 +73,7 @@
             <Card.Footer>
                 <AlertDialog.Root>
                     <AlertDialog.Trigger>
-                        <Trash class="w-4 text-destructive" />
+                        <Trash class="text-destructive w-4" />
                     </AlertDialog.Trigger>
                     <AlertDialog.Content>
                         <AlertDialog.Header>
@@ -106,22 +106,6 @@
                         </AlertDialog.Footer>
                     </AlertDialog.Content>
                 </AlertDialog.Root>
-                <span>
-                    <Button
-                        size="sm"
-                        variant="ghost"
-                        onclick={async () => {
-                            try {
-                                await invoke("handle_delete_audio", {
-                                    token: user.accessToken,
-                                    audio_id: audio.id,
-                                });
-                            } catch (error) {
-                                console.error(error);
-                            }
-                        }}
-                    ></Button>
-                </span>
                 <span class="ml-auto text-xs">
                     {audio.lastUsedAt}
                 </span>

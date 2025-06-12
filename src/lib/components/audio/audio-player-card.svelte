@@ -22,6 +22,8 @@
 
     import type { SubtitleSegment } from "./types";
     import type { AudioItem } from "@/types/audio";
+    import { invoke } from "@tauri-apps/api/core";
+    import { getUserContext } from "@/user/userService.svelte";
 
     interface Props {
         audioPath: BlobPart;
@@ -30,17 +32,17 @@
 
     let { audioPath, audioItem = $bindable() }: Props = $props();
 
+    const { getUser } = getUserContext();
+    const user = getUser();
+
     let audioPlayer: AudioPlayer | undefined = $state(undefined);
     let container: HTMLElement | undefined = $state(undefined);
     let volume = $state(10);
-
     let subtitles: SubtitleSegment[] = $state([]);
-
     let visible = $state(true);
-
     let questionId = $state("0");
-
-    let tabValue = $state<"list" | "swiper">("list");
+    let tabValue = $state<"list" | "swiper">("swiper");
+    let isTranscribing = $state(false);
 
     onMount(() => {
         async function load() {
@@ -49,7 +51,9 @@
             await audioPlayer.initialize(audioPath);
             volume = audioPlayer.getVolume() * 100;
 
-            subtitles = await getSubtitleFile(audioItem.id);
+            if (audioItem.transcribe === 1) {
+                subtitles = await getSubtitleFile(audioItem.id);
+            }
         }
         load();
 
@@ -67,6 +71,26 @@
     async function onPause() {
         if (!audioPlayer) return;
         audioPlayer.onPause();
+    }
+
+    async function getSubtitle() {
+        try {
+            isTranscribing = true;
+
+            await invoke("start_transcribe", {
+                audio_id: audioItem.id,
+                model: "base.en",
+            });
+            audioItem = await invoke("handle_update_audio_transcribe", {
+                token: user.accessToken,
+                audio_id: audioItem.id,
+            });
+            subtitles = await getSubtitleFile(audioItem.id);
+        } catch (error) {
+            console.error(error);
+        } finally {
+            isTranscribing = false;
+        }
     }
 </script>
 
@@ -94,7 +118,7 @@
             />
 
             <Button
-                class="ml-auto text-muted-foreground"
+                class="text-muted-foreground ml-auto"
                 type="button"
                 size="sm"
                 variant="outline"
@@ -129,21 +153,39 @@
 </Card.Root>
 
 <div class="p-6">
-    {#if audioPlayer && audioPlayer.isReady}
+    {#if audioItem.transcribe === 0 && !isTranscribing}
+        <Button
+            disabled={isTranscribing}
+            onclick={() => {
+                getSubtitle();
+            }}
+        >
+            {#if isTranscribing}
+                <LoaderCircle class="text-primary mx-auto animate-spin" />
+            {/if}
+            Transcribe !
+        </Button>
+    {:else if isTranscribing}
+        <LoaderCircle class="animate-spin" />
+    {:else if audioPlayer && audioPlayer.isReady}
         <Tabs.Root bind:value={tabValue} class="" activationMode="manual">
             <Tabs.List>
-                <Tabs.Trigger
-                    value="list"
-                    onclick={() => {
-                        visible = true;
-                    }}>List</Tabs.Trigger
-                >
                 <Tabs.Trigger
                     value="swiper"
                     onclick={() => {
                         visible = false;
-                    }}>Swiper</Tabs.Trigger
+                    }}
                 >
+                    Swiper
+                </Tabs.Trigger>
+                <Tabs.Trigger
+                    value="list"
+                    onclick={() => {
+                        visible = true;
+                    }}
+                >
+                    List
+                </Tabs.Trigger>
             </Tabs.List>
             <Tabs.Content value="list">
                 <div transition:fade>
@@ -152,7 +194,7 @@
                     >
                         <div class="flex flex-col gap-0">
                             {#each subtitles as i, index (index)}
-                                <div class="flex w-full gap-4 p-2 shadow-xs">
+                                <div class="flex w-full gap-4 p-2">
                                     <span
                                         class="w-4 shrink-0 text-right text-sm leading-6"
                                         >{index + 1}</span
@@ -167,14 +209,14 @@
                                     <div class="flex shrink-0 gap-4">
                                         {#if audioPlayer?.isPlaying && i.start <= audioPlayer?.currentTime && audioPlayer?.currentTime <= i.end}
                                             <Pause
-                                                class="w-5 text-primary"
+                                                class="text-primary w-4"
                                                 onclick={() => {
                                                     onPause();
                                                 }}
                                             />
                                         {:else}
                                             <Play
-                                                class="w-5 stroke-primary text-primary"
+                                                class="stroke-primary text-primary w-4"
                                                 onclick={() => {
                                                     if (!audioPlayer) return;
 
@@ -195,7 +237,7 @@
                                         {/if}
 
                                         <RotateCcw
-                                            class="w-5 text-lime-500"
+                                            class="w-4 text-lime-500"
                                             onclick={() => {
                                                 onPlaySection(i.start, i.end);
                                             }}
@@ -221,6 +263,6 @@
             </Tabs.Content>
         </Tabs.Root>
     {:else}
-        <LoaderCircle class="mx-auto animate-spin text-primary" />
+        <LoaderCircle class="text-primary mx-auto animate-spin" />
     {/if}
 </div>

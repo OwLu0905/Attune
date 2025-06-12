@@ -1,11 +1,16 @@
 <script lang="ts">
+    import { onMount } from "svelte";
     import { fade } from "svelte/transition";
+    import { invoke } from "@tauri-apps/api/core";
+    import { page } from "$app/state";
+    import { getUserContext } from "@/user/userService.svelte";
 
     import Button from "$lib/components/ui/button/button.svelte";
+    import Textarea from "@/components/ui/textarea/textarea.svelte";
     import * as Select from "@/components/ui/select";
+    import * as ToggleGroup from "@/components/ui/toggle-group";
 
     import SegmentField from "./segment-field.svelte";
-    import Textarea from "@/components/ui/textarea/textarea.svelte";
 
     import {
         ChevronLeft,
@@ -20,11 +25,7 @@
 
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { SubtitleSegment } from "./types";
-    import { invoke } from "@tauri-apps/api/core";
-    import { page } from "$app/state";
-    import { getUserContext } from "@/user/userService.svelte";
-    import { onMount } from "svelte";
-    import { flip } from "svelte/animate";
+    import { PLAYBACK_RATE } from "@/constants";
 
     interface Props {
         questionId: string;
@@ -45,6 +46,8 @@
         questionId;
         return hiddenAll;
     });
+
+    let playrate = $state("1");
 
     let audioId = $derived(page.params.id);
 
@@ -138,7 +141,7 @@
 
     <div class="shrink grow">
         {#key questionId}
-            <section class=" flex flex-col gap-2 bg-card p-4">
+            <section class=" bg-card flex flex-col gap-2 p-4">
                 <div class="flex flex-wrap gap-1 p-1 tracking-wide" in:fade>
                     <SegmentField
                         {audioPlayer}
@@ -151,6 +154,27 @@
                 </div>
 
                 <div class="flex items-center justify-center gap-2">
+                    <ToggleGroup.Root
+                        size="sm"
+                        type="single"
+                        bind:value={
+                            () => playrate,
+                            (v) => {
+                                playrate = v;
+                                audioPlayer.onSetPlaybackRate(+v);
+                                return v;
+                            }
+                        }
+                    >
+                        {#each PLAYBACK_RATE as speed}
+                            <ToggleGroup.Item
+                                value={`${speed}`}
+                                class="text-xs tabular-nums"
+                            >
+                                {speed.toFixed(2)}
+                            </ToggleGroup.Item>
+                        {/each}
+                    </ToggleGroup.Root>
                     <Button
                         onclick={() => (hiddenItem = !hiddenItem)}
                         variant="link"
