@@ -12,6 +12,7 @@
         ChevronRight,
         Eye,
         EyeOff,
+        Heart,
         Pause,
         Play,
         RotateCcw,
@@ -19,6 +20,11 @@
 
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { SubtitleSegment } from "./types";
+    import { invoke } from "@tauri-apps/api/core";
+    import { page } from "$app/state";
+    import { getUserContext } from "@/user/userService.svelte";
+    import { onMount } from "svelte";
+    import { flip } from "svelte/animate";
 
     interface Props {
         questionId: string;
@@ -31,15 +37,44 @@
         $props();
 
     let hiddenAll = $state(true);
+    let dictationList = $state<{ dictationId: number; createdAt: string }[]>(
+        [],
+    );
 
     let hiddenItem = $derived.by(() => {
         questionId;
         return hiddenAll;
     });
 
+    let audioId = $derived(page.params.id);
+
+    const { getUser } = getUserContext();
+
+    const user = getUser();
+
     const items = $derived(
         Array.from({ length: subtitles.length }, (_, i) => `${i}`),
     );
+
+    const isLove = $derived.by(
+        () =>
+            dictationList.findIndex((i) => i.dictationId === +questionId) > -1,
+    );
+
+    onMount(() => {
+        // TODO: get dictation list
+        async function getDictationList() {
+            try {
+                dictationList = await invoke("handle_get_dictation_list", {
+                    token: user.accessToken,
+                    audio_id: audioId,
+                });
+            } catch (error) {
+                console.error(error);
+            }
+        }
+        getDictationList();
+    });
 
     $effect(() => {
         questionId;
@@ -156,17 +191,58 @@
                             <Play class="text-primary" />
                         {/if}
                     </Button>
-                    <Button variant="link">
-                        <RotateCcw
-                            class="w-5 text-lime-500"
-                            onclick={() => {
-                                onPlaySection(
-                                    subtitles?.[+questionId].start,
-                                    subtitles?.[+questionId].end,
-                                );
-                            }}
-                        />
+                    <Button
+                        variant="link"
+                        onclick={() => {
+                            onPlaySection(
+                                subtitles?.[+questionId].start,
+                                subtitles?.[+questionId].end,
+                            );
+                        }}
+                    >
+                        <RotateCcw class="w-5 text-lime-500" />
                     </Button>
+
+                    {#if isLove}
+                        <div in:fade>
+                            <Button
+                                variant="link"
+                                onclick={async () => {
+                                    dictationList = await invoke(
+                                        "handle_delete_dictation_item",
+                                        {
+                                            token: user.accessToken,
+                                            audio_id: audioId,
+                                            dictation_id: +questionId,
+                                        },
+                                    );
+                                }}
+                            >
+                                <Heart class="fill-rose-500 stroke-red-500" />
+                            </Button>
+                        </div>
+                    {:else}
+                        <div in:fade>
+                            <Button
+                                variant="link"
+                                onclick={async () => {
+                                    dictationList = (await invoke(
+                                        "handle_create_dictation_item",
+                                        {
+                                            token: user.accessToken,
+                                            audio_id: audioId,
+                                            dictation_id: +questionId,
+                                        },
+                                    )) as {
+                                        dictationId: number;
+                                        createdAt: string;
+                                    }[];
+                                }}
+                            >
+                                <Heart class="w-5 stroke-red-500" />
+                            </Button>
+                        </div>
+                    {/if}
                 </div>
             </section>
         {/key}

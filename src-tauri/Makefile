@@ -1,4 +1,4 @@
-.PHONY: add migrate 
+.PHONY: add migrate clean
 
 
 add:
@@ -7,3 +7,5 @@ add:
 migrate:
 	echo WIP
 
+clean:
+	cargo clean
