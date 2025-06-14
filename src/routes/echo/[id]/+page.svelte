@@ -42,9 +42,7 @@
 {#if audioPath === undefined || !audioItem}
     <div>no data</div>
 {:else}
-    <div class="relative flex flex-col overflow-hidden">
-        <div class="flex h-full w-full shrink grow flex-col overflow-scroll">
-            <AudioPlayerCard {audioItem} {audioPath} />
-        </div>
+    <div class="relative flex h-full flex-col overflow-hidden">
+        <AudioPlayerCard {audioItem} {audioPath} />
     </div>
 {/if}

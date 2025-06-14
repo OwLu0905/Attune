@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { onMount } from "svelte";
+    import { onMount, type Component } from "svelte";
     import { fade } from "svelte/transition";
     import { invoke } from "@tauri-apps/api/core";
     import { page } from "$app/state";
@@ -18,14 +18,19 @@
         Eye,
         EyeOff,
         Heart,
+        Mic,
         Pause,
         Play,
         RotateCcw,
+        SquareArrowOutUpRight,
+        SquarePen,
     } from "@lucide/svelte";
 
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { SubtitleSegment } from "./types";
     import { PLAYBACK_RATE } from "@/constants";
+    import { cn } from "@/utils";
+    import RecordRegion from "./record-region.svelte";
 
     interface Props {
         questionId: string;
@@ -47,7 +52,8 @@
         return hiddenAll;
     });
 
-    let playrate = $state("1");
+    let playbackRate = $state("1");
+    let selected = $state("mic");
 
     let audioId = $derived(page.params.id);
 
@@ -65,7 +71,6 @@
     );
 
     onMount(() => {
-        // TODO: get dictation list
         async function getDictationList() {
             try {
                 dictationList = await invoke("handle_get_dictation_list", {
@@ -96,7 +101,32 @@
     });
 </script>
 
-<div class="flex flex-col gap-1 px-4 py-2 tabular-nums">
+{#snippet item(value: string, Icon: Component)}
+    <button
+        class={cn(
+            "bg-card text-primary flex items-center justify-center rounded-full shadow-md",
+            "origin-bottom-right transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
+            "h-0 w-0 scale-0 opacity-0",
+            "group-hover:h-10 data-[current=true]:h-10",
+            "group-hover:w-10 data-[current=true]:w-10",
+            "group-hover:scale-100 data-[current=true]:scale-100",
+            "group-hover:opacity-100 data-[current=true]:opacity-100",
+            "group-hover:data-[current=true]:translate-x-0.5 ",
+            "nth-1:-translate-y-4",
+            "nth-2:-translate-y-2",
+            "data-[current=true]:inset-shadow-sm",
+            "data-[current=true]:inset-shadow-primary/60 ",
+        )}
+        data-current={selected === value ? "true" : "false"}
+        onclick={() => {
+            selected = value;
+        }}
+    >
+        <Icon class="max-h-4 max-w-4" />
+    </button>
+{/snippet}
+
+<div class="flex flex-col gap-1 overflow-auto px-4 py-2 tabular-nums">
     <div class="flex justify-between gap-4">
         <Button
             variant="outline"
@@ -139,18 +169,25 @@
         </Button>
     </div>
 
-    <div class="shrink grow">
+    <div class="flex shrink grow flex-col gap-2 overflow-auto">
         {#key questionId}
-            <section class=" bg-card flex flex-col gap-2 p-4">
-                <div class="flex flex-wrap gap-1 p-1 tracking-wide" in:fade>
+            <section class="bg-card flex flex-col gap-2 p-4">
+                <div
+                    class="flex shrink-0 flex-wrap gap-1 p-1 tracking-wide"
+                    in:fade
+                >
                     <SegmentField
                         {audioPlayer}
                         segment={subtitles?.[+questionId]}
                         hidden={hiddenItem}
                     />
                 </div>
-                <div class="w-full">
-                    <Textarea />
+                <div class="flex items-stretch">
+                    {#if selected === "pen"}
+                        <Textarea class="min-h-16" />
+                    {:else if selected === "mic"}
+                        <RecordRegion />
+                    {/if}
                 </div>
 
                 <div class="flex items-center justify-center gap-2">
@@ -158,9 +195,9 @@
                         size="sm"
                         type="single"
                         bind:value={
-                            () => playrate,
+                            () => playbackRate,
                             (v) => {
-                                playrate = v;
+                                playbackRate = v;
                                 audioPlayer.onSetPlaybackRate(+v);
                                 return v;
                             }
@@ -187,7 +224,9 @@
                     </Button>
 
                     <Button
-                        variant="link"
+                        variant="secondary"
+                        size="icon"
+                        class="size-8"
                         onclick={() => {
                             if (!audioPlayer) return;
 
@@ -210,9 +249,9 @@
                         }}
                     >
                         {#if audioPlayer?.isPlaying}
-                            <Pause class="text-primary" />
+                            <Pause />
                         {:else}
-                            <Play class="text-primary" />
+                            <Play />
                         {/if}
                     </Button>
                     <Button
@@ -268,6 +307,17 @@
                         </div>
                     {/if}
                 </div>
+            </section>
+
+            <div
+                class="group absolute right-4 bottom-4 flex h-auto flex-col px-2 py-1"
+            >
+                {@render item("link", SquareArrowOutUpRight)}
+                {@render item("pen", SquarePen)}
+                {@render item("mic", Mic)}
+            </div>
+            <section class="my-2 flex shrink grow flex-col gap-2 overflow-auto">
+                TODO
             </section>
         {/key}
     </div>

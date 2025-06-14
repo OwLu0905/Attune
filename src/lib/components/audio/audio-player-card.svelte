@@ -152,7 +152,7 @@
     </Card.Footer>
 </Card.Root>
 
-<div class="p-6">
+<div class="shrink grow overflow-auto p-6">
     {#if audioItem.transcribe === 0 && !isTranscribing}
         <Button
             disabled={isTranscribing}
@@ -168,7 +168,7 @@
     {:else if isTranscribing}
         <LoaderCircle class="animate-spin" />
     {:else if audioPlayer && audioPlayer.isReady}
-        <Tabs.Root bind:value={tabValue} class="" activationMode="manual">
+        <Tabs.Root bind:value={tabValue} activationMode="manual" class="h-full">
             <Tabs.List>
                 <Tabs.Trigger
                     value="swiper"

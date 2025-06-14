@@ -92,21 +92,23 @@
                     </Breadcrumb.Root>
                 </div>
             </header>
-            <h1 class="p-4 py-2 text-3xl font-bold text-primary">
+            <h1 class="text-primary p-4 py-2 text-3xl font-bold">
                 {mainRoute}
             </h1>
-            <div class="flex flex-1 flex-col gap-4 p-4">
+            <div
+                class="flex h-0 shrink grow flex-col gap-4 overflow-hidden p-4"
+            >
                 {#if isHomePage}
                     <div class="grid auto-rows-min gap-4 md:grid-cols-3">
-                        <div class="aspect-video rounded-xl bg-muted/50"></div>
-                        <div class="aspect-video rounded-xl bg-muted/50"></div>
-                        <div class="aspect-video rounded-xl bg-muted/50"></div>
+                        <div class="bg-muted/50 aspect-video rounded-xl"></div>
+                        <div class="bg-muted/50 aspect-video rounded-xl"></div>
+                        <div class="bg-muted/50 aspect-video rounded-xl"></div>
                         <div class="col-span-4 w-full">
                             {@render children()}
                         </div>
                     </div>
                     <div
-                        class="min-h-screen flex-1 rounded-xl bg-muted/50 md:min-h-min"
+                        class="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min"
                     ></div>
                 {:else}
                     {@render children()}
