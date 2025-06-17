@@ -38,11 +38,17 @@
         onPause: () => Promise<void>;
         onPlaySection: (start: number, end: number) => Promise<void>;
         subtitles: SubtitleSegment[];
+        hiddenAll: boolean;
     }
-    let { questionId, audioPlayer, onPause, onPlaySection, subtitles }: Props =
-        $props();
+    let {
+        questionId,
+        audioPlayer,
+        onPause,
+        onPlaySection,
+        subtitles,
+        hiddenAll,
+    }: Props = $props();
 
-    let hiddenAll = $state(true);
     let dictationList = $state<{ dictationId: number; createdAt: string }[]>(
         [],
     );
@@ -127,48 +133,6 @@
 {/snippet}
 
 <div class="flex flex-col gap-1 overflow-auto px-4 py-2 tabular-nums">
-    <div class="flex justify-between gap-4">
-        <Button
-            variant="outline"
-            size="sm"
-            onclick={() => {
-                if (+questionId === 0) return;
-                questionId = `${+questionId - 1}`;
-            }}
-        >
-            <ChevronLeft />
-        </Button>
-        <div class="flex items-center gap-4 text-sm">
-            <Button onclick={() => (hiddenAll = !hiddenAll)} variant="outline">
-                {#if hiddenAll}
-                    <Eye class="text-primary" />
-                {:else}
-                    <EyeOff class="text-primary" />
-                {/if}
-            </Button>
-            <Select.Root type="single" bind:value={questionId}>
-                <Select.Trigger class="w-20">{+questionId + 1}</Select.Trigger>
-                <Select.Content>
-                    {#each items as s}
-                        <Select.Item value={s}>{+s + 1}</Select.Item>
-                    {/each}
-                </Select.Content>
-            </Select.Root>
-        </div>
-        <Button
-            variant="outline"
-            size="sm"
-            onclick={() => {
-                if (+questionId === subtitles?.length - 1) {
-                    return;
-                }
-                questionId = `${+questionId + 1}`;
-            }}
-        >
-            <ChevronRight />
-        </Button>
-    </div>
-
     <div class="flex shrink grow flex-col gap-2 overflow-auto">
         {#key questionId}
             <section class="bg-card flex flex-col gap-2 p-4">
@@ -189,8 +153,32 @@
                         <RecordRegion />
                     {/if}
                 </div>
+            </section>
 
-                <div class="flex items-center justify-center gap-2">
+            <div
+                class="group absolute right-4 bottom-4 flex h-auto flex-col px-2 py-1"
+            >
+                {@render item("link", SquareArrowOutUpRight)}
+                {@render item("pen", SquarePen)}
+                {@render item("mic", Mic)}
+            </div>
+
+            <div
+                class="absolute right-0 bottom-4 left-0 mx-auto flex w-fit items-center justify-center gap-2 py-1"
+            >
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onclick={() => {
+                        if (+questionId === 0) return;
+                        questionId = `${+questionId - 1}`;
+                    }}
+                >
+                    <ChevronLeft />
+                </Button>
+                <div
+                    class="bg-card inset-shadow-primary/60 flex items-center justify-center gap-2 rounded-full px-8 py-1 shadow-md inset-shadow-sm"
+                >
                     <ToggleGroup.Root
                         size="sm"
                         type="single"
@@ -306,15 +294,31 @@
                             </Button>
                         </div>
                     {/if}
-                </div>
-            </section>
 
-            <div
-                class="group absolute right-4 bottom-4 flex h-auto flex-col px-2 py-1"
-            >
-                {@render item("link", SquareArrowOutUpRight)}
-                {@render item("pen", SquarePen)}
-                {@render item("mic", Mic)}
+                    <Select.Root type="single" bind:value={questionId}>
+                        <Select.Trigger class="border-primary/10 w-16 text-xs"
+                            >{+questionId + 1}</Select.Trigger
+                        >
+                        <Select.Content>
+                            {#each items as s}
+                                <Select.Item value={s}>{+s + 1}</Select.Item>
+                            {/each}
+                        </Select.Content>
+                    </Select.Root>
+                </div>
+
+                <Button
+                    variant="ghost"
+                    size="sm"
+                    onclick={() => {
+                        if (+questionId === subtitles?.length - 1) {
+                            return;
+                        }
+                        questionId = `${+questionId + 1}`;
+                    }}
+                >
+                    <ChevronRight />
+                </Button>
             </div>
             <section class="my-2 flex shrink grow flex-col gap-2 overflow-auto">
                 TODO

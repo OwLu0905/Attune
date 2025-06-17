@@ -28,7 +28,7 @@ export class AudioPlayer {
             waveColor: `${this.secondaryOklch}`,
             barWidth: 2,
             barGap: 1,
-            height: 60,
+            height: 40,
             // backend: WAVESURFER_BACKEND,
             plugins: [this.regions, TimelinePlugin.create()],
         });

@@ -1,12 +1,16 @@
 <script lang="ts">
+    import { invoke } from "@tauri-apps/api/core";
     import { onMount } from "svelte";
     import { fade } from "svelte/transition";
+    import { getUserContext } from "@/user/userService.svelte";
 
     import Button from "$lib/components/ui/button/button.svelte";
     import Slider from "@/components/ui/slider/slider.svelte";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Tabs from "@/components/ui/tabs";
     import {
+        Eye,
+        EyeOff,
         LoaderCircle,
         Pause,
         Play,
@@ -14,16 +18,13 @@
         Volume2,
     } from "@lucide/svelte";
     import ScrollArea from "@/components/ui/scroll-area/scroll-area.svelte";
-
-    import { AudioPlayer } from "./audio-player.svelte";
-    import { getSubtitleFile } from "@/utils";
     import DictationCard from "./dictation-card.svelte";
     import SegmentField from "./segment-field.svelte";
+    import { AudioPlayer } from "./audio-player.svelte";
+    import { getSubtitleFile } from "@/utils";
 
     import type { SubtitleSegment } from "./types";
     import type { AudioItem } from "@/types/audio";
-    import { invoke } from "@tauri-apps/api/core";
-    import { getUserContext } from "@/user/userService.svelte";
 
     interface Props {
         audioPath: BlobPart;
@@ -43,6 +44,7 @@
     let questionId = $state("0");
     let tabValue = $state<"list" | "swiper">("swiper");
     let isTranscribing = $state(false);
+    let hiddenAll = $state(true);
 
     onMount(() => {
         async function load() {
@@ -94,7 +96,7 @@
     }
 </script>
 
-<Card.Root>
+<Card.Root class="">
     <Card.Header class="flex flex-row justify-between">
         <div class="flex flex-col gap-1.5">
             <Card.Title>{audioItem.title}</Card.Title>
@@ -103,8 +105,8 @@
     </Card.Header>
     <Card.Content>
         <div bind:this={container}></div>
-        <div class="mt-8 flex items-center justify-center gap-2">
-            <Volume2 class="text-primary" />
+        <div class="mt-6 flex items-center justify-center gap-2">
+            <Volume2 class="text-primary" size={16} />
             <Slider
                 type="single"
                 max={100}
@@ -117,11 +119,8 @@
                 }}
             />
 
-            <Button
-                class="text-muted-foreground ml-auto"
-                type="button"
-                size="sm"
-                variant="outline"
+            <button
+                class="text-primary ml-auto h-4 w-4"
                 onclick={() => {
                     if (!audioPlayer) return;
 
@@ -129,30 +128,30 @@
                 }}
             >
                 {#if audioPlayer?.isPlaying}
-                    <Pause />
+                    <Pause size={16} />
                 {:else}
-                    <Play />
+                    <Play size={16} />
                 {/if}
-            </Button>
+            </button>
         </div>
     </Card.Content>
 
     <Card.Footer class="flex w-full flex-col items-start gap-2">
-        <div class="flex gap-4">
-            <div class="flex gap-4">
-                <div class="flex items-center gap-2">
-                    <div class="h-4 w-4 rounded-full bg-violet-200"></div>
-                    <div class="text-sm">Current Segment</div>
+        <div class="flex gap-2">
+            <div class="flex gap-2">
+                <div class="flex items-center gap-1">
+                    <div class="bg-primary/60 h-2 w-2 rounded-full"></div>
+                    <div class="text-xs">Current Segment</div>
                 </div>
             </div>
-            <div class="text-sm tabular-nums">
-                {audioPlayer?.currentTime?.toFixed(2)}(sec)
+            <div class="text-xs tabular-nums">
+                {audioPlayer?.currentTime?.toFixed(2)} (sec)
             </div>
         </div>
     </Card.Footer>
 </Card.Root>
 
-<div class="shrink grow overflow-auto p-6">
+<div class="shrink grow overflow-auto px-2 pt-2">
     {#if audioItem.transcribe === 0 && !isTranscribing}
         <Button
             disabled={isTranscribing}
@@ -168,7 +167,11 @@
     {:else if isTranscribing}
         <LoaderCircle class="animate-spin" />
     {:else if audioPlayer && audioPlayer.isReady}
-        <Tabs.Root bind:value={tabValue} activationMode="manual" class="h-full">
+        <Tabs.Root
+            bind:value={tabValue}
+            activationMode="manual"
+            class="relative h-full"
+        >
             <Tabs.List>
                 <Tabs.Trigger
                     value="swiper"
@@ -258,9 +261,22 @@
                         {onPause}
                         {onPlaySection}
                         {subtitles}
+                        {hiddenAll}
                     />
                 {/if}
             </Tabs.Content>
+            <div class="absolute top-0 right-0 flex justify-between gap-4">
+                <Button
+                    onclick={() => (hiddenAll = !hiddenAll)}
+                    variant="outline"
+                >
+                    {#if hiddenAll}
+                        <Eye class="text-primary" />
+                    {:else}
+                        <EyeOff class="text-primary" />
+                    {/if}
+                </Button>
+            </div>
         </Tabs.Root>
     {:else}
         <LoaderCircle class="text-primary mx-auto animate-spin" />

@@ -1,110 +1,81 @@
 <script lang="ts">
+    import { onMount } from "svelte";
+    import { fade } from "svelte/transition";
     import { cn } from "@/utils";
     import Button from "@/components/ui/button/button.svelte";
-    import * as Select from "@/components/ui/select";
-    import { Disc, Mic } from "@lucide/svelte";
-    import WaveBackground from "./wave-background.svelte";
-    import { onMount } from "svelte";
-    import WaveSurfer from "wavesurfer.js";
+    import { RecordPlayer } from "./record-player.svelte";
     import RecordPlugin from "wavesurfer.js/dist/plugins/record.esm.js";
+    import { Disc, Mic } from "@lucide/svelte";
 
     let rc: HTMLElement;
-    let ws;
-    let record: any;
-    let micSelect: any[] = [];
+    let ws: RecordPlayer | undefined = $state(undefined);
+    let micSelect: any[] = $state([]);
 
     onMount(() => {
-        ws = WaveSurfer.create({
-            container: rc,
-            waveColor: "rgb(200, 0, 200)",
-            progressColor: "rgb(100, 0, 100)",
-        });
-        record = ws.registerPlugin(
-            RecordPlugin.create({
-                renderRecordedAudio: false,
-                scrollingWaveform: true,
-                continuousWaveform: true,
-                continuousWaveformDuration: 30, // optional
-            }),
-        );
+        ws = new RecordPlayer();
+        ws.createRecord(rc);
+    });
+
+    const isRecording = $derived.by(() => {
+        if (ws) return ws.isRecording;
+        return false;
     });
 
     onMount(() => {
         async function getAudioDevices() {
-            try {
-                // Request permission first (required for device labels)
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-
-                // Get all media devices
-                const devices = await navigator.mediaDevices.enumerateDevices();
-
-                // Filter for audio input devices (microphones)
-                const audioInputs = devices.filter(
-                    (device) => device.kind === "audioinput",
-                );
-
-                // Filter for audio output devices (speakers/headphones)
-                const audioOutputs = devices.filter(
-                    (device) => device.kind === "audiooutput",
-                );
-
-                // console.log('Audio Input Devices:', audioInputs);
-                // console.log('Audio Output Devices:', audioOutputs);
-
-                return { audioInputs, audioOutputs };
-            } catch (error) {
-                console.error("Error accessing media devices:", error);
-            }
+            RecordPlugin.getAvailableAudioDevices().then((devices) => {
+                micSelect = devices;
+            });
         }
-
-        getAudioDevices().then((data) => {
-            console.log(data);
-            micSelect = data?.audioInputs ?? [];
-        });
+        getAudioDevices();
     });
+
+    const triggerContent = $derived(micSelect[0]?.label ?? "Select mic");
 </script>
 
-<div
-    bind:this={rc}
-    class={cn(
-        "border-border box-border h-16 w-full rounded-md border shadow-xs",
-        "flex items-center justify-center",
-        "relative",
-        "backdrop-blur-2xl",
-    )}
->
-    <!-- <WaveBackground /> -->
+<div class="relative flex w-full flex-col">
     <div
-        class="z-5 flex h-full w-full items-center justify-center gap-2 bg-white/30 backdrop-blur-3xl"
-    >
-        <Button
-            size="sm"
-            onclick={async () => {
-                await record.startRecording({ deviceId: "" });
-            }}
-        >
-            <Mic strokeWidth={1.5} />
-            Record</Button
-        >
+        bind:this={rc}
+        class={cn(
+            "border-border box-border w-full rounded-md border shadow-xs",
+        )}
+    ></div>
 
-        <Button
-            size="sm"
-            variant="destructive"
-            onclick={() => {
-                record.stopRecording();
-            }}
-        >
-            <Disc strokeWidth={1.5} />
-            Finish</Button
-        >
+    <div class="z-5 flex w-full items-center justify-center gap-2 py-2">
+        {#if isRecording}
+            <div in:fade>
+                <Button
+                    variant="secondary"
+                    size="icon"
+                    class="text-destructive"
+                    onclick={() => {
+                        if (!ws) return;
+                        ws.onFinish();
+                    }}
+                >
+                    <Disc strokeWidth={1.5} />
+                </Button>
+            </div>
+        {:else}
+            <div in:fade>
+                <Button
+                    variant="secondary"
+                    size="icon"
+                    class="text-primary"
+                    onclick={async () => {
+                        try {
+                            if (!ws) return;
+                            ws.createRecord(rc);
+
+                            ws.onRecord(micSelect[0]?.deviceId ?? "");
+                        } catch (error) {
+                            console.error(error);
+                        }
+                    }}
+                >
+                    <Mic strokeWidth={1.5} />
+                </Button>
+            </div>
+        {/if}
     </div>
 </div>
-
-<Select.Root type="single">
-    <Select.Trigger class="mx-4 w-[180px]"></Select.Trigger>
-    <Select.Content>
-        {#each micSelect as mic}
-            <Select.Item value={mic.deviceId}>{mic.labels}</Select.Item>
-        {/each}
-    </Select.Content>
-</Select.Root>
