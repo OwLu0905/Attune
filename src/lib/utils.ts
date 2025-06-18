@@ -2,7 +2,13 @@ import { type ClassValue, clsx } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { appLocalDataDir } from "@tauri-apps/api/path";
 
-import { readFile, BaseDirectory } from "@tauri-apps/plugin-fs";
+import {
+    readFile,
+    BaseDirectory,
+    readDir,
+    stat,
+    remove,
+} from "@tauri-apps/plugin-fs";
 
 export function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -70,6 +76,57 @@ export async function getSubtitleFile(id: string) {
         // Parse the JSON string
         const jsonData = JSON.parse(jsonString);
         return jsonData;
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function getRecordHistory(audioId: string, index: string) {
+    try {
+        return await readDir(`data/${audioId}/${index}/`, {
+            baseDir: BaseDirectory.AppLocalData,
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function getRecordItem(
+    audioId: string,
+    index: string,
+    filename: string,
+) {
+    try {
+        return await readFile(`data/${audioId}/${index}/${filename}`, {
+            baseDir: BaseDirectory.AppLocalData,
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+export async function getRecordItemMetadata(
+    audioId: string,
+    index: string,
+    filename: string,
+) {
+    try {
+        return await stat(`data/${audioId}/${index}/${filename}`, {
+            baseDir: BaseDirectory.AppLocalData,
+        });
+    } catch (error) {
+        console.error(error);
+    }
+}
+
+export async function deleteRecordItem(
+    audioId: string,
+    index: string,
+    filename: string,
+) {
+    try {
+        return await remove(`data/${audioId}/${index}/${filename}`, {
+            baseDir: BaseDirectory.AppLocalData,
+        });
     } catch (error) {
         console.error(error);
     }

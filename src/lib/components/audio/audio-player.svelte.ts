@@ -83,10 +83,13 @@ export class AudioPlayer {
     onSetVolume(sv: number) {
         this.ws!.setVolume(sv);
     }
+    onMuted() {
+        this.onSetVolume(0);
+    }
     onSetPlaybackRate(speed: number) {
         this.ws!.setPlaybackRate(speed, true);
     }
-    destory() {
+    destroy() {
         this.ws?.destroy();
     }
 }

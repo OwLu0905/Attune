@@ -1,8 +1,9 @@
 import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import RecordPlugin from "wavesurfer.js/dist/plugins/record.esm.js";
-
 import type { Region } from "wavesurfer.js/dist/plugins/regions.esm.js";
+
+import { writeFile, mkdir, BaseDirectory } from "@tauri-apps/plugin-fs";
 import { WAVESURFER_BACKEND } from "@/constants";
 
 export class RecordPlayer {
@@ -21,10 +22,15 @@ export class RecordPlayer {
     isPlaying = $state(false);
     isReady = $state(false);
     isRecording = $state(false);
+    blobData: Blob | null = $state(null);
+    recordedUrl: string | null = $state(null);
 
     computedStyle = getComputedStyle(document.documentElement);
     primaryOklch = this.computedStyle.getPropertyValue("--primary").trim();
     secondaryOklch = this.computedStyle.getPropertyValue("--secondary").trim();
+    destructiveOklch = this.computedStyle
+        .getPropertyValue("--destructive")
+        .trim();
 
     constructor() {}
     async createRecord(container: HTMLElement) {
@@ -32,10 +38,16 @@ export class RecordPlayer {
             this.ws.destroy();
         }
 
+        if (this.recordedUrl) {
+            URL.revokeObjectURL(this.recordedUrl);
+            this.recordedUrl = null;
+            this.blobData = null;
+        }
+
         this.ws = WaveSurfer.create({
             container,
-            progressColor: `${this.primaryOklch}`,
-            waveColor: `${this.secondaryOklch}`,
+            progressColor: `${this.destructiveOklch}`,
+            waveColor: `${this.destructiveOklch}`,
             barWidth: 2,
             barGap: 1,
             height: 62,
@@ -56,8 +68,8 @@ export class RecordPlayer {
             if (this.ws) {
                 this.ws.destroy();
             }
-
-            const recordedUrl = URL.createObjectURL(blob);
+            this.blobData = blob;
+            this.recordedUrl = URL.createObjectURL(blob);
             this.ws = WaveSurfer.create({
                 container,
                 progressColor: `${this.primaryOklch}`,
@@ -66,7 +78,7 @@ export class RecordPlayer {
                 barGap: 1,
                 height: 62,
                 backend: WAVESURFER_BACKEND,
-                url: recordedUrl,
+                url: this.recordedUrl,
             });
 
             this.ws?.on("click", () => {
@@ -77,6 +89,37 @@ export class RecordPlayer {
     async onRecord(deviceId: ConstrainDOMString) {
         this.isRecording = true;
         await this.record.startRecording({ deviceId });
+    }
+    async onSaveFile(index: string, id: string) {
+        if (!this.blobData || !this.recordedUrl) return;
+
+        const arrayBuffer = await this.blobData.arrayBuffer();
+        const uint8Array = new Uint8Array(arrayBuffer);
+        const fileExtension =
+            this.blobData.type.split(";")[0].split("/")[1] || "webm";
+
+        const uuid = this.recordedUrl.slice(
+            this.recordedUrl.lastIndexOf("/") + 1,
+        ); // Extract UUID from existing URL
+
+        const dirPath = `data/${id}/${index}`;
+        try {
+            await mkdir(dirPath, {
+                baseDir: BaseDirectory.AppLocalData,
+                recursive: true, // This creates parent directories if they don't exist
+            });
+        } catch (error) {
+            // Directory might already exist, that's okay
+            console.log("Directory creation info:", error);
+        }
+
+        await writeFile(
+            `data/${id}/${index}/${uuid}.${fileExtension}`,
+            uint8Array,
+            {
+                baseDir: BaseDirectory.AppLocalData,
+            },
+        );
     }
 
     onFinish() {
@@ -107,7 +150,10 @@ export class RecordPlayer {
     onSetPlaybackRate(speed: number) {
         this.ws!.setPlaybackRate(speed, true);
     }
-    destory() {
+    empty() {
+        this.ws?.empty();
+    }
+    destroy() {
         this.ws?.destroy();
     }
 }

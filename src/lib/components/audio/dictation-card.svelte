@@ -24,15 +24,19 @@
         RotateCcw,
         SquareArrowOutUpRight,
         SquarePen,
+        Trash,
     } from "@lucide/svelte";
 
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { SubtitleSegment } from "./types";
     import { PLAYBACK_RATE } from "@/constants";
     import { cn } from "@/utils";
-    import RecordRegion from "./record-region.svelte";
+    import RecordRegion from "./record/record-region.svelte";
+    import RecordHistoryCard from "./record/record-history-card.svelte";
+    import { RecordHistoryData } from "./record/record-history-data.svelte";
 
     interface Props {
+        audioId: string;
         questionId: string;
         audioPlayer: AudioPlayer;
         onPause: () => Promise<void>;
@@ -62,6 +66,8 @@
     let selected = $state("mic");
 
     let audioId = $derived(page.params.id);
+
+    const recordData = new RecordHistoryData();
 
     const { getUser } = getUserContext();
 
@@ -150,7 +156,7 @@
                     {#if selected === "pen"}
                         <Textarea class="min-h-16" />
                     {:else if selected === "mic"}
-                        <RecordRegion />
+                        <RecordRegion {audioId} {questionId} {recordData} />
                     {/if}
                 </div>
             </section>
@@ -320,8 +326,8 @@
                     <ChevronRight />
                 </Button>
             </div>
-            <section class="my-2 flex shrink grow flex-col gap-2 overflow-auto">
-                TODO
+            <section class="my-2 flex shrink grow flex-col gap-2">
+                <RecordHistoryCard {audioId} {questionId} {recordData} />
             </section>
         {/key}
     </div>

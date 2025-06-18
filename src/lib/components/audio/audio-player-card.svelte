@@ -16,15 +16,15 @@
         Play,
         RotateCcw,
         Volume2,
+        VolumeOff,
     } from "@lucide/svelte";
-    import ScrollArea from "@/components/ui/scroll-area/scroll-area.svelte";
     import DictationCard from "./dictation-card.svelte";
-    import SegmentField from "./segment-field.svelte";
     import { AudioPlayer } from "./audio-player.svelte";
     import { getSubtitleFile } from "@/utils";
 
     import type { SubtitleSegment } from "./types";
     import type { AudioItem } from "@/types/audio";
+    import ListCard from "./list-card.svelte";
 
     interface Props {
         audioPath: BlobPart;
@@ -61,19 +61,10 @@
 
         return () => {
             if (audioPlayer) {
-                audioPlayer.destory();
+                audioPlayer.destroy();
             }
         };
     });
-
-    async function onPlaySection(start: number, end: number) {
-        if (!audioPlayer) return;
-        audioPlayer.onPlaySection(start, end);
-    }
-    async function onPause() {
-        if (!audioPlayer) return;
-        audioPlayer.onPause();
-    }
 
     async function getSubtitle() {
         try {
@@ -94,6 +85,15 @@
             isTranscribing = false;
         }
     }
+
+    async function onPlaySection(start: number, end: number) {
+        if (!audioPlayer) return;
+        audioPlayer.onPlaySection(start, end);
+    }
+    async function onPause() {
+        if (!audioPlayer) return;
+        audioPlayer.onPause();
+    }
 </script>
 
 <Card.Root class="">
@@ -106,7 +106,18 @@
     <Card.Content>
         <div bind:this={container}></div>
         <div class="mt-6 flex items-center justify-center gap-2">
-            <Volume2 class="text-primary" size={16} />
+            {#if volume === 0}
+                <VolumeOff class="text-primary" size={16} />
+            {:else}
+                <Volume2
+                    onclick={() => {
+                        volume = 0;
+                        audioPlayer?.onMuted();
+                    }}
+                    class="text-primary"
+                    size={16}
+                />
+            {/if}
             <Slider
                 type="single"
                 max={100}
@@ -191,71 +202,13 @@
                 </Tabs.Trigger>
             </Tabs.List>
             <Tabs.Content value="list">
-                <div transition:fade>
-                    <ScrollArea
-                        class="text-md flex max-h-80 w-full max-w-full flex-col gap-0.5 overflow-auto bg-stone-100 px-4 py-2 tabular-nums"
-                    >
-                        <div class="flex flex-col gap-0">
-                            {#each subtitles as i, index (index)}
-                                <div class="flex w-full gap-4 p-2">
-                                    <span
-                                        class="w-4 shrink-0 text-right text-sm leading-6"
-                                        >{index + 1}</span
-                                    >
-                                    <div class="shrink grow">
-                                        <SegmentField
-                                            {audioPlayer}
-                                            segment={i}
-                                            hidden={false}
-                                        />
-                                    </div>
-                                    <div class="flex shrink-0 gap-4">
-                                        {#if audioPlayer?.isPlaying && i.start <= audioPlayer?.currentTime && audioPlayer?.currentTime <= i.end}
-                                            <Pause
-                                                class="text-primary w-4"
-                                                onclick={() => {
-                                                    onPause();
-                                                }}
-                                            />
-                                        {:else}
-                                            <Play
-                                                class="stroke-primary text-primary w-4"
-                                                onclick={() => {
-                                                    if (!audioPlayer) return;
-
-                                                    const startTime =
-                                                        i.start <=
-                                                            audioPlayer?.currentTime &&
-                                                        audioPlayer?.currentTime <=
-                                                            i.end
-                                                            ? audioPlayer?.currentTime
-                                                            : i.start;
-
-                                                    onPlaySection(
-                                                        startTime,
-                                                        i.end,
-                                                    );
-                                                }}
-                                            />
-                                        {/if}
-
-                                        <RotateCcw
-                                            class="w-4 text-lime-500"
-                                            onclick={() => {
-                                                onPlaySection(i.start, i.end);
-                                            }}
-                                        />
-                                    </div>
-                                </div>
-                            {/each}
-                        </div>
-                    </ScrollArea>
-                </div>
+                <ListCard {subtitles} {audioPlayer} {onPause} {onPlaySection} />
             </Tabs.Content>
 
             <Tabs.Content value="swiper">
                 {#if tabValue === "swiper"}
                     <DictationCard
+                        audioId={audioItem.id}
                         {questionId}
                         {audioPlayer}
                         {onPause}
