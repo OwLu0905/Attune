@@ -16,7 +16,7 @@
 </script>
 
 <main class="container">
-    <h2 class="py-4 text-xl font-bold text-primary">
+    <h2 class="text-primary py-4 text-xl font-bold">
         Welcome to Tauri + Svelte
     </h2>
 

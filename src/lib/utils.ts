@@ -47,7 +47,7 @@ export async function getAppLocalDataDir() {
 export async function getAudioSubtitlePath(id: string) {
     try {
         const dir = await appLocalDataDir();
-        const audioPath = `${dir}/data/${id}/audio.mp3`;
+        const audioPath = `${dir}/data/${id}/audio.m4a`;
         const subtitlePath = `${dir}/data/${id}/subtitle.json`;
         return [audioPath, subtitlePath];
     } catch (error) {
@@ -57,7 +57,7 @@ export async function getAudioSubtitlePath(id: string) {
 }
 export async function getAudioFile(id: string) {
     try {
-        return await readFile(`data/${id}/audio.mp3`, {
+        return await readFile(`data/${id}/audio.m4a`, {
             baseDir: BaseDirectory.AppLocalData,
         });
     } catch (error) {

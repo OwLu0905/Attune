@@ -44,7 +44,7 @@
                 name: "Novel",
                 logo: AudioWaveform,
                 plan: "Startup",
-                link: "/novel/1",
+                link: "/novel",
             },
             {
                 name: "Home",

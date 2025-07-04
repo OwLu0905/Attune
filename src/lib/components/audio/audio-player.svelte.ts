@@ -2,6 +2,13 @@ import WaveSurfer from "wavesurfer.js";
 import RegionsPlugin from "wavesurfer.js/dist/plugins/regions.esm.js";
 import TimelinePlugin from "wavesurfer.js/dist/plugins/timeline.esm.js";
 import type { Region } from "wavesurfer.js/dist/plugins/regions.esm.js";
+import { WAVESURFER_BACKEND } from "@/constants";
+
+// BUG: safari loading issue
+// https://stackoverflow.com/questions/65952427/mobile-safari-skips-first-seconds-of-html-audio-on-play
+
+// BUG: safari file types
+// https://stackoverflow.com/questions/54126228/what-causes-desktop-safari-html-audio-currenttime-inaccuracy
 
 const random = (min: number, max: number) => Math.random() * (max - min) + min;
 const randomColor = () =>
@@ -59,7 +66,7 @@ export class AudioPlayer {
             regions.on("region-clicked", () => {});
         });
 
-        const blob = new Blob([audio], { type: "audio/mp3" });
+        const blob = new Blob([audio], { type: "audio/mp4" });
         this.ws!.loadBlob(blob);
     }
     async onPlayPause() {

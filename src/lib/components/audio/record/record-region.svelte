@@ -100,13 +100,12 @@
                         if (!ws?.blobData || !ws?.recordedUrl) return;
                         isSaving = true;
                         await ws.onSaveFile(questionId, audioId);
-                        setTimeout(() => {
-                            isSaving = false;
-                            if (ws && ws.blobData) {
-                                ws.blobData = null;
-                                ws.empty();
-                            }
-                        }, 1000);
+
+                        if (ws && ws.blobData) {
+                            ws.blobData = null;
+                            ws.empty();
+                        }
+                        isSaving = false;
                         recordData.updateData(audioId, questionId);
                     }}
                 >

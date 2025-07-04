@@ -1,10 +1,13 @@
-use tauri::AppHandle;
+use tauri::{AppHandle, Emitter};
 use tauri_plugin_shell::{process::CommandEvent, ShellExt};
 use tokio::fs::remove_file;
 
 use std::io::ErrorKind;
 
-use crate::config::{get_data_path, get_model_path};
+use crate::{
+    config::{get_data_path, get_model_path},
+    service::wx::{TranscriptionComplete, TranscriptionProgress, WhisperXClient},
+};
 
 async fn remove_file_safe(path: &str) -> tokio::io::Result<()> {
     match remove_file(path).await {
@@ -25,6 +28,9 @@ pub async fn start_transcribe(
         .sidecar("whip_v2")
         .expect("whip_v2 sidecar does not exist");
 
+    // .sidecar("wpx")
+    // .expect("wpx sidecar does not exist");
+
     let model_path = get_model_path(&app_handle).unwrap_or(format!("/"));
 
     let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
@@ -36,7 +42,7 @@ pub async fn start_transcribe(
     let (mut rx, _child) = command
         .args([
             "--file",
-            &format!("{}/{}/audio.mp3", data_path, audio_id),
+            &format!("{}/{}/audio.m4a", data_path, audio_id),
             "--model",
             &model,
             "--model_path",
@@ -81,4 +87,176 @@ pub async fn start_transcribe(
 
     let _ = handle.await.unwrap();
     Ok(())
+}
+
+#[tauri::command(rename_all = "snake_case")]
+pub async fn start_transcribe_service(
+    app_handle: AppHandle,
+    audio_id: String,
+    model: String,
+) -> Result<(), String> {
+    let model_path = get_model_path(&app_handle).unwrap_or(format!("/"));
+
+    let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
+
+    let check_data = &format!("{}/{}/subtitle.json", data_path, audio_id);
+
+    remove_file_safe(check_data).await.unwrap();
+
+    let client = WhisperXClient::new("http://localhost:8081");
+
+    match client.health_check().await {
+        Ok(true) => println!("✅ Service is healthy"),
+        Ok(false) => println!("❌ Service is not healthy"),
+        Err(e) => println!("❌ Failed to check health: {}", e),
+    }
+
+    match client
+        .transcribe(
+            &format!("{}/{}/audio.m4a", data_path, audio_id),
+            Some(&model), // model
+            Some("en"),   // language
+            Some(&format!("{}/models", model_path)),
+            Some(&format!("{}/{}/subtitle", data_path, audio_id)),
+        )
+        .await
+    {
+        Ok(response) => {
+            println!("✅ Transcription completed!");
+            println!("🗣️  Language detected: {}", response.language);
+            println!("📄 Output file: {}", response.output_file);
+            println!("📝 Segments ({} total):", response.segments.len());
+
+            // Print first few segments
+            for (i, segment) in response.segments.iter().take(3).enumerate() {
+                println!(
+                    "  {}. [{:.2}s - {:.2}s]: {}",
+                    i + 1,
+                    segment.start,
+                    segment.end,
+                    segment.text.trim()
+                );
+            }
+
+            if response.segments.len() > 3 {
+                println!("  ... and {} more segments", response.segments.len() - 3);
+            }
+        }
+        Err(e) => {
+            println!("❌ Transcription failed: {}", e);
+        }
+    }
+
+    Ok(())
+}
+#[tauri::command(rename_all = "snake_case")]
+pub async fn start_transcribe_service_streaming(
+    app_handle: AppHandle,
+    audio_id: String,
+    model: String,
+) -> Result<(), String> {
+    let model_path = get_model_path(&app_handle).unwrap_or(format!("/"));
+    let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
+    let check_data = &format!("{}/{}/subtitle.json", data_path, audio_id);
+    remove_file_safe(check_data).await.unwrap();
+
+    let client = WhisperXClient::new("http://localhost:8081");
+
+    // Health check
+    match client.health_check().await {
+        Ok(true) => println!("✅ Service is healthy"),
+        Ok(false) => {
+            println!("❌ Service is not healthy");
+            return Err("Service is not healthy".to_string());
+        }
+        Err(e) => {
+            println!("❌ Failed to check health: {}", e);
+            return Err(format!("Failed to check health: {}", e));
+        }
+    }
+
+    let audio_id_clone = audio_id.clone();
+    let app_handle_clone = app_handle.clone();
+
+    match client
+        .transcribe_streaming(
+            &format!("{}/{}/audio.m4a", data_path, audio_id),
+            Some(&model),
+            Some("en"),
+            Some(&format!("{}/models", model_path)),
+            Some(&format!("{}/{}/subtitle", data_path, audio_id)),
+            |status_update| {
+                // Emit progress events to the frontend
+                let progress_event = TranscriptionProgress {
+                    audio_id: audio_id_clone.clone(),
+                    status: status_update.status.clone(),
+                    message: status_update.message.clone(),
+                    progress: status_update.progress,
+                };
+
+                // Emit to frontend
+                app_handle_clone
+                    .emit("transcription-progress", &progress_event)
+                    .unwrap();
+
+                // Also log to console
+                println!("📊 [{}] {}", status_update.status, status_update.message);
+                if let Some(progress) = status_update.progress {
+                    println!("    Progress: {:.1}%", progress * 100.0);
+                }
+            },
+        )
+        .await
+    {
+        Ok(response) => {
+            println!("✅ Transcription completed!");
+            println!("🗣️  Language detected: {}", response.language);
+            println!("📄 Output file: {}", response.output_file);
+            println!("📝 Segments ({} total):", response.segments.len());
+
+            // Print first few segments
+            for (i, segment) in response.segments.iter().take(3).enumerate() {
+                println!(
+                    "  {}. [{:.2}s - {:.2}s]: {}",
+                    i + 1,
+                    segment.start,
+                    segment.end,
+                    segment.text.trim()
+                );
+            }
+
+            if response.segments.len() > 3 {
+                println!("  ... and {} more segments", response.segments.len() - 3);
+            }
+
+            // Emit completion event to frontend
+            let completion_event = TranscriptionComplete {
+                audio_id: audio_id.clone(),
+                language: response.language,
+                output_file: response.output_file,
+                segments_count: response.segments.len(),
+            };
+            app_handle
+                .emit("transcription-complete", &completion_event)
+                .unwrap();
+
+            Ok(())
+        }
+        Err(e) => {
+            println!("❌ Transcription failed: {}", e);
+
+            // Emit error event to frontend
+            let error_event = TranscriptionProgress {
+                audio_id: audio_id.clone(),
+                status: "error".to_string(),
+                message: e.to_string(),
+                progress: None,
+            };
+            app_handle
+                .emit("transcription-error", &error_event)
+                .unwrap();
+
+            Err(format!("Transcription failed: {}", e))
+        }
+    }
 }

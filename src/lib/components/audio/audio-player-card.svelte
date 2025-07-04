@@ -25,6 +25,7 @@
     import type { SubtitleSegment } from "./types";
     import type { AudioItem } from "@/types/audio";
     import ListCard from "./list-card.svelte";
+    import { listen } from "@tauri-apps/api/event";
 
     interface Props {
         audioPath: BlobPart;
@@ -45,6 +46,8 @@
     let tabValue = $state<"list" | "swiper">("swiper");
     let isTranscribing = $state(false);
     let hiddenAll = $state(true);
+
+    let prog = $state("");
 
     onMount(() => {
         async function load() {
@@ -70,9 +73,10 @@
         try {
             isTranscribing = true;
 
-            await invoke("start_transcribe", {
+            // TODO:
+            await invoke("start_transcribe_service_streaming", {
                 audio_id: audioItem.id,
-                model: "base.en",
+                model: "small.en",
             });
             audioItem = await invoke("handle_update_audio_transcribe", {
                 token: user.accessToken,
@@ -94,6 +98,12 @@
         if (!audioPlayer) return;
         audioPlayer.onPause();
     }
+    onMount(() => {
+        listen("transcription-progress", (event) => {
+            const { status, message, progress } = event.payload;
+            prog = status + message;
+        });
+    });
 </script>
 
 <Card.Root class="">
@@ -106,6 +116,17 @@
     <Card.Content>
         <div bind:this={container}></div>
         <div class="mt-6 flex items-center justify-center gap-2">
+            <Button
+                disabled={isTranscribing}
+                onclick={() => {
+                    getSubtitle();
+                }}
+            >
+                {#if isTranscribing}
+                    <LoaderCircle class="animate-spin" />
+                {/if}
+                Transcribe !
+            </Button>
             {#if volume === 0}
                 <VolumeOff class="text-primary" size={16} />
             {:else}
@@ -161,7 +182,6 @@
         </div>
     </Card.Footer>
 </Card.Root>
-
 <div class="shrink grow overflow-auto px-2 pt-2">
     {#if audioItem.transcribe === 0 && !isTranscribing}
         <Button

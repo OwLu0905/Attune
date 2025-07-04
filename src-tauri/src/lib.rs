@@ -7,6 +7,7 @@ mod db;
 mod model;
 mod query;
 mod server;
+mod service;
 pub mod ws;
 mod yt;
 
@@ -51,6 +52,8 @@ pub fn run() {
             greet,
             yt::download_yt_sections,
             model::start_transcribe,
+            model::start_transcribe_service,
+            model::start_transcribe_service_streaming,
             server::start_oauth_server,
             server::stop_oauth_server,
             query::commands::handle_login,

@@ -68,7 +68,7 @@ def transcribe(
         beam_size=5,
         language=lang,
         word_timestamps=True,
-        vad_filter=True,
+        vad_filter=False,
         log_progress=True,
     )
 

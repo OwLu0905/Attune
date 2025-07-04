@@ -64,14 +64,14 @@ pub async fn download_yt_sections(
 
         let (mut rx, _child) = yt_command
             .args([
-                // "--download-sections",
-                // &format!("*{}-{}", start, end),
-                // "-f",
-                // "mp4",
-                // "-k",
+                "--download-sections",
+                &format!("*{}-{}", start, end),
+                "-f",
+                "mp4",
+                "-k",
                 "--extract-audio",
                 "--audio-format",
-                "mp3",
+                "m4a",
                 "-o",
                 &format!("{}/{}/audio.%(ext)s", data_path, uuid),
                 &url,
