@@ -1,21 +1,16 @@
 use db::{setup_db, Db};
 use tauri::Manager;
 
-pub mod commands;
 mod config;
 mod db;
 mod model;
 mod query;
 mod server;
 mod service;
-pub mod ws;
 mod yt;
 
 pub struct DbState {
     db: Db,
-}
-pub struct WsState {
-    ws_client: ws::WebSocketClient,
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
@@ -32,7 +27,6 @@ pub fn run() {
         .plugin(tauri_plugin_opener::init());
 
     builder = builder
-        .plugin(tauri_plugin_deep_link::init())
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_sql::Builder::new().build());
 

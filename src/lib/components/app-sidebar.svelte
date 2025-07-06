@@ -35,18 +35,6 @@
         },
         topics: [
             {
-                name: "Echo",
-                logo: GalleryVerticalEnd,
-                plan: "Enterprise",
-                link: "/echo/1",
-            },
-            {
-                name: "Novel",
-                logo: AudioWaveform,
-                plan: "Startup",
-                link: "/novel",
-            },
-            {
                 name: "Home",
                 logo: Command,
                 plan: "Free",
@@ -54,16 +42,9 @@
             },
             {
                 name: "YouTube",
-                logo: Command,
-                plan: "Pro",
+                logo: AudioWaveform,
+                plan: "Learning",
                 link: "/yt",
-            },
-
-            {
-                name: "Model",
-                logo: Command,
-                plan: "Pro",
-                link: "/model",
             },
         ],
         navMain: [
@@ -188,10 +169,9 @@
     <Sidebar.Header>
         <TopicSwitcher topics={data.topics} />
     </Sidebar.Header>
-    {#if isEcho}
+
+    {#if user.accessToken}
         <EchoSidebar />
-    {:else if isNovel}
-        <NovelSidebar />
     {:else}
         <DefaultSidebar {data} />
     {/if}

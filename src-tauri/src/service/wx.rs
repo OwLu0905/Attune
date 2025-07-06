@@ -3,7 +3,6 @@ use futures::StreamExt;
 use reqwest;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
-use tauri::{AppHandle, Manager};
 
 #[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct TranscriptionResponse {

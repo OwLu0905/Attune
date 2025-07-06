@@ -19,7 +19,6 @@
         }
       ]
     },
-		
     {
       "identifier": "fs:scope",
       "allow": [
@@ -29,22 +28,23 @@
       ]
     },
     "store:default",
-		"fs:default",
-		{
-			"identifier": "fs:allow-app-write",
-			"allow": [
-				{
-					"path": "$APPLOCALDATA/data/**/*"
-				}
-			]
-		},
-		{
-			"identifier": "fs:allow-app-meta",
-			"allow": [
-				{
-					"path": "$APPLOCALDATA/data/**/*"
-				}
-			]
-		}
+    "fs:default",
+    {
+      "identifier": "fs:allow-app-write",
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/data/**/*"
+        }
+      ]
+    },
+    {
+      "identifier": "fs:allow-app-meta",
+      "allow": [
+        {
+          "path": "$APPLOCALDATA/data/**/*"
+        }
+      ]
+    },
+    "fs:default"
   ]
 }

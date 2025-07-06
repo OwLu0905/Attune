@@ -5,13 +5,10 @@
     import * as Sidebar from "$lib/components/ui/sidebar/index.js";
     import { useSidebar } from "$lib/components/ui/sidebar/index.js";
     import { getUserContext } from "@/user/userService.svelte";
-    import { LogIn } from "@lucide/svelte";
+    import { LogIn, Settings } from "@lucide/svelte";
     import BadgeCheck from "@lucide/svelte/icons/badge-check";
-    import Bell from "@lucide/svelte/icons/bell";
     import ChevronsUpDown from "@lucide/svelte/icons/chevrons-up-down";
-    import CreditCard from "@lucide/svelte/icons/credit-card";
     import LogOut from "@lucide/svelte/icons/log-out";
-    import Sparkles from "@lucide/svelte/icons/sparkles";
 
     let { user }: { user: { name: string; email: string; avatar: string } } =
         $props();
@@ -19,6 +16,22 @@
 
     const { getUser, setUser } = getUserContext();
     const userInfo = getUser();
+
+    async function logout() {
+        try {
+            await invoke("logout_user");
+        } catch (error) {
+            console.error(error);
+        } finally {
+            setUser({
+                userId: null,
+                accessToken: null,
+                name: null,
+                email: null,
+                picture: null,
+            });
+        }
+    }
 </script>
 
 <Sidebar.Menu>
@@ -78,23 +91,16 @@
                 <DropdownMenu.Separator />
                 <DropdownMenu.Group>
                     <DropdownMenu.Item>
-                        <Sparkles />
-                        Upgrade to Pro
-                    </DropdownMenu.Item>
-                </DropdownMenu.Group>
-                <DropdownMenu.Separator />
-                <DropdownMenu.Group>
-                    <DropdownMenu.Item>
                         <BadgeCheck />
                         Account
                     </DropdownMenu.Item>
                     <DropdownMenu.Item>
-                        <CreditCard />
-                        Billing
-                    </DropdownMenu.Item>
-                    <DropdownMenu.Item>
-                        <Bell />
-                        Notifications
+                        {#snippet child({ props })}
+                            <a href="/setting" {...props}>
+                                <Settings />
+                                Settings
+                            </a>
+                        {/snippet}
                     </DropdownMenu.Item>
                 </DropdownMenu.Group>
                 <DropdownMenu.Separator />
@@ -108,20 +114,8 @@
                     </a>
                 {:else}
                     <DropdownMenu.Item
-                        onclick={async () => {
-                            try {
-                                await invoke("logout_user");
-                            } catch (error) {
-                                console.error(error);
-                            } finally {
-                                setUser({
-                                    userId: null,
-                                    accessToken: null,
-                                    name: null,
-                                    email: null,
-                                    picture: null,
-                                });
-                            }
+                        onclick={() => {
+                            logout();
                         }}
                     >
                         <LogOut />

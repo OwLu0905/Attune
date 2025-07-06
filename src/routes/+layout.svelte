@@ -72,29 +72,15 @@
         <AppSidebar />
         <Sidebar.Inset>
             <header
-                class="flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+                class="mx-4 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
             >
-                <div class="flex items-center gap-2 px-4">
+                <div class="ml-2 flex items-center">
                     <Sidebar.Trigger class="-ml-1" />
-                    <Separator orientation="vertical" class="mr-2 h-4" />
-                    <Breadcrumb.Root>
-                        <Breadcrumb.List>
-                            <Breadcrumb.Item class="hidden md:block">
-                                <Breadcrumb.Link href="#"
-                                    >Building Your Application</Breadcrumb.Link
-                                >
-                            </Breadcrumb.Item>
-                            <Breadcrumb.Separator class="hidden md:block" />
-                            <Breadcrumb.Item>
-                                <Breadcrumb.Page>Data Fetching</Breadcrumb.Page>
-                            </Breadcrumb.Item>
-                        </Breadcrumb.List>
-                    </Breadcrumb.Root>
                 </div>
+                <h1 class="text-primary py-2 text-3xl font-bold">
+                    {mainRoute}
+                </h1>
             </header>
-            <h1 class="text-primary p-4 py-2 text-3xl font-bold">
-                {mainRoute}
-            </h1>
             <div
                 class="flex h-0 shrink grow flex-col gap-4 overflow-hidden p-4"
             >
