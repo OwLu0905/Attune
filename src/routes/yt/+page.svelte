@@ -1,26 +1,29 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
-    import Button from "@/components/ui/button/button.svelte";
-    import * as Card from "$lib/components/ui/card/index.js";
     import { getUserContext } from "@/user/userService.svelte";
-    import { Trash, Upload } from "@lucide/svelte";
+    import Button from "@/components/ui/button/button.svelte";
     import Badge from "@/components/ui/badge/badge.svelte";
-
-    import { getAudioList } from "$lib/audio.js";
+    import * as Card from "$lib/components/ui/card/index.js";
     import * as AlertDialog from "@/components/ui/alert-dialog";
+    import Invalid from "@/components/error/invalid.svelte";
+    import Error from "@/components/error/error.svelte";
+    import { Trash, Upload } from "@lucide/svelte";
+    import { getAudioList } from "$lib/audio.js";
     import type { AudioItem } from "@/types/audio";
 
     const { getUser } = getUserContext();
+
+    const user = getUser();
+
     let audioList: AudioItem[] = $state([]);
 
     async function getList(token: string) {
         audioList = await getAudioList(token);
     }
-    const user = getUser();
 </script>
 
 {#if !user.accessToken}
-    invalid user
+    <Invalid />
 {:else}
     <a href="/yt/create">
         <Button variant="outline">
@@ -113,7 +116,7 @@
                 </Card.Root>
             {/each}
         {:catch error}
-            <span>Ooops!!!</span>
+            <Error />
         {/await}
     </div>
 {/if}

@@ -1,20 +1,21 @@
 <script lang="ts">
     import { invoke } from "@tauri-apps/api/core";
-    import { onMount } from "svelte";
-    import { fade } from "svelte/transition";
+    import {  onMount } from "svelte";
     import { getUserContext } from "@/user/userService.svelte";
 
     import Button from "$lib/components/ui/button/button.svelte";
     import Slider from "@/components/ui/slider/slider.svelte";
     import * as Card from "$lib/components/ui/card/index.js";
     import * as Tabs from "@/components/ui/tabs";
+    import * as DropdownMenu from "@/components/ui/dropdown-menu";
     import {
         Eye,
         EyeOff,
+        Languages,
         LoaderCircle,
         Pause,
         Play,
-        RotateCcw,
+        Settings,
         Volume2,
         VolumeOff,
     } from "@lucide/svelte";
@@ -37,8 +38,8 @@
     const { getUser } = getUserContext();
     const user = getUser();
 
-    let audioPlayer: AudioPlayer | undefined = $state(undefined);
-    let container: HTMLElement | undefined = $state(undefined);
+    let audioPlayer: AudioPlayer | undefined = $state.raw(undefined);
+    let container: HTMLElement | undefined = $state.raw(undefined);
     let volume = $state(10);
     let subtitles: SubtitleSegment[] = $state([]);
     let visible = $state(true);
@@ -52,9 +53,15 @@
     onMount(() => {
         async function load() {
             if (!container) return;
+            if (audioPlayer) {
+                audioPlayer.destroy();
+            }
             audioPlayer = new AudioPlayer(container);
-            await audioPlayer.initialize(audioPath);
-            volume = audioPlayer.getVolume() * 100;
+
+            await audioPlayer.initialize(audioPath, () => {
+                if (!audioPlayer) return;
+                volume = audioPlayer.getVolume() * 100;
+            });
 
             if (audioItem.transcribe === 1) {
                 subtitles = await getSubtitleFile(audioItem.id);
@@ -100,6 +107,7 @@
     }
     onMount(() => {
         listen("transcription-progress", (event) => {
+            // TODO: fix types
             const { status, message, progress } = event.payload;
             prog = status + message;
         });
@@ -110,23 +118,41 @@
     <Card.Header class="flex flex-row justify-between">
         <div class="flex flex-col gap-1.5">
             <Card.Title>{audioItem.title}</Card.Title>
-            <Card.Description>{audioItem.id}</Card.Description>
+            <Card.Description class="text-xs tabular-nums"
+                >{audioItem.lastUsedAt}---{audioItem.id}--{audioItem.url}</Card.Description
+            >
+        </div>
+        <div>
+            <DropdownMenu.Root>
+                <DropdownMenu.Trigger
+                    class="transition-transform duration-200 hover:rotate-30 data-[state=open]:rotate-30"
+                >
+                    <Settings size={20} />
+                </DropdownMenu.Trigger>
+                <DropdownMenu.Content side="left" align="start">
+                    <DropdownMenu.Group>
+                        <DropdownMenu.Item
+                            onclick={() => {
+                                // TODO: update subtitle => add alert modal
+                                // getSubtitle();
+                            }}
+                            disabled={isTranscribing}
+                        >
+                            {#snippet child({ props })}
+                                <span {...props}>
+                                    <Languages />
+                                    Transcribe
+                                </span>
+                            {/snippet}
+                        </DropdownMenu.Item>
+                    </DropdownMenu.Group>
+                </DropdownMenu.Content>
+            </DropdownMenu.Root>
         </div>
     </Card.Header>
     <Card.Content>
         <div bind:this={container}></div>
         <div class="mt-6 flex items-center justify-center gap-2">
-            <Button
-                disabled={isTranscribing}
-                onclick={() => {
-                    getSubtitle();
-                }}
-            >
-                {#if isTranscribing}
-                    <LoaderCircle class="animate-spin" />
-                {/if}
-                Transcribe !
-            </Button>
             {#if volume === 0}
                 <VolumeOff class="text-primary" size={16} />
             {:else}
@@ -182,6 +208,7 @@
         </div>
     </Card.Footer>
 </Card.Root>
+
 <div class="shrink grow overflow-auto px-2 pt-2">
     {#if audioItem.transcribe === 0 && !isTranscribing}
         <Button

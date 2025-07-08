@@ -13,33 +13,33 @@
     let audioItem: AudioItem | undefined = $state.raw(undefined);
     let audioPath: Uint8Array | undefined = $state.raw(undefined);
 
-    $effect(() => {
-        async function getAudioItem() {
-            try {
-                if (!user.accessToken) {
-                    return;
-                }
-                audioItem = await invoke("handle_get_audio_item", {
-                    token: user.accessToken,
-                    audio_id: audioId,
-                });
-
-                audioPath = await getAudioFile(audioId);
-            } catch (error) {
-                console.error(error);
+    async function getAudioItem() {
+        try {
+            if (!user.accessToken) {
+                return;
             }
-        }
+            audioItem = await invoke("handle_get_audio_item", {
+                token: user.accessToken,
+                audio_id: audioId,
+            });
 
-        getAudioItem();
-    });
+            audioPath = await getAudioFile(audioId);
+        } catch (error) {
+            console.error(error);
+        }
+    }
 </script>
 
-{#if audioPath === undefined || !audioItem}
-    <div>no data</div>
-{:else}
-    {#key audioItem.id}
+{#await getAudioItem()}
+    <div>loading...</div>
+{:then _}
+    {#if audioItem && audioPath}
         <div class="relative flex h-full flex-col overflow-hidden">
-            <AudioPlayerCard {audioItem} {audioPath} />
+            {#key audioId}
+                <AudioPlayerCard {audioItem} {audioPath} />
+            {/key}
         </div>
-    {/key}
-{/if}
+    {/if}
+{:catch error}
+    <p style="color: red">{error.message}</p>
+{/await}

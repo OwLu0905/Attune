@@ -36,8 +36,8 @@ importers:
         specifier: 1.0.0-next.7
         version: 1.0.0-next.7(svelte@5.34.1)
       wavesurfer.js:
-        specifier: ^7.9.3
-        version: 7.9.5
+        specifier: ^7.9.9
+        version: 7.9.9
     devDependencies:
       '@internationalized/date':
         specifier: ^3.8.2
@@ -1404,8 +1404,8 @@ packages:
       vite:
         optional: true
 
-  wavesurfer.js@7.9.5:
-    resolution: {integrity: sha512-ioOG9chuAn0bF2NYYKkZtaxjcQK/hFskLg8ViLYbJHhWPk1N5wWtuqVhqeh2ZWT2SK3t0E8UkD7lLDLuZQQaSA==}
+  wavesurfer.js@7.9.9:
+    resolution: {integrity: sha512-8O/zu+RC7yjikxiuhsXzRZ8vvjV+Qq4PUKZBQsLLcq6fqbrSF3Vh99l7fT8zeEjKjDBNH2Qxsxq5mRJIuBmM3Q==}
 
   yallist@5.0.0:
     resolution: {integrity: sha512-YgvUTfwqyc7UXVMrB+SImsVYSmTS8X/tSrtdNZMImM+n7+QTriRXyXim0mBrTXNeqzVF0KWGgHPeiyViFFrNDw==}
@@ -2522,7 +2522,7 @@ snapshots:
     optionalDependencies:
       vite: 6.3.5(jiti@2.4.2)(lightningcss@1.30.1)
 
-  wavesurfer.js@7.9.5: {}
+  wavesurfer.js@7.9.9: {}
 
   yallist@5.0.0: {}
 

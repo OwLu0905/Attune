@@ -28,20 +28,27 @@ export class AudioPlayer {
     primaryOklch = this.computedStyle.getPropertyValue("--primary").trim();
     secondaryOklch = this.computedStyle.getPropertyValue("--secondary").trim();
 
+    _container: HTMLElement;
+
     constructor(container: HTMLElement) {
+        this._container = container;
+    }
+    async initialize(audio: BlobPart, cb: () => void) {
+        // if (!this.ws) throw new Error("Can't initialize WaveSurfer");
+
+        this.ws?.destroy();
+
         this.ws = WaveSurfer.create({
-            container,
+            container: this._container,
             progressColor: `${this.primaryOklch}`,
             waveColor: `${this.secondaryOklch}`,
             barWidth: 2,
             barGap: 1,
             height: 40,
             // backend: WAVESURFER_BACKEND,
-            plugins: [this.regions, TimelinePlugin.create()],
+            // plugins: [this.regions, TimelinePlugin.create()],
+            plugins: [TimelinePlugin.create()],
         });
-    }
-    async initialize(audio: BlobPart) {
-        if (!this.ws) throw new Error("Can't initialize WaveSurfer");
 
         this.ws.setVolume(0.5);
 
@@ -54,17 +61,20 @@ export class AudioPlayer {
             ws.on("pause", () => (this.isPlaying = false));
             ws.on("timeupdate", (ct) => (this.currentTime = ct));
             ws.on("interaction", () => (this.activeRegion = null));
-        });
-        this.ws.on("decode", () => {
-            if (!this.ws) throw new Error("Can't initialize WaveSurfer");
-            const ws = this.ws;
-            const regions = this.regions;
 
-            regions.on("region-created", () => {});
-            regions.on("region-out", () => {});
-            regions.on("region-updated", () => {});
-            regions.on("region-clicked", () => {});
+            cb();
         });
+
+        // this.ws.on("decode", () => {
+        //     if (!this.ws) throw new Error("Can't initialize WaveSurfer");
+        //     const ws = this.ws;
+        //     const regions = this.regions;
+        //
+        //     regions.on("region-created", () => {});
+        //     regions.on("region-out", () => {});
+        //     regions.on("region-updated", () => {});
+        //     regions.on("region-clicked", () => {});
+        // });
 
         const blob = new Blob([audio], { type: "audio/mp4" });
         this.ws!.loadBlob(blob);
