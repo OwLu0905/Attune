@@ -29,25 +29,29 @@ export class AudioPlayer {
     secondaryOklch = this.computedStyle.getPropertyValue("--secondary").trim();
 
     _container: HTMLElement;
+    _video: HTMLVideoElement | undefined;
 
-    constructor(container: HTMLElement) {
+    constructor(container: HTMLElement, video?: HTMLVideoElement) {
         this._container = container;
+        this._video = video;
     }
-    async initialize(audio: BlobPart, cb: () => void) {
+    async initialize(_: any, cb: () => void) {
         // if (!this.ws) throw new Error("Can't initialize WaveSurfer");
 
         this.ws?.destroy();
 
         this.ws = WaveSurfer.create({
             container: this._container,
+            media: this._video,
             progressColor: `${this.primaryOklch}`,
             waveColor: `${this.secondaryOklch}`,
-            barWidth: 2,
-            barGap: 1,
-            height: 40,
+            barWidth: 1.5,
+            barGap: 0.5,
+            height: 60,
+            minPxPerSec: 160,
             // backend: WAVESURFER_BACKEND,
             // plugins: [this.regions, TimelinePlugin.create()],
-            plugins: [TimelinePlugin.create()],
+            // plugins: [TimelinePlugin.create()],
         });
 
         this.ws.setVolume(0.5);
@@ -76,8 +80,8 @@ export class AudioPlayer {
         //     regions.on("region-clicked", () => {});
         // });
 
-        const blob = new Blob([audio], { type: "audio/mp4" });
-        this.ws!.loadBlob(blob);
+        // const blob = new Blob([audio], { type: "audio/mp4" });
+        // this.ws!.loadBlob(blob);
     }
     async onPlayPause() {
         this.ws!.playPause();
@@ -93,6 +97,10 @@ export class AudioPlayer {
     }
     async onPlaySection(start: number, end: number) {
         this.ws!.play(start, end);
+
+        this.ws!.once("pause", () => {
+            this.ws?.setTime(end);
+        });
     }
     getVolume() {
         return this.ws!.getVolume();

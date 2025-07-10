@@ -55,9 +55,14 @@ export async function getAudioSubtitlePath(id: string) {
         return null;
     }
 }
-export async function getAudioFile(id: string) {
+
+type FileType = "m4a" | "mp4";
+export async function getAudioFile(
+    id: string,
+    file: FileType | undefined = "m4a",
+) {
     try {
-        return await readFile(`data/${id}/audio.m4a`, {
+        return await readFile(`data/${id}/audio.${file}`, {
             baseDir: BaseDirectory.AppLocalData,
         });
     } catch (error) {

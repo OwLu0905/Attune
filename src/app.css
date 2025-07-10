@@ -41,6 +41,8 @@
   --font-serif: Merriweather, serif;
   --font-mono: JetBrains Mono, monospace;
   --radius: 0.5rem;
+
+  --font-tmp: Caveat, Comic Sans MS, -apple-system, Inter, sans-serif;
 }
 
 .dark {

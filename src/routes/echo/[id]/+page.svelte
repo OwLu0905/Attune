@@ -11,7 +11,7 @@
 
     let audioId = $derived(page.params.id);
     let audioItem: AudioItem | undefined = $state.raw(undefined);
-    let audioPath: Uint8Array | undefined = $state.raw(undefined);
+    let videoPath: Uint8Array | undefined = $state.raw(undefined);
 
     async function getAudioItem() {
         try {
@@ -23,7 +23,7 @@
                 audio_id: audioId,
             });
 
-            audioPath = await getAudioFile(audioId);
+            videoPath = await getAudioFile(audioId, "mp4");
         } catch (error) {
             console.error(error);
         }
@@ -33,11 +33,9 @@
 {#await getAudioItem()}
     <div>loading...</div>
 {:then _}
-    {#if audioItem && audioPath}
+    {#if audioItem && videoPath}
         <div class="relative flex h-full flex-col overflow-hidden">
-            {#key audioId}
-                <AudioPlayerCard {audioItem} {audioPath} />
-            {/key}
+            <AudioPlayerCard {audioItem} {videoPath} />
         </div>
     {/if}
 {:catch error}

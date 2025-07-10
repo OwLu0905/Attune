@@ -113,7 +113,7 @@
     });
 </script>
 
-{#snippet item(value: string, Icon: Component)}
+{#snippet float(value: string, Icon: Component)}
     <button
         class={cn(
             "bg-card text-primary flex items-center justify-center rounded-full shadow-md",
@@ -138,20 +138,20 @@
     </button>
 {/snippet}
 
-<div class="flex flex-col gap-1 overflow-auto px-4 py-2 tabular-nums">
+<div class="flex h-full flex-col gap-1 overflow-auto px-4 py-2 tabular-nums">
     <div class="flex shrink grow flex-col gap-2 overflow-auto">
         {#key questionId}
-            <section class="bg-card flex flex-col gap-2 p-4">
-                <div
-                    class="flex shrink-0 flex-wrap gap-1 p-1 tracking-wide"
-                    in:fade
-                >
-                    <SegmentField
-                        {audioPlayer}
-                        segment={subtitles?.[+questionId]}
-                        hidden={hiddenItem}
-                    />
-                </div>
+            <section class="bg-card flex h-full flex-col gap-2 p-4">
+                <!-- <div -->
+                <!--     class="flex shrink-0 flex-wrap gap-1 p-1 tracking-wide" -->
+                <!--     in:fade -->
+                <!-- > -->
+                <!--     <SegmentField -->
+                <!--         {audioPlayer} -->
+                <!--         segment={subtitles?.[+questionId]} -->
+                <!--         hidden={hiddenItem} -->
+                <!--     /> -->
+                <!-- </div> -->
                 <div class="flex items-stretch">
                     {#if selected === "pen"}
                         <Textarea class="min-h-16" />
@@ -164,13 +164,17 @@
             <div
                 class="group absolute right-4 bottom-4 flex h-auto flex-col px-2 py-1"
             >
-                {@render item("link", SquareArrowOutUpRight)}
-                {@render item("pen", SquarePen)}
-                {@render item("mic", Mic)}
+                {@render float("link", SquareArrowOutUpRight)}
+                {@render float("pen", SquarePen)}
+                {@render float("mic", Mic)}
             </div>
 
+            <section class="flex shrink grow flex-col gap-2">
+                <RecordHistoryCard {audioId} {questionId} {recordData} />
+            </section>
+
             <div
-                class="absolute right-0 bottom-4 left-0 mx-auto flex w-fit items-center justify-center gap-2 py-1"
+                class="mx-auto flex w-fit items-center justify-center gap-2 py-1"
             >
                 <Button
                     variant="ghost"
@@ -182,6 +186,7 @@
                 >
                     <ChevronLeft />
                 </Button>
+
                 <div
                     class="bg-card inset-shadow-primary/60 flex items-center justify-center gap-2 rounded-full px-8 py-1 shadow-md inset-shadow-sm"
                 >
@@ -326,9 +331,6 @@
                     <ChevronRight />
                 </Button>
             </div>
-            <section class="my-2 flex shrink grow flex-col gap-2">
-                <RecordHistoryCard {audioId} {questionId} {recordData} />
-            </section>
         {/key}
     </div>
 </div>

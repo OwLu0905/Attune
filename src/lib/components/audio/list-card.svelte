@@ -1,73 +1,116 @@
 <script lang="ts">
+    import { invoke } from "@tauri-apps/api/core";
+    import { getUserContext } from "@/user/userService.svelte";
     import { fade } from "svelte/transition";
 
     import ScrollArea from "@/components/ui/scroll-area/scroll-area.svelte";
     import SegmentField from "./segment-field.svelte";
+    import Error from "../error/error.svelte";
+    import { Skeleton } from "@/components/ui/skeleton";
 
-    import { Pause, Play, RotateCcw } from "@lucide/svelte";
+    import { Eye, EyeClosed, EyeOff, Settings } from "@lucide/svelte";
+
+    import type { AudioItem } from "@/types/audio";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
 
+    export type TDictationItem = { dictationId: number; createdAt: string };
+
     interface Props {
+        audioItem: AudioItem;
         subtitles: SubtitleSegment[];
-        audioPlayer: AudioPlayer;
+        audioPlayer: AudioPlayer | undefined;
         onPause: () => Promise<void>;
         onPlaySection: (start: number, end: number) => Promise<void>;
     }
-    let { subtitles, audioPlayer, onPause, onPlaySection }: Props = $props();
+    let { audioItem, subtitles, audioPlayer, onPause, onPlaySection }: Props =
+        $props();
+
+    let hidden = $state(true);
+
+    const { getUser } = getUserContext();
+    const user = getUser();
+    let dictationList = $state<TDictationItem[]>([]);
+
+    async function getDictationList() {
+        try {
+            dictationList = await invoke("handle_get_dictation_list", {
+                token: user.accessToken,
+                audio_id: audioItem.id,
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    async function createDictationItem(index: number) {
+        try {
+            dictationList = await invoke("handle_create_dictation_item", {
+                token: user.accessToken,
+                audio_id: audioItem.id,
+                dictation_id: index,
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    async function deleteDictationItem(index: number) {
+        try {
+            dictationList = await invoke("handle_delete_dictation_item", {
+                token: user.accessToken,
+                audio_id: audioItem.id,
+                dictation_id: index,
+            });
+        } catch (error) {
+            console.error(error);
+        }
+    }
 </script>
 
-<div transition:fade>
-    <ScrollArea
-        class="text-md flex max-h-80 w-full max-w-full flex-col gap-0.5 overflow-auto bg-stone-100 px-4 py-2 tabular-nums"
+{#if audioPlayer}
+    <div
+        transition:fade
+        class="relative h-full shrink grow overflow-auto bg-white ring"
     >
-        <div class="flex flex-col gap-0">
-            {#each subtitles as i, index (index)}
-                <div class="flex w-full gap-4 p-2">
-                    <span class="w-4 shrink-0 text-right text-sm leading-6"
-                        >{index + 1}</span
-                    >
-                    <div class="shrink grow">
+        <div class="sticky top-0 z-5 flex w-full gap-2 bg-inherit px-4 py-2">
+            <Settings size={16} />
+            {#if hidden}
+                <Eye
+                    class="h-4 w-4"
+                    onclick={() => {
+                        hidden = false;
+                    }}
+                />
+            {:else}
+                <EyeOff
+                    class="h-4 w-4"
+                    onclick={() => {
+                        hidden = true;
+                    }}
+                />
+            {/if}
+        </div>
+        {#await getDictationList() then _}
+            <ScrollArea class="px-4 tabular-nums">
+                <div class="mx-2 flex flex-col gap-4.5">
+                    {#each subtitles as segment, index (index)}
                         <SegmentField
                             {audioPlayer}
-                            segment={i}
-                            hidden={false}
+                            {segment}
+                            {hidden}
+                            {onPause}
+                            {onPlaySection}
+                            {index}
+                            {dictationList}
+                            {createDictationItem}
+                            {deleteDictationItem}
                         />
-                    </div>
-                    <div class="flex shrink-0 gap-4">
-                        {#if audioPlayer?.isPlaying && i.start <= audioPlayer?.currentTime && audioPlayer?.currentTime <= i.end}
-                            <Pause
-                                class="text-primary w-4"
-                                onclick={() => {
-                                    onPause();
-                                }}
-                            />
-                        {:else}
-                            <Play
-                                class="stroke-primary text-primary w-4"
-                                onclick={() => {
-                                    if (!audioPlayer) return;
-
-                                    const startTime =
-                                        i.start <= audioPlayer?.currentTime &&
-                                        audioPlayer?.currentTime <= i.end
-                                            ? audioPlayer?.currentTime
-                                            : i.start;
-
-                                    onPlaySection(startTime, i.end);
-                                }}
-                            />
-                        {/if}
-
-                        <RotateCcw
-                            class="w-4 text-lime-500"
-                            onclick={() => {
-                                onPlaySection(i.start, i.end);
-                            }}
-                        />
-                    </div>
+                    {/each}
                 </div>
-            {/each}
-        </div>
-    </ScrollArea>
-</div>
+            </ScrollArea>
+        {:catch}
+            <Error />
+        {/await}
+    </div>
+{:else}
+    <Skeleton class="h-80 w-full rounded-xl" />
+{/if}
