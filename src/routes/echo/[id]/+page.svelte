@@ -5,6 +5,7 @@
     import { getAudioFile } from "@/utils";
     import AudioPlayerCard from "@/components/audio/audio-player-card.svelte";
     import type { AudioItem } from "@/types/audio";
+    import { fade } from "svelte/transition";
 
     const { getUser } = getUserContext();
     const user = getUser();
@@ -31,7 +32,9 @@
 </script>
 
 {#await getAudioItem()}
-    <div>loading...</div>
+    <div class="relative flex h-full w-full flex-col overflow-hidden">
+        <div in:fade class="h-full w-full"></div>
+    </div>
 {:then _}
     {#if audioItem && videoPath}
         <div class="relative flex h-full flex-col overflow-hidden">

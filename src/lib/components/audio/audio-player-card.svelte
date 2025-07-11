@@ -136,7 +136,7 @@
         <div class="flex flex-col gap-1.5">
             <Card.Title>{audioItem.title}</Card.Title>
             <Card.Description class="text-xs tabular-nums"
-                >{audioItem.lastUsedAt} - {audioItem.id} - {audioItem.url}</Card.Description
+                >{audioItem.id} - {audioItem.url}</Card.Description
             >
         </div>
         <div>
@@ -186,9 +186,9 @@
         </div>
     </Card.Header>
 
-    <Card.Content class="shrink grow overflow-hidden">
-        <div class="flex h-full gap-6 py-8">
-            <div class="w-142 shrink-0">
+    <Card.Content class="@container shrink grow overflow-hidden">
+        <div class="flex h-full flex-col gap-6 py-6 @3xl:flex-row">
+            <div class="w-full shrink-0 @3xl:w-142">
                 <!-- svelte-ignore a11y_media_has_caption -->
                 <video
                     bind:this={videoRef}
@@ -196,10 +196,13 @@
                     controls
                     playsinline
                     class="rounded-xl"
-                    style="width: 100%; width: 480px; margin: 4px auto; display: block;"
+                    style="width: 480px; height: 270px; margin: 4px auto; display: block;"
                 >
                 </video>
-                <div bind:this={container}></div>
+                <div
+                    bind:this={container}
+                    style="width:480px; height: 60px"
+                ></div>
 
                 <div class="mt-6 flex items-center justify-center gap-2">
                     {#if volume === 0}
