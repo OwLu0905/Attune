@@ -5,18 +5,15 @@
     import { getUserContext } from "@/user/userService.svelte";
 
     import Button from "$lib/components/ui/button/button.svelte";
-    import Slider from "@/components/ui/slider/slider.svelte";
+
     import * as Card from "$lib/components/ui/card/index.js";
     import * as DropdownMenu from "@/components/ui/dropdown-menu";
     import {
         Bot,
         Languages,
         LoaderCircle,
-        Pause,
-        Play,
+        Mic,
         Settings,
-        Volume2,
-        VolumeOff,
     } from "@lucide/svelte";
     import { AudioPlayer } from "./audio-player.svelte";
     import ListCard from "./list-card.svelte";
@@ -25,6 +22,8 @@
 
     import type { SubtitleSegment } from "./types";
     import type { AudioItem } from "@/types/audio";
+
+    import DictationEditor from "../editor/dictation-editor.svelte";
 
     interface Props {
         videoPath: BlobPart;
@@ -47,6 +46,8 @@
         const blob = new Blob([videoPath], { type: "video/mp4" });
         return URL.createObjectURL(blob);
     });
+
+    let dictationId = $state(0);
     let prog = $state("");
 
     async function getSubtitle() {
@@ -188,7 +189,7 @@
 
     <Card.Content class="@container shrink grow overflow-hidden">
         <div class="flex h-full flex-col gap-6 py-6 @3xl:flex-row">
-            <div class="w-full shrink-0 @3xl:w-142">
+            <div class="w-full shrink-0 @3xl:w-120 @4xl:w-140">
                 <!-- svelte-ignore a11y_media_has_caption -->
                 <video
                     bind:this={videoRef}
@@ -201,49 +202,15 @@
                 </video>
                 <div
                     bind:this={container}
-                    style="width:480px; height: 60px"
+                    style="width:480px; height: 40px"
                 ></div>
 
-                <div class="mt-6 flex items-center justify-center gap-2">
-                    {#if volume === 0}
-                        <VolumeOff class="text-primary" size={16} />
-                    {:else}
-                        <Volume2
-                            onclick={() => {
-                                volume = 0;
-                                audioPlayer?.onMuted();
-                            }}
-                            class="text-primary"
-                            size={16}
-                        />
-                    {/if}
-                    <Slider
-                        type="single"
-                        max={100}
-                        step={1}
-                        min={0}
-                        bind:value={volume}
-                        class="mb-0 max-w-[70%]"
-                        onValueCommit={(e) => {
-                            audioPlayer?.onSetVolume(e / 100);
-                        }}
+                {#key dictationId}
+                    <DictationEditor
+                        audioId={audioItem.id}
+                        index={dictationId}
                     />
-
-                    <button
-                        class="text-primary ml-auto h-4 w-4"
-                        onclick={() => {
-                            if (!audioPlayer) return;
-
-                            audioPlayer.onPlayPause();
-                        }}
-                    >
-                        {#if audioPlayer?.isPlaying}
-                            <Pause size={16} />
-                        {:else}
-                            <Play size={16} />
-                        {/if}
-                    </button>
-                </div>
+                {/key}
             </div>
 
             <ListCard
@@ -252,12 +219,13 @@
                 {audioPlayer}
                 {onPause}
                 {onPlaySection}
+                bind:dictationId
             />
         </div>
     </Card.Content>
 
     <Card.Footer
-        class="flex w-full shrink-0 basis-10 flex-col items-center justify-center gap-2 border-t"
+        class="flex w-full shrink-0 basis-10 items-center justify-center gap-2 border-t"
     >
         <div class="flex gap-2">
             <div class="flex items-center gap-1">
@@ -268,5 +236,6 @@
                 {audioPlayer?.currentTime?.toFixed(2)} (sec)
             </div>
         </div>
+        <Mic class="h-4 w-4" />
     </Card.Footer>
 </Card.Root>

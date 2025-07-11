@@ -8,13 +8,13 @@
     import Error from "../error/error.svelte";
     import { Skeleton } from "@/components/ui/skeleton";
 
-    import { Eye, EyeClosed, EyeOff, Settings } from "@lucide/svelte";
+    import { Eye, EyeOff, Settings } from "@lucide/svelte";
 
     import type { AudioItem } from "@/types/audio";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
 
-    export type TDictationItem = { dictationId: number; createdAt: string };
+    export type TBookmarkItem = { bookmarkId: number; createdAt: string };
 
     interface Props {
         audioItem: AudioItem;
@@ -22,19 +22,27 @@
         audioPlayer: AudioPlayer | undefined;
         onPause: () => Promise<void>;
         onPlaySection: (start: number, end: number) => Promise<void>;
+        dictationId: number;
     }
-    let { audioItem, subtitles, audioPlayer, onPause, onPlaySection }: Props =
-        $props();
+    let {
+        audioItem,
+        subtitles,
+        audioPlayer,
+        onPause,
+        onPlaySection,
+
+        dictationId = $bindable(),
+    }: Props = $props();
 
     let hidden = $state(true);
 
     const { getUser } = getUserContext();
     const user = getUser();
-    let dictationList = $state<TDictationItem[]>([]);
+    let bookmarkList = $state<TBookmarkItem[]>([]);
 
-    async function getDictationList() {
+    async function getBookmarkList() {
         try {
-            dictationList = await invoke("handle_get_dictation_list", {
+            bookmarkList = await invoke("handle_get_dictation_list", {
                 token: user.accessToken,
                 audio_id: audioItem.id,
             });
@@ -42,9 +50,9 @@
             console.error(error);
         }
     }
-    async function createDictationItem(index: number) {
+    async function createBookmarkItem(index: number) {
         try {
-            dictationList = await invoke("handle_create_dictation_item", {
+            bookmarkList = await invoke("handle_create_dictation_item", {
                 token: user.accessToken,
                 audio_id: audioItem.id,
                 dictation_id: index,
@@ -53,9 +61,9 @@
             console.error(error);
         }
     }
-    async function deleteDictationItem(index: number) {
+    async function deleteBookmarkItem(index: number) {
         try {
-            dictationList = await invoke("handle_delete_dictation_item", {
+            bookmarkList = await invoke("handle_delete_dictation_item", {
                 token: user.accessToken,
                 audio_id: audioItem.id,
                 dictation_id: index,
@@ -63,6 +71,10 @@
         } catch (error) {
             console.error(error);
         }
+    }
+
+    function getDictation(index: number) {
+        dictationId = index;
     }
 </script>
 
@@ -89,7 +101,7 @@
                 />
             {/if}
         </div>
-        {#await getDictationList() then _}
+        {#await getBookmarkList() then _}
             <ScrollArea class="px-4 tabular-nums">
                 <div class="mx-2 flex flex-col gap-4.5">
                     {#each subtitles as segment, index (index)}
@@ -100,9 +112,10 @@
                             {onPause}
                             {onPlaySection}
                             {index}
-                            {dictationList}
-                            {createDictationItem}
-                            {deleteDictationItem}
+                            {getDictation}
+                            {bookmarkList}
+                            {createBookmarkItem}
+                            {deleteBookmarkItem}
                         />
                     {/each}
                 </div>

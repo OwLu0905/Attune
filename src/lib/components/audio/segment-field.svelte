@@ -1,9 +1,10 @@
 <script lang="ts">
     import { cn } from "@/utils";
     import { fade } from "svelte/transition";
-    import { Eye, EyeOff, Heart } from "@lucide/svelte";
+    import { Eye, EyeOff, Heart, PencilRuler } from "@lucide/svelte";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
+    import type { TBookmarkItem } from "./list-card.svelte";
 
     interface Props {
         audioPlayer: AudioPlayer;
@@ -12,9 +13,10 @@
         onPause: () => Promise<void>;
         onPlaySection: (start: number, end: number) => Promise<void>;
         index: number;
-        dictationList: { dictationId: number; createdAt: string }[];
-        createDictationItem: (i: number) => Promise<void>;
-        deleteDictationItem: (i: number) => Promise<void>;
+        getDictation: (i: number) => void;
+        bookmarkList: TBookmarkItem[];
+        createBookmarkItem: (i: number) => Promise<void>;
+        deleteBookmarkItem: (i: number) => Promise<void>;
     }
     let {
         audioPlayer,
@@ -23,9 +25,10 @@
         onPause,
         onPlaySection,
         index,
-        dictationList,
-        createDictationItem,
-        deleteDictationItem,
+        getDictation,
+        bookmarkList,
+        createBookmarkItem,
+        deleteBookmarkItem,
     }: Props = $props();
 
     let currentTime = $derived(audioPlayer.currentTime);
@@ -37,7 +40,7 @@
     );
 
     const isLove = $derived.by(
-        () => dictationList.findIndex((i) => i.dictationId === +index) > -1,
+        () => bookmarkList.findIndex((i) => i.bookmarkId === +index) > -1,
     );
 </script>
 
@@ -50,29 +53,37 @@
             "before:text-primary before:transform-transform ease-in before:absolute before:translate-y-0 before:duration-300 before:content-['>']",
     )}
 >
-    <div class="flex shrink gap-2">
+    <div class="flex w-full shrink gap-2">
+        <div>
+            <PencilRuler
+                class="h-6 w-4"
+                onclick={() => {
+                    getDictation(index);
+                }}
+            />
+        </div>
         {#if isLove}
-            <div in:fade class="ml-2">
+            <div in:fade class="mr-0.5 ml-2">
                 <button
                     onclick={() => {
-                        deleteDictationItem(index);
+                        deleteBookmarkItem(index);
                     }}
                 >
                     <Heart class="h-6 w-4 fill-rose-400 stroke-rose-400" />
                 </button>
             </div>
         {:else}
-            <div in:fade class="ml-2">
+            <div in:fade class="mr-1 ml-2">
                 <button
                     onclick={() => {
-                        createDictationItem(index);
+                        createBookmarkItem(index);
                     }}
                 >
                     <Heart class="h-6 w-4 stroke-gray-300 opacity-50" />
                 </button>
             </div>
         {/if}
-        <div class="flex flex-wrap gap-x-1 gap-y-0.5">
+        <div class="flex grow flex-wrap gap-x-1 gap-y-0.5">
             {#each segment?.words as seg}
                 <!-- svelte-ignore a11y_no_static_element_interactions -->
                 <!-- svelte-ignore a11y_click_events_have_key_events -->
@@ -103,7 +114,7 @@
             {/each}
         </div>
         <div
-            class="transform-all mx-1 flex shrink-0 origin-center gap-2 opacity-0 duration-150 ease-out group-hover:opacity-100"
+            class="transform-all ml-auto flex shrink-0 gap-2 opacity-0 duration-150 ease-out group-hover:opacity-100"
         >
             {#if hidden}
                 <Eye
