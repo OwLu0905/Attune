@@ -1,6 +1,6 @@
 pub mod audio;
 pub mod commands;
-pub mod dictation;
+pub mod bookmark;
 pub mod oauth;
 pub mod store;
 pub mod user;

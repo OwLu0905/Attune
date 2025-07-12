@@ -5,7 +5,7 @@ use uuid::Uuid;
 
 use crate::config::get_data_path;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, specta::Type)]
 #[serde(tag = "type")] // This makes the variant name appear as "type"
 enum DownloadStatus {
     Started,
@@ -20,6 +20,7 @@ enum DownloadStatus {
 // TODO: add filename args (we could write into db first before download it)
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn download_yt_sections(
     app_handle: AppHandle,
     url: String,

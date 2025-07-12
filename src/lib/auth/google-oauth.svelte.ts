@@ -64,12 +64,14 @@ export class GoogleOAuth {
                                 name: data.name,
                                 picture: data.picture,
                                 email_verified: data.email_verified,
-                                access_token: data.access_token,
-                                access_token_expires_at:
-                                    data.access_token_expires_at,
-                                refresh_token: data.refresh_token,
-                                refresh_token_expires_at:
-                                    data.refresh_token_expires_at,
+                                tokens: {
+                                    access_token: data.access_token,
+                                    access_token_expires_at:
+                                        data.access_token_expires_at,
+                                    refresh_token: data.refresh_token,
+                                    refresh_token_expires_at:
+                                        data.refresh_token_expires_at,
+                                },
                             },
                         );
 
@@ -253,7 +255,6 @@ export class GoogleOAuth {
                     code_verifier: this.code_verifier,
                     grant_type: "authorization_code",
                     redirect_uri: this.redirectUri,
-                    code_challenge_method: "S256",
                 }),
             });
 

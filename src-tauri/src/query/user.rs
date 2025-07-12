@@ -115,7 +115,7 @@ struct AppSettings {
     auto_login: bool,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionWithUser {
     pub user_id: String,
@@ -135,7 +135,7 @@ pub async fn get_user_by_id(db: &Db, user_id: &str) -> Result<Option<User>, sqlx
 pub async fn get_user_by_session_token(
     db: &Db,
     app_handle: &AppHandle,
-    session_token: &str,
+    session_token: String,
 ) -> Result<Option<SessionWithUser>, sqlx::Error> {
     let result = sqlx::query_as::<_, SessionWithUser>(
         r#"
@@ -150,7 +150,7 @@ pub async fn get_user_by_session_token(
         WHERE s.token = ? AND s.expiresAt > unixepoch()
         "#,
     )
-    .bind(session_token)
+    .bind(&session_token)
     .fetch_optional(db)
     .await?;
 
@@ -183,19 +183,19 @@ pub async fn get_user_by_session_token(
 
 pub async fn create_user(
     db: &Db,
-    name: &str,
-    email: &str,
+    name: String,
+    email: String,
     email_verified: bool,
-    picture: Option<&str>,
+    picture: Option<String>,
 ) -> Result<String, sqlx::Error> {
     let user_id = Uuid::new_v4().to_string();
 
     sqlx::query("INSERT INTO user (id, name, email, emailVerified, image) VALUES (?, ?, ?, ?, ?)")
         .bind(&user_id)
-        .bind(name)
-        .bind(email)
-        .bind(email_verified)
-        .bind(picture)
+        .bind(&name)
+        .bind(&email)
+        .bind(&email_verified)
+        .bind(&picture)
         .execute(db)
         .await?;
 
@@ -204,12 +204,12 @@ pub async fn create_user(
 
 pub async fn create_account(
     db: &Db,
-    user_id: &str,
-    account_id: &str,
-    provider_id: &str,
-    access_token: Option<&str>,
+    user_id: String,
+    account_id: String,
+    provider_id: String,
+    access_token: Option<String>,
     access_token_expires_at: Option<Timestamp>,
-    refresh_token: Option<&str>,
+    refresh_token: Option<String>,
     refresh_token_expires_at: Option<Timestamp>,
 ) -> Result<Account, sqlx::Error> {
     let id = Uuid::new_v4().to_string();
@@ -217,13 +217,13 @@ pub async fn create_account(
     sqlx::query(
         "INSERT INTO account (id, userId, providerId, accountId, accessToken, accessTokenExpiresAt, refreshToken, refreshTokenExpiresAt, createdAt, updatedAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)")
     .bind(&id)
-    .bind(user_id)
-    .bind(provider_id)
-    .bind(account_id)
-    .bind(access_token)
-    .bind(access_token_expires_at)
-    .bind(refresh_token)
-    .bind(refresh_token_expires_at)
+    .bind(&user_id)
+    .bind(&provider_id)
+    .bind(&account_id)
+    .bind(&access_token)
+    .bind(&access_token_expires_at)
+    .bind(&refresh_token)
+    .bind(&refresh_token_expires_at)
     .execute(db)
     .await
     .expect("account error");
@@ -236,7 +236,7 @@ pub async fn create_account(
     Ok(account)
 }
 
-pub async fn create_session(db: &Db, user_id: &str) -> Result<String, sqlx::Error> {
+pub async fn create_session(db: &Db, user_id: String) -> Result<String, sqlx::Error> {
     let id = Uuid::new_v4().to_string();
     let token = Uuid::new_v4().to_string();
     let now = Utc::now();
@@ -258,7 +258,7 @@ pub async fn create_session(db: &Db, user_id: &str) -> Result<String, sqlx::Erro
         "#,
     )
     .bind(&id)
-    .bind(user_id)
+    .bind(&user_id)
     .bind(&token)
     .bind(&expires_at_timestamp)
     .execute(db)
@@ -267,14 +267,14 @@ pub async fn create_session(db: &Db, user_id: &str) -> Result<String, sqlx::Erro
     Ok(token)
 }
 
-pub async fn delete_session(db: &Db, session_token: &str) -> Result<(), sqlx::Error> {
+pub async fn delete_session(db: &Db, session_token: String) -> Result<(), sqlx::Error> {
     sqlx::query(
         r#"
         DELETE FROM session
         WHERE token = ?
         "#,
     )
-    .bind(session_token)
+    .bind(&session_token)
     .execute(db)
     .await?;
 

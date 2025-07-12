@@ -42,7 +42,7 @@
 
     async function getBookmarkList() {
         try {
-            bookmarkList = await invoke("handle_get_dictation_list", {
+            bookmarkList = await invoke("handle_get_bookmark_list", {
                 token: user.accessToken,
                 audio_id: audioItem.id,
             });
@@ -52,10 +52,10 @@
     }
     async function createBookmarkItem(index: number) {
         try {
-            bookmarkList = await invoke("handle_create_dictation_item", {
+            bookmarkList = await invoke("handle_create_bookmark_item", {
                 token: user.accessToken,
                 audio_id: audioItem.id,
-                dictation_id: index,
+                bookmark_id: index,
             });
         } catch (error) {
             console.error(error);
@@ -63,10 +63,10 @@
     }
     async function deleteBookmarkItem(index: number) {
         try {
-            bookmarkList = await invoke("handle_delete_dictation_item", {
+            bookmarkList = await invoke("handle_delete_bookmark_item", {
                 token: user.accessToken,
                 audio_id: audioItem.id,
-                dictation_id: index,
+                bookmark_id: index,
             });
         } catch (error) {
             console.error(error);

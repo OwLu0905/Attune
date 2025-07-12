@@ -4,21 +4,21 @@ use reqwest;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 pub struct TranscriptionResponse {
     pub segments: Vec<Segment>,
     pub output_file: String,
     pub language: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone, specta::Type)]
 pub struct Segment {
     pub start: f64,
     pub end: f64,
     pub text: String,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, specta::Type)]
 pub struct StatusUpdate {
     pub status: String,
     pub message: String,
@@ -27,7 +27,7 @@ pub struct StatusUpdate {
 }
 
 // Event payload for Tauri frontend
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 pub struct TranscriptionProgress {
     pub audio_id: String,
     pub status: String,
@@ -35,7 +35,7 @@ pub struct TranscriptionProgress {
     pub progress: Option<f64>,
 }
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, specta::Type)]
 pub struct TranscriptionComplete {
     pub audio_id: String,
     pub language: String,

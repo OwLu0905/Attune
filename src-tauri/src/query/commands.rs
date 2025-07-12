@@ -2,7 +2,7 @@ use crate::{
     config::get_data_path,
     query::{
         audio::{AudioItem, AudioListItem},
-        dictation::Dictation,
+        bookmark::Bookmark,
     },
     DbState,
 };
@@ -12,7 +12,7 @@ use tokio::fs::remove_dir_all;
 
 use super::{
     audio::{create_audio, delete_audio, get_audio, get_audios, update_audio_transcribe},
-    dictation::{create_dictation_item, delete_dictation_item, get_dictation_list},
+    bookmark::{create_bookmark_item, delete_bookmark_item, get_bookmark_list},
     oauth::handle_google_auth,
     store::{delete_store_token, get_store_token, set_store_token},
     user::{delete_session, get_user_by_session_token, SessionWithUser, Timestamp},
@@ -26,19 +26,25 @@ async fn remove_dir_all_safe(path: &str) -> tokio::io::Result<()> {
     }
 }
 
+#[derive(serde::Deserialize, specta::Type)]
+pub struct TokenData {
+    pub access_token: Option<String>,
+    pub access_token_expires_at: Option<Timestamp>,
+    pub refresh_token: Option<String>,
+    pub refresh_token_expires_at: Option<Timestamp>,
+}
+
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn handle_login(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    sub: &str,
-    email: &str,
-    name: &str,
-    picture: Option<&str>,
+    sub: String,
+    email: String,
+    name: String,
+    picture: Option<String>,
     email_verified: bool,
-    access_token: Option<&str>,
-    access_token_expires_at: Option<Timestamp>,
-    refresh_token: Option<&str>,
-    refresh_token_expires_at: Option<Timestamp>,
+    tokens: TokenData,
 ) -> Result<String, String> {
     let db = &state.db;
 
@@ -49,10 +55,10 @@ pub async fn handle_login(
         name,
         picture,
         email_verified,
-        access_token,
-        access_token_expires_at,
-        refresh_token,
-        refresh_token_expires_at,
+        tokens.access_token,
+        tokens.access_token_expires_at,
+        tokens.refresh_token,
+        tokens.refresh_token_expires_at,
     )
     .await
     .map_err(|e| e.to_string());
@@ -67,6 +73,7 @@ pub async fn handle_login(
 }
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn check_persist_user(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
@@ -74,7 +81,7 @@ pub async fn check_persist_user(
     let db = &state.db;
     let session_token = get_store_token(&app_handle)?;
 
-    let user_info = get_user_by_session_token(db, &app_handle, &session_token)
+    let user_info = get_user_by_session_token(db, &app_handle, session_token)
         .await
         .expect("Failed to get user");
 
@@ -82,6 +89,7 @@ pub async fn check_persist_user(
 }
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn logout_user(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
@@ -90,46 +98,52 @@ pub async fn logout_user(
     let session_token = delete_store_token(&app_handle)?;
 
     if let Some(token) = session_token {
-        let _ = delete_session(db, &token);
+        let _ = delete_session(db, token);
     }
 
     Ok(())
 }
 
+#[derive(serde::Deserialize, specta::Type)]
+pub struct CreateAudioData {
+    pub audio_id: String,
+    pub token: String,
+    pub title: String,
+    pub description: Option<String>,
+    pub url: String,
+    pub thumbnail: String,
+    pub start_time: i16,
+    pub end_time: i16,
+    pub provider: String,
+    pub tag: Option<String>,
+}
+
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn handle_create_audio(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    audio_id: &str,
-    token: &str,
-    title: &str,
-    description: Option<&str>,
-    url: &str,
-    thumbnail: &str,
-    start_time: i16,
-    end_time: i16,
-    provider: &str,
-    tag: Option<&str>,
+    audio_data: CreateAudioData,
 ) -> Result<(), String> {
     let db = &state.db;
 
-    let user_info = get_user_by_session_token(db, &app_handle, token)
+    let user_info = get_user_by_session_token(db, &app_handle, audio_data.token)
         .await
         .expect("create audio failed: invalid user");
 
     if let Some(user) = user_info {
         create_audio(
             db,
-            &user.user_id,
-            &audio_id,
-            title,
-            description,
-            url,
-            thumbnail,
-            start_time,
-            end_time,
-            provider,
-            tag,
+            user.user_id,
+            audio_data.audio_id,
+            audio_data.title,
+            audio_data.description,
+            audio_data.url,
+            audio_data.thumbnail,
+            audio_data.start_time,
+            audio_data.end_time,
+            audio_data.provider,
+            audio_data.tag,
         )
         .await
         .expect("create audio failed: invalid paramsters");
@@ -140,10 +154,11 @@ pub async fn handle_create_audio(
 }
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn handle_get_audio_list(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    token: &str,
+    token: String,
 ) -> Result<Vec<AudioListItem>, String> {
     let db = &state.db;
 
@@ -152,7 +167,7 @@ pub async fn handle_get_audio_list(
         .expect("get audio list failed: invalid user");
 
     if let Some(user) = user_info {
-        let audio_list = get_audios(db, &user.user_id)
+        let audio_list = get_audios(db, user.user_id)
             .await
             .expect("get audio list failed: invalid paramsters");
         return Ok(audio_list);
@@ -162,11 +177,12 @@ pub async fn handle_get_audio_list(
 }
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn handle_get_audio_item(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    token: &str,
-    audio_id: &str,
+    token: String,
+    audio_id: String,
 ) -> Result<AudioItem, String> {
     let db = &state.db;
 
@@ -175,7 +191,7 @@ pub async fn handle_get_audio_item(
         .expect("get audio item failed: invalid user");
 
     if let Some(user) = user_info {
-        let audio_item = get_audio(db, &user.user_id, audio_id)
+        let audio_item = get_audio(db, user.user_id, audio_id)
             .await
             .expect("get audio item failed: invalid paramsters");
         return Ok(audio_item);
@@ -185,11 +201,12 @@ pub async fn handle_get_audio_item(
 }
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn handle_update_audio_transcribe(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    token: &str,
-    audio_id: &str,
+    token: String,
+    audio_id: String,
 ) -> Result<AudioItem, String> {
     let db = &state.db;
 
@@ -198,7 +215,7 @@ pub async fn handle_update_audio_transcribe(
         .expect("update audio item failed: invalid user");
 
     if let Some(user) = user_info {
-        let audio_item = update_audio_transcribe(db, &user.user_id, audio_id)
+        let audio_item = update_audio_transcribe(db, user.user_id, audio_id)
             .await
             .expect("update audio item failed: invalid paramsters");
         return Ok(audio_item);
@@ -208,11 +225,12 @@ pub async fn handle_update_audio_transcribe(
 }
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn handle_delete_audio(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    token: &str,
-    audio_id: &str,
+    token: String,
+    audio_id: String,
 ) -> Result<Vec<AudioListItem>, String> {
     let db = &state.db;
 
@@ -225,7 +243,7 @@ pub async fn handle_delete_audio(
         let check_dir = &format!("{}/{}", data_path, audio_id);
         remove_dir_all_safe(check_dir).await.unwrap();
 
-        let audio_list = delete_audio(db, &user.user_id, audio_id)
+        let audio_list = delete_audio(db, user.user_id, audio_id)
             .await
             .expect("delete audio failed: invalid paramsters");
         return Ok(audio_list);
@@ -235,72 +253,75 @@ pub async fn handle_delete_audio(
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn handle_create_dictation_item(
+#[specta::specta]
+pub async fn handle_create_bookmark_item(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    token: &str,
-    audio_id: &str,
-    dictation_id: i16,
-) -> Result<Vec<Dictation>, String> {
+    token: String,
+    audio_id: String,
+    bookmark_id: i16,
+) -> Result<Vec<Bookmark>, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
         .await
-        .expect("create dictation item failed: invalid user");
+        .expect("create bookmark item failed: invalid user");
 
     if let Some(user) = user_info {
-        let dictation_item = create_dictation_item(db, &user.user_id, audio_id, dictation_id)
+        let bookmark_item = create_bookmark_item(db, user.user_id, audio_id, bookmark_id)
             .await
-            .expect("create dictation item failed: invalid paramsters");
-        return Ok(dictation_item);
+            .expect("create bookmark item failed: invalid paramsters");
+        return Ok(bookmark_item);
     } else {
-        return Err("Failed to create dictation item".to_string());
+        return Err("Failed to create bookmark item".to_string());
     }
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn handle_delete_dictation_item(
+#[specta::specta]
+pub async fn handle_delete_bookmark_item(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    token: &str,
-    audio_id: &str,
-    dictation_id: i16,
-) -> Result<Vec<Dictation>, String> {
+    token: String,
+    audio_id: String,
+    bookmark_id: i16,
+) -> Result<Vec<Bookmark>, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
         .await
-        .expect("delete dictation   item failed: invalid user");
+        .expect("delete bookmark item failed: invalid user");
 
     if let Some(user) = user_info {
-        let dictation_list = delete_dictation_item(db, &user.user_id, audio_id, dictation_id)
+        let bookmark_list = delete_bookmark_item(db, user.user_id, audio_id, bookmark_id)
             .await
-            .expect("delete dictation item failed: invalid paramsters");
-        return Ok(dictation_list);
+            .expect("delete bookmark item failed: invalid paramsters");
+        return Ok(bookmark_list);
     } else {
-        return Err("Failed to delete dictation  item".to_string());
+        return Err("Failed to delete bookmark item".to_string());
     }
 }
 
 #[tauri::command(rename_all = "snake_case")]
-pub async fn handle_get_dictation_list(
+#[specta::specta]
+pub async fn handle_get_bookmark_list(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
-    token: &str,
-    audio_id: &str,
-) -> Result<Vec<Dictation>, String> {
+    token: String,
+    audio_id: String,
+) -> Result<Vec<Bookmark>, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
         .await
-        .expect("get dictation list failed: invalid user");
+        .expect("get bookmark list failed: invalid user");
 
     if let Some(user) = user_info {
-        let dictation_list = get_dictation_list(db, &user.user_id, audio_id)
+        let bookmark_list = get_bookmark_list(db, user.user_id, audio_id)
             .await
-            .expect("get dictation list failed: invalid paramsters");
-        return Ok(dictation_list);
+            .expect("get bookmark list failed: invalid paramsters");
+        return Ok(bookmark_list);
     } else {
-        return Err("Failed to get dictation list".to_string());
+        return Err("Failed to get bookmark list".to_string());
     }
 }

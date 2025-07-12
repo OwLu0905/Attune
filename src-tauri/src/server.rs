@@ -7,7 +7,7 @@ use tauri_plugin_oauth::cancel;
 use tauri_plugin_oauth::start_with_config;
 use tauri_plugin_oauth::OauthConfig;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Clone, specta::Type)]
 #[serde(tag = "type")] // This makes the variant name appear as "type"
 enum OAuthState {
     Verify { code: String },
@@ -15,6 +15,7 @@ enum OAuthState {
 }
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub async fn start_oauth_server(app_handle: AppHandle, state: String) -> Result<u16, String> {
     let close_res = r#"<html>
 <head>
@@ -69,6 +70,7 @@ pub async fn start_oauth_server(app_handle: AppHandle, state: String) -> Result<
 }
 
 #[tauri::command(rename_all = "snake_case")]
+#[specta::specta]
 pub fn stop_oauth_server(port: u16) -> Result<String, String> {
     match cancel(port) {
         Ok(()) => Ok(format!("Closed server on (port: {}) successfully", port)),

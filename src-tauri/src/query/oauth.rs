@@ -6,17 +6,16 @@ use super::user::{
 
 async fn check_google_account_exists(
     db: &Db,
-    sub: &str,
-
-    access_token: Option<&str>,
+    sub: String,
+    access_token: Option<String>,
     access_token_expires_at: Option<Timestamp>,
-    refresh_token: Option<&str>,
+    refresh_token: Option<String>,
     refresh_token_expires_at: Option<Timestamp>,
 ) -> Result<Option<Account>, sqlx::Error> {
     let existing_account = sqlx::query_as::<_, Account>(
         "SELECT * FROM account WHERE providerId = 'google' AND accountId = ?",
     )
-    .bind(sub)
+    .bind(&sub)
     .fetch_optional(db)
     .await?;
 
@@ -66,22 +65,22 @@ async fn check_google_account_exists(
 
 pub async fn handle_google_auth(
     db: &Db,
-    sub: &str,
-    email: &str,
-    name: &str,
-    picture: Option<&str>,
+    sub: String,
+    email: String,
+    name: String,
+    picture: Option<String>,
     email_verified: bool,
-    access_token: Option<&str>,
+    access_token: Option<String>,
     access_token_expires_at: Option<Timestamp>,
-    refresh_token: Option<&str>,
+    refresh_token: Option<String>,
     refresh_token_expires_at: Option<Timestamp>,
 ) -> Result<String, sqlx::Error> {
     let account_result = check_google_account_exists(
         db,
-        sub,
-        access_token,
+        sub.clone(),
+        access_token.clone(),
         access_token_expires_at,
-        refresh_token,
+        refresh_token.clone(),
         refresh_token_expires_at,
     )
     .await?;
@@ -95,9 +94,9 @@ pub async fn handle_google_auth(
             let user_id = create_user(db, name, email, email_verified, picture).await?;
             let _ = create_account(
                 db,
-                &user_id,
+                user_id.clone(),
                 sub,
-                "google",
+                String::from("google"),
                 access_token,
                 access_token_expires_at,
                 refresh_token,
@@ -112,7 +111,7 @@ pub async fn handle_google_auth(
     let user = user.expect("Edge case");
     let user_id = user.id;
 
-    let session_token = create_session(db, &user_id).await?;
+    let session_token = create_session(db, user_id).await?;
 
     Ok(session_token)
 }

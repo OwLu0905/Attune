@@ -3,7 +3,7 @@ use sqlx::prelude::FromRow;
 
 use crate::db::Db;
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct Audio {
     pub id: String,
@@ -35,7 +35,7 @@ pub struct Audio {
     updated_at: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct AudioListItem {
     pub id: String,
@@ -59,7 +59,7 @@ pub struct AudioListItem {
 }
 
 // Audio with exercise types
-#[derive(Debug, Serialize, Deserialize, FromRow, Clone)]
+#[derive(Debug, Serialize, Deserialize, FromRow, Clone, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct AudioItem {
     #[serde(flatten)]
@@ -70,7 +70,7 @@ pub struct AudioItem {
     pub exercise_type: Option<String>,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Serialize, Deserialize, FromRow, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct AudioExerciseTypes {
     #[sqlx(rename = "audioId")]
@@ -82,16 +82,16 @@ pub struct AudioExerciseTypes {
 
 pub async fn create_audio(
     db: &Db,
-    user_id: &str,
-    audio_id: &str,
-    title: &str,
-    description: Option<&str>,
-    url: &str,
-    thumbnail: &str,
+    user_id: String,
+    audio_id: String,
+    title: String,
+    description: Option<String>,
+    url: String,
+    thumbnail: String,
     start_time: i16,
     end_time: i16,
-    provider: &str,
-    tag: Option<&str>,
+    provider: String,
+    _tag: Option<String>,
 ) -> Result<(), sqlx::Error> {
     sqlx::query(
         r#"
@@ -128,16 +128,20 @@ pub async fn create_audio(
     Ok(())
 }
 
-pub async fn get_audios(db: &Db, user_id: &str) -> Result<Vec<AudioListItem>, sqlx::Error> {
+pub async fn get_audios(db: &Db, user_id: String) -> Result<Vec<AudioListItem>, sqlx::Error> {
     let audios = sqlx::query_as::<_, AudioListItem>("SELECT id, title, description, url, thumbnail, startTime, endTime, provider, tag, transcribe, lastUsedAt FROM audio WHERE userId = ?  ORDER BY lastUsedAt DESC")
-        .bind(user_id)
+        .bind(&user_id)
         .fetch_all(db)
         .await?;
 
     Ok(audios)
 }
 
-pub async fn get_audio(db: &Db, user_id: &str, audio_id: &str) -> Result<AudioItem, sqlx::Error> {
+pub async fn get_audio(
+    db: &Db,
+    user_id: String,
+    audio_id: String,
+) -> Result<AudioItem, sqlx::Error> {
     let audio = sqlx::query_as::<_, AudioItem>(
         r#"
         SELECT 
@@ -161,8 +165,8 @@ pub async fn get_audio(db: &Db, user_id: &str, audio_id: &str) -> Result<AudioIt
         "#
 
     )
-        .bind(user_id)
-        .bind(audio_id)
+        .bind(&user_id)
+        .bind(&audio_id)
         .fetch_one(db)
         .await.map_err(|e| e.to_string());
 
@@ -171,12 +175,12 @@ pub async fn get_audio(db: &Db, user_id: &str, audio_id: &str) -> Result<AudioIt
 
 pub async fn update_audio_transcribe(
     db: &Db,
-    user_id: &str,
-    audio_id: &str,
+    user_id: String,
+    audio_id: String,
 ) -> Result<AudioItem, sqlx::Error> {
     sqlx::query("UPDATE audio SET transcribe = 1 WHERE userId = ? AND id = ?")
-        .bind(user_id)
-        .bind(audio_id)
+        .bind(&user_id)
+        .bind(&audio_id)
         .execute(db)
         .await?;
 
@@ -187,12 +191,12 @@ pub async fn update_audio_transcribe(
 
 pub async fn delete_audio(
     db: &Db,
-    user_id: &str,
-    audio_id: &str,
+    user_id: String,
+    audio_id: String,
 ) -> Result<Vec<AudioListItem>, sqlx::Error> {
     sqlx::query("DELETE FROM audio WHERE userId = ? AND id = ?")
-        .bind(user_id)
-        .bind(audio_id)
+        .bind(&user_id)
+        .bind(&audio_id)
         .execute(db)
         .await?;
 

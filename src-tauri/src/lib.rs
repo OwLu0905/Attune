@@ -9,12 +9,15 @@ mod server;
 mod service;
 mod yt;
 
+use tauri_specta::{collect_commands, Builder};
+
 pub struct DbState {
     db: Db,
 }
 
 // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
 #[tauri::command]
+#[specta::specta]
 fn greet(name: &str) -> String {
     format!("Hello, {}! You've been greeted from Rust!", name)
 }
@@ -25,6 +28,36 @@ pub fn run() {
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_store::Builder::new().build())
         .plugin(tauri_plugin_opener::init());
+
+    let mut ts_build = Builder::<tauri::Wry>::new();
+    ts_build = ts_build.commands(collect_commands![
+        greet,
+        yt::download_yt_sections,
+        model::start_transcribe,
+        model::start_transcribe_service,
+        model::start_transcribe_service_streaming,
+        server::start_oauth_server,
+        server::stop_oauth_server,
+        query::commands::handle_login,
+        query::commands::check_persist_user,
+        query::commands::logout_user,
+        query::commands::handle_create_audio,
+        query::commands::handle_get_audio_list,
+        query::commands::handle_get_audio_item,
+        query::commands::handle_update_audio_transcribe,
+        query::commands::handle_delete_audio,
+        query::commands::handle_create_bookmark_item,
+        query::commands::handle_delete_bookmark_item,
+        query::commands::handle_get_bookmark_list
+    ]);
+    #[cfg(debug_assertions)] // <- Only export on non-release builds
+    ts_build
+        .export(
+            specta_typescript::Typescript::default()
+                .bigint(specta_typescript::BigIntExportBehavior::Number),
+            "../src/lib/tauri.ts",
+        )
+        .expect("Failed to export typescript bindings");
 
     builder = builder
         .plugin(tauri_plugin_shell::init())
@@ -42,26 +75,27 @@ pub fn run() {
 
             Ok(())
         })
-        .invoke_handler(tauri::generate_handler![
-            greet,
-            yt::download_yt_sections,
-            model::start_transcribe,
-            model::start_transcribe_service,
-            model::start_transcribe_service_streaming,
-            server::start_oauth_server,
-            server::stop_oauth_server,
-            query::commands::handle_login,
-            query::commands::check_persist_user,
-            query::commands::logout_user,
-            query::commands::handle_create_audio,
-            query::commands::handle_get_audio_list,
-            query::commands::handle_get_audio_item,
-            query::commands::handle_update_audio_transcribe,
-            query::commands::handle_delete_audio,
-            query::commands::handle_create_dictation_item,
-            query::commands::handle_delete_dictation_item,
-            query::commands::handle_get_dictation_list
-        ])
+        // .invoke_handler(tauri::generate_handler![
+        //     greet,
+        //     yt::download_yt_sections,
+        //     model::start_transcribe,
+        //     model::start_transcribe_service,
+        //     model::start_transcribe_service_streaming,
+        //     server::start_oauth_server,
+        //     server::stop_oauth_server,
+        //     query::commands::handle_login,
+        //     query::commands::check_persist_user,
+        //     query::commands::logout_user,
+        //     query::commands::handle_create_audio,
+        //     query::commands::handle_get_audio_list,
+        //     query::commands::handle_get_audio_item,
+        //     query::commands::handle_update_audio_transcribe,
+        //     query::commands::handle_delete_audio,
+        //     query::commands::handle_create_bookmark_item,
+        //     query::commands::handle_delete_bookmark_item,
+        //     query::commands::handle_get_bookmark_list
+        // ])
+        .invoke_handler(ts_build.invoke_handler())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
