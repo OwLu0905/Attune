@@ -1,5 +1,6 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
+    import { commands } from "$lib/tauri";
+    import type { Bookmark } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
     import { fade } from "svelte/transition";
 
@@ -10,11 +11,9 @@
 
     import { Eye, EyeOff, Settings } from "@lucide/svelte";
 
-    import type { AudioItem } from "@/types/audio";
+    import type { AudioItem } from "$lib/tauri";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
-
-    export type TBookmarkItem = { bookmarkId: number; createdAt: string };
 
     interface Props {
         audioItem: AudioItem;
@@ -38,36 +37,60 @@
 
     const { getUser } = getUserContext();
     const user = getUser();
-    let bookmarkList = $state<TBookmarkItem[]>([]);
+    let bookmarkList = $state<Bookmark[]>([]);
 
     async function getBookmarkList() {
+        if (!user.accessToken) return;
+
         try {
-            bookmarkList = await invoke("handle_get_bookmark_list", {
-                token: user.accessToken,
-                audio_id: audioItem.id,
-            });
+            const result = await commands.handleGetBookmarkList(
+                user.accessToken,
+                audioItem.id,
+            );
+
+            if (result.status === "error") {
+                throw new Error(result.error);
+            }
+
+            bookmarkList = result.data;
         } catch (error) {
             console.error(error);
         }
     }
     async function createBookmarkItem(index: number) {
+        if (!user.accessToken) return;
+
         try {
-            bookmarkList = await invoke("handle_create_bookmark_item", {
-                token: user.accessToken,
-                audio_id: audioItem.id,
-                bookmark_id: index,
-            });
+            const result = await commands.handleCreateBookmarkItem(
+                user.accessToken,
+                audioItem.id,
+                index,
+            );
+
+            if (result.status === "error") {
+                throw new Error(result.error);
+            }
+
+            bookmarkList = result.data;
         } catch (error) {
             console.error(error);
         }
     }
     async function deleteBookmarkItem(index: number) {
+        if (!user.accessToken) return;
+        
         try {
-            bookmarkList = await invoke("handle_delete_bookmark_item", {
-                token: user.accessToken,
-                audio_id: audioItem.id,
-                bookmark_id: index,
-            });
+            const result = await commands.handleDeleteBookmarkItem(
+                user.accessToken,
+                audioItem.id,
+                index,
+            );
+
+            if (result.status === "error") {
+                throw new Error(result.error);
+            }
+
+            bookmarkList = result.data;
         } catch (error) {
             console.error(error);
         }

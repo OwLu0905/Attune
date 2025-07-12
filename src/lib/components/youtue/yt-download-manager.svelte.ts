@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { commands } from "$lib/tauri";
 import { listen } from "@tauri-apps/api/event";
 import type { UnlistenFn } from "@tauri-apps/api/event";
 
@@ -57,11 +57,13 @@ export class YtDownloadManager {
         end,
         url,
     }: DownloadSectionParam): Promise<string> {
-        return await invoke(DOWNLOAD_YT_EVENT.download_section, {
-            start,
-            end,
-            url,
-        });
+        const result = await commands.downloadYtSections(url, start, end);
+        
+        if (result.status === "error") {
+            throw new Error(result.error);
+        }
+        
+        return result.data;
     }
 
     cleanup() {

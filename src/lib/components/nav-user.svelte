@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
+    import { commands } from "$lib/tauri";
     import * as Avatar from "$lib/components/ui/avatar/index.js";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
     import * as Sidebar from "$lib/components/ui/sidebar/index.js";
@@ -19,7 +19,11 @@
 
     async function logout() {
         try {
-            await invoke("logout_user");
+            const result = await commands.logoutUser();
+            
+            if (result.status === "error") {
+                throw new Error(result.error);
+            }
         } catch (error) {
             console.error(error);
         } finally {

@@ -8,13 +8,13 @@
     import Error from "@/components/error/error.svelte";
     import { cn } from "@/utils";
     import { getAudioList } from "@/audio";
-    import type { AudioItem } from "@/types/audio";
+    import type { AudioListItem } from "$lib/tauri";
 
     const { getUser } = getUserContext();
 
     const user = getUser();
 
-    let audioList: AudioItem[] = $state([]);
+    let audioList: AudioListItem[] = $state([]);
 
     async function getList(token: string) {
         audioList = await getAudioList(token);

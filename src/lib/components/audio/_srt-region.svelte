@@ -7,7 +7,7 @@
     import { cn, getSubtitleFile } from "@/utils";
 
     import type { SubtitleSegment } from "./types";
-    import type { AudioItem } from "@/types/audio";
+    import type { AudioItem } from "$lib/tauri";
     import type { Attachment } from "svelte/attachments";
 
     let subtitlesByText: SubtitleSegment[] = $state([]);

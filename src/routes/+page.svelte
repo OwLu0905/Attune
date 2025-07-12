@@ -2,7 +2,7 @@
     import Button from "$lib/components/ui/button/button.svelte";
     import { Input } from "$lib/components/ui/input";
 
-    import { invoke } from "@tauri-apps/api/core";
+    import { commands } from "$lib/tauri";
     import { toast } from "svelte-sonner";
 
     let name = $state("");
@@ -11,7 +11,8 @@
     async function greet(event: Event) {
         event.preventDefault();
         // Learn more about Tauri commands at https://tauri.app/develop/calling-rust/
-        greetMsg = await invoke("greet", { name });
+        const result = await commands.greet(name);
+        greetMsg = result;
     }
 </script>
 

@@ -17,7 +17,7 @@ async fn remove_file_safe(path: &str) -> tokio::io::Result<()> {
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn start_transcribe(
     app_handle: AppHandle,
@@ -90,7 +90,7 @@ pub async fn start_transcribe(
     Ok(())
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn start_transcribe_service(
     app_handle: AppHandle,
@@ -151,7 +151,7 @@ pub async fn start_transcribe_service(
 
     Ok(())
 }
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn start_transcribe_service_streaming(
     app_handle: AppHandle,

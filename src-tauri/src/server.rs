@@ -14,7 +14,7 @@ enum OAuthState {
     Error { message: String },
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn start_oauth_server(app_handle: AppHandle, state: String) -> Result<u16, String> {
     let close_res = r#"<html>
@@ -69,7 +69,7 @@ pub async fn start_oauth_server(app_handle: AppHandle, state: String) -> Result<
     .map_err(|err| err.to_string())
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub fn stop_oauth_server(port: u16) -> Result<String, String> {
     match cancel(port) {

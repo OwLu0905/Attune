@@ -2,7 +2,8 @@
     import "../app.css";
     import { page } from "$app/state";
     import { onMount } from "svelte";
-    import { invoke } from "@tauri-apps/api/core";
+    import { commands } from "$lib/tauri";
+    import type { SessionWithUser } from "$lib/tauri";
 
     import AppSidebar from "$lib/components/app-sidebar.svelte";
     import { Separator } from "$lib/components/ui/separator";
@@ -38,7 +39,18 @@
 
     onMount(async () => {
         try {
-            const userData: UserInfo = await invoke("check_persist_user");
+            const result = await commands.checkPersistUser();
+            
+            if (result.status === "error") {
+                throw new Error(result.error);
+            }
+            
+            const userData = result.data;
+            
+            if (!userData) {
+                console.log("No persisted user session found");
+                return;
+            }
             user.userId = userData.userId;
             user.accessToken = userData.accessToken;
             user.name = userData.name;

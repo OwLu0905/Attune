@@ -19,7 +19,7 @@ enum DownloadStatus {
 // TODO: return data format
 // TODO: add filename args (we could write into db first before download it)
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn download_yt_sections(
     app_handle: AppHandle,

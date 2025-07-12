@@ -34,7 +34,7 @@ pub struct TokenData {
     pub refresh_token_expires_at: Option<Timestamp>,
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_login(
     app_handle: AppHandle,
@@ -72,7 +72,7 @@ pub async fn handle_login(
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn check_persist_user(
     app_handle: AppHandle,
@@ -88,7 +88,7 @@ pub async fn check_persist_user(
     Ok(user_info)
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn logout_user(
     app_handle: AppHandle,
@@ -118,7 +118,7 @@ pub struct CreateAudioData {
     pub tag: Option<String>,
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_create_audio(
     app_handle: AppHandle,
@@ -153,7 +153,7 @@ pub async fn handle_create_audio(
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_get_audio_list(
     app_handle: AppHandle,
@@ -176,7 +176,7 @@ pub async fn handle_get_audio_list(
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_get_audio_item(
     app_handle: AppHandle,
@@ -200,7 +200,7 @@ pub async fn handle_get_audio_item(
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_update_audio_transcribe(
     app_handle: AppHandle,
@@ -224,7 +224,7 @@ pub async fn handle_update_audio_transcribe(
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_delete_audio(
     app_handle: AppHandle,
@@ -252,7 +252,7 @@ pub async fn handle_delete_audio(
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_create_bookmark_item(
     app_handle: AppHandle,
@@ -277,7 +277,7 @@ pub async fn handle_create_bookmark_item(
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_delete_bookmark_item(
     app_handle: AppHandle,
@@ -302,7 +302,7 @@ pub async fn handle_delete_bookmark_item(
     }
 }
 
-#[tauri::command(rename_all = "snake_case")]
+#[tauri::command]
 #[specta::specta]
 pub async fn handle_get_bookmark_list(
     app_handle: AppHandle,

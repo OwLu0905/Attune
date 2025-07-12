@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
+    import { commands } from "$lib/tauri";
     import { listen } from "@tauri-apps/api/event";
     import { onDestroy, onMount } from "svelte";
     import { getUserContext } from "@/user/userService.svelte";
@@ -52,17 +52,31 @@
 
     async function getSubtitle() {
         try {
+            if (!user.accessToken) {
+                throw new Error("User not authenticated");
+            }
+            
             isTranscribing = true;
 
             // TODO:
-            await invoke("start_transcribe_service_streaming", {
-                audio_id: audioItem.id,
-                model: "small.en",
-            });
-            audioItem = await invoke("handle_update_audio_transcribe", {
-                token: user.accessToken,
-                audio_id: audioItem.id,
-            });
+            const transcribe_result = await commands.startTranscribeServiceStreaming(
+                audioItem.id,
+                "small.en"
+            );
+            
+            if (transcribe_result.status === "error") {
+                throw new Error(transcribe_result.error);
+            };
+            const update_result = await commands.handleUpdateAudioTranscribe(
+                user.accessToken,
+                audioItem.id
+            );
+            
+            if (update_result.status === "error") {
+                throw new Error(update_result.error);
+            }
+            
+            audioItem = update_result.data;
             subtitles = await getSubtitleFile(audioItem.id);
         } catch (error) {
             console.error(error);

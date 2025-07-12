@@ -1,4 +1,4 @@
-import { invoke } from "@tauri-apps/api/core";
+import { commands } from "../tauri";
 import { listen } from "@tauri-apps/api/event";
 import { openUrl } from "@tauri-apps/plugin-opener";
 import { PUBLIC_GOOGLE_CLIENT_ID } from "$env/static/public";
@@ -56,24 +56,27 @@ export class GoogleOAuth {
                     const data = await this.handleVerifyFlow(status);
 
                     if (data) {
-                        const session_token: string = await invoke(
-                            "handle_login",
+                        const session_token_result = await commands.handleLogin(
+                            data.sub,
+                            data.email,
+                            data.name,
+                            data.picture,
+                            data.email_verified,
                             {
-                                sub: data.sub,
-                                email: data.email,
-                                name: data.name,
-                                picture: data.picture,
-                                email_verified: data.email_verified,
-                                tokens: {
-                                    access_token: data.access_token,
-                                    access_token_expires_at:
-                                        data.access_token_expires_at,
-                                    refresh_token: data.refresh_token,
-                                    refresh_token_expires_at:
-                                        data.refresh_token_expires_at,
-                                },
+                                access_token: data.access_token,
+                                access_token_expires_at:
+                                    +data.access_token_expires_at,
+                                refresh_token: data.refresh_token,
+                                refresh_token_expires_at:
+                                    +data.refresh_token_expires_at,
                             },
                         );
+
+                        if (session_token_result.status === "error") {
+                            throw new Error(session_token_result.error);
+                        }
+
+                        const session_token = session_token_result.data;
 
                         fn({
                             accessToken: session_token,
@@ -201,9 +204,13 @@ export class GoogleOAuth {
 
             const oauthState = await this.generateOAuthState();
 
-            this.port = await invoke(OAUTH_EVENT.start_server, {
-                state: oauthState,
-            });
+            const port_result = await commands.startOauthServer(oauthState);
+
+            if (port_result.status === "error") {
+                throw new Error(port_result.error);
+            }
+
+            this.port = port_result.data;
 
             if (!this.port) {
                 throw new Error("Invalid port received from server");
@@ -228,9 +235,13 @@ export class GoogleOAuth {
         if (!this.port) return;
 
         try {
-            const message = await invoke(OAUTH_EVENT.stop_server, {
-                port: this.port,
-            });
+            const message_result = await commands.stopOauthServer(this.port);
+
+            if (message_result.status === "error") {
+                throw new Error(message_result.error);
+            }
+
+            const message = message_result.data;
             return message;
         } catch (error) {
             this.error = error;

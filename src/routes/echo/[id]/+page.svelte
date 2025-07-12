@@ -1,10 +1,10 @@
 <script lang="ts">
     import { page } from "$app/state";
-    import { invoke } from "@tauri-apps/api/core";
+    import { commands } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
     import { getAudioFile } from "@/utils";
     import AudioPlayerCard from "@/components/audio/audio-player-card.svelte";
-    import type { AudioItem } from "@/types/audio";
+    import type { AudioItem } from "$lib/tauri";
     import { fade } from "svelte/transition";
 
     const { getUser } = getUserContext();
@@ -19,10 +19,18 @@
             if (!user.accessToken) {
                 return;
             }
-            audioItem = await invoke("handle_get_audio_item", {
-                token: user.accessToken,
-                audio_id: audioId,
-            });
+            const result = await commands.handleGetAudioItem(
+                user.accessToken,
+                audioId,
+            );
+
+            if (result.status === "error") {
+                throw new Error(result.error);
+            }
+
+            if (result.data) {
+                audioItem = result.data;
+            }
 
             videoPath = await getAudioFile(audioId, "mp4");
         } catch (error) {

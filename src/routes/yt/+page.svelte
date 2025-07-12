@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { invoke } from "@tauri-apps/api/core";
+    import { commands } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
     import Button from "@/components/ui/button/button.svelte";
     import Badge from "@/components/ui/badge/badge.svelte";
@@ -9,13 +9,13 @@
     import Error from "@/components/error/error.svelte";
     import { Trash, Upload } from "@lucide/svelte";
     import { getAudioList } from "$lib/audio.js";
-    import type { AudioItem } from "@/types/audio";
+    import type { AudioListItem } from "$lib/tauri";
 
     const { getUser } = getUserContext();
 
     const user = getUser();
 
-    let audioList: AudioItem[] = $state([]);
+    let audioList: AudioListItem[] = $state([]);
 
     async function getList(token: string) {
         audioList = await getAudioList(token);
@@ -93,14 +93,22 @@
                                     >
                                     <AlertDialog.Action
                                         onclick={async () => {
+                                            if (!user.accessToken) return;
+
                                             try {
-                                                audioList = await invoke(
-                                                    "handle_delete_audio",
-                                                    {
-                                                        token: user.accessToken,
-                                                        audio_id: audio.id,
-                                                    },
-                                                );
+                                                const result =
+                                                    await commands.handleDeleteAudio(
+                                                        user.accessToken,
+                                                        audio.id,
+                                                    );
+
+                                                if (result.status === "error") {
+                                                    throw new Error(
+                                                        result.error,
+                                                    );
+                                                }
+
+                                                audioList = result.data;
                                             } catch (error) {
                                                 console.error(error);
                                             }

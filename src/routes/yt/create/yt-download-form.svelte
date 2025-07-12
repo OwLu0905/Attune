@@ -16,7 +16,8 @@
 
     import type { TSLIDER_VALUES } from "@/components/youtue/types";
     import type { YtOembUrlInfo } from "./types";
-    import { invoke } from "@tauri-apps/api/core";
+    import { commands } from "$lib/tauri";
+    import type { CreateAudioData } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
     import { toast } from "svelte-sonner";
     interface Props {
@@ -38,6 +39,10 @@
             try {
                 const urlInfoSnapshot = $state.snapshot(urlInfo);
                 if (form.valid) {
+                    if (!user.accessToken) {
+                        throw new Error("User not authenticated");
+                    }
+
                     const data = form.data;
                     const audioId = await yt_download_manager.handleDownload({
                         start: data.startTime,
@@ -45,17 +50,26 @@
                         url: data.url,
                     });
 
-                    await invoke("handle_create_audio", {
-                        token: user.accessToken,
+                    const audioData: CreateAudioData = {
                         audio_id: audioId,
+                        token: user.accessToken,
                         title: data.title,
-                        description: data.description,
+                        description: data.description || "",
                         url: data.url,
-                        thumbnail: urlInfoSnapshot?.embedInfo.thumbnail_url,
+                        thumbnail:
+                            urlInfoSnapshot?.embedInfo.thumbnail_url || "",
                         start_time: data.startTime,
                         end_time: data.endTime,
-                        provider: urlInfoSnapshot?.embedInfo.provider_name,
-                    });
+                        provider:
+                            urlInfoSnapshot?.embedInfo.provider_name || "",
+                        tag: null,
+                    };
+
+                    const result = await commands.handleCreateAudio(audioData);
+
+                    if (result.status === "error") {
+                        throw new Error(result.error);
+                    }
 
                     toast.success("Download completed!!", {
                         description: "check",
@@ -148,7 +162,7 @@
                         />
 
                         <div
-                            class="absolute bottom-0 right-0 top-0 mx-2 flex items-center text-primary"
+                            class="text-primary absolute top-0 right-0 bottom-0 mx-2 flex items-center"
                         >
                             {#if $formData.privoder === "YouTube"}
                                 <Youtube />
