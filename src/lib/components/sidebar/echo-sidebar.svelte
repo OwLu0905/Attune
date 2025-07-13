@@ -5,7 +5,7 @@
     import * as HoverCard from "@/components/ui/hover-card/";
     import { PlusCircle } from "@lucide/svelte";
     import Invalid from "@/components/error/invalid.svelte";
-    import Error from "@/components/error/error.svelte";
+    import ErrorMessage from "@/components/error/error-message.svelte";
     import { cn } from "@/utils";
     import { getAudioList } from "@/audio";
     import type { AudioListItem } from "$lib/tauri";
@@ -94,7 +94,7 @@
                         </Sidebar.MenuItem>
                     {/each}
                 {:catch error}
-                    <Error />
+                    <ErrorMessage />
                 {/await}
             </Sidebar.Menu>
         </Sidebar.Group>

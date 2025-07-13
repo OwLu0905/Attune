@@ -48,7 +48,9 @@ pub fn run() {
         query::commands::handle_delete_audio,
         query::commands::handle_create_bookmark_item,
         query::commands::handle_delete_bookmark_item,
-        query::commands::handle_get_bookmark_list
+        query::commands::handle_create_dictation_item,
+        query::commands::handle_delete_dictation_item,
+        query::commands::handle_get_bookmark_dictation_combined
     ]);
     #[cfg(debug_assertions)] // <- Only export on non-release builds
     ts_build
@@ -75,26 +77,6 @@ pub fn run() {
 
             Ok(())
         })
-        // .invoke_handler(tauri::generate_handler![
-        //     greet,
-        //     yt::download_yt_sections,
-        //     model::start_transcribe,
-        //     model::start_transcribe_service,
-        //     model::start_transcribe_service_streaming,
-        //     server::start_oauth_server,
-        //     server::stop_oauth_server,
-        //     query::commands::handle_login,
-        //     query::commands::check_persist_user,
-        //     query::commands::logout_user,
-        //     query::commands::handle_create_audio,
-        //     query::commands::handle_get_audio_list,
-        //     query::commands::handle_get_audio_item,
-        //     query::commands::handle_update_audio_transcribe,
-        //     query::commands::handle_delete_audio,
-        //     query::commands::handle_create_bookmark_item,
-        //     query::commands::handle_delete_bookmark_item,
-        //     query::commands::handle_get_bookmark_list
-        // ])
         .invoke_handler(ts_build.invoke_handler())
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

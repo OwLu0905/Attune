@@ -120,7 +120,7 @@ async handleDeleteAudio(token: string, audioId: string) : Promise<Result<AudioLi
     else return { status: "error", error: e  as any };
 }
 },
-async handleCreateBookmarkItem(token: string, audioId: string, bookmarkId: number) : Promise<Result<Bookmark[], string>> {
+async handleCreateBookmarkItem(token: string, audioId: string, bookmarkId: number) : Promise<Result<BookmarkDictationView[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("handle_create_bookmark_item", { token, audioId, bookmarkId }) };
 } catch (e) {
@@ -128,7 +128,7 @@ async handleCreateBookmarkItem(token: string, audioId: string, bookmarkId: numbe
     else return { status: "error", error: e  as any };
 }
 },
-async handleDeleteBookmarkItem(token: string, audioId: string, bookmarkId: number) : Promise<Result<Bookmark[], string>> {
+async handleDeleteBookmarkItem(token: string, audioId: string, bookmarkId: number) : Promise<Result<BookmarkDictationView[], string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("handle_delete_bookmark_item", { token, audioId, bookmarkId }) };
 } catch (e) {
@@ -136,9 +136,25 @@ async handleDeleteBookmarkItem(token: string, audioId: string, bookmarkId: numbe
     else return { status: "error", error: e  as any };
 }
 },
-async handleGetBookmarkList(token: string, audioId: string) : Promise<Result<Bookmark[], string>> {
+async handleCreateDictationItem(token: string, audioId: string, dictationId: number) : Promise<Result<BookmarkDictationView[], string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("handle_get_bookmark_list", { token, audioId }) };
+    return { status: "ok", data: await TAURI_INVOKE("handle_create_dictation_item", { token, audioId, dictationId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async handleDeleteDictationItem(token: string, audioId: string, dictationId: number) : Promise<Result<BookmarkDictationView[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("handle_delete_dictation_item", { token, audioId, dictationId }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async handleGetBookmarkDictationCombined(token: string, audioId: string) : Promise<Result<BookmarkDictationView[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("handle_get_bookmark_dictation_combined", { token, audioId }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -158,7 +174,7 @@ async handleGetBookmarkList(token: string, audioId: string) : Promise<Result<Boo
 
 export type AudioItem = ({ id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; lastUsedAt: string }) & { exerciseType: string | null }
 export type AudioListItem = { id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; lastUsedAt: string }
-export type Bookmark = { bookmarkId: number; createdAt: string }
+export type BookmarkDictationView = { userId: string; audioId: string; bookmarkId: number | null; bookmarkPosition: number | null; bookmarkCreatedAt: string | null; dictationId: number | null; dictationPosition: number | null; dictationCreatedAt: string | null }
 export type CreateAudioData = { audio_id: string; token: string; title: string; description: string | null; url: string; thumbnail: string; start_time: number; end_time: number; provider: string; tag: string | null }
 export type SessionWithUser = { userId: string; accessToken: string; name: string; email: string; picture: string | null }
 export type TokenData = { access_token: string | null; access_token_expires_at: number | null; refresh_token: string | null; refresh_token_expires_at: number | null }

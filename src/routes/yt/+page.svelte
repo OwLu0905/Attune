@@ -6,7 +6,7 @@
     import * as Card from "$lib/components/ui/card/index.js";
     import * as AlertDialog from "@/components/ui/alert-dialog";
     import Invalid from "@/components/error/invalid.svelte";
-    import Error from "@/components/error/error.svelte";
+    import ErrorMessage from "@/components/error/error-message.svelte";
     import { Trash, Upload } from "@lucide/svelte";
     import { getAudioList } from "$lib/audio.js";
     import type { AudioListItem } from "$lib/tauri";
@@ -124,7 +124,7 @@
                 </Card.Root>
             {/each}
         {:catch error}
-            <Error />
+            <ErrorMessage />
         {/await}
     </div>
 {/if}

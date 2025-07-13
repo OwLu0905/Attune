@@ -1,12 +1,12 @@
 <script lang="ts">
     import { commands } from "$lib/tauri";
-    import type { Bookmark } from "$lib/tauri";
+    import type { BookmarkDictationView } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
     import { fade } from "svelte/transition";
 
     import ScrollArea from "@/components/ui/scroll-area/scroll-area.svelte";
     import SegmentField from "./segment-field.svelte";
-    import Error from "../error/error.svelte";
+    import ErrorMessage from "../error/error-message.svelte";
     import { Skeleton } from "@/components/ui/skeleton";
 
     import { Eye, EyeOff, Settings } from "@lucide/svelte";
@@ -37,13 +37,13 @@
 
     const { getUser } = getUserContext();
     const user = getUser();
-    let bookmarkList = $state<Bookmark[]>([]);
+    let combinedList = $state<BookmarkDictationView[]>([]);
 
-    async function getBookmarkList() {
+    async function getCombinedList() {
         if (!user.accessToken) return;
 
         try {
-            const result = await commands.handleGetBookmarkList(
+            const result = await commands.handleGetBookmarkDictationCombined(
                 user.accessToken,
                 audioItem.id,
             );
@@ -52,7 +52,7 @@
                 throw new Error(result.error);
             }
 
-            bookmarkList = result.data;
+            combinedList = result.data;
         } catch (error) {
             console.error(error);
         }
@@ -71,14 +71,14 @@
                 throw new Error(result.error);
             }
 
-            bookmarkList = result.data;
+            combinedList = result.data;
         } catch (error) {
             console.error(error);
         }
     }
     async function deleteBookmarkItem(index: number) {
         if (!user.accessToken) return;
-        
+
         try {
             const result = await commands.handleDeleteBookmarkItem(
                 user.accessToken,
@@ -90,7 +90,7 @@
                 throw new Error(result.error);
             }
 
-            bookmarkList = result.data;
+            combinedList = result.data;
         } catch (error) {
             console.error(error);
         }
@@ -124,7 +124,7 @@
                 />
             {/if}
         </div>
-        {#await getBookmarkList() then _}
+        {#await getCombinedList() then _}
             <ScrollArea class="px-4 tabular-nums">
                 <div class="mx-2 flex flex-col gap-4.5">
                     {#each subtitles as segment, index (index)}
@@ -136,15 +136,15 @@
                             {onPlaySection}
                             {index}
                             {getDictation}
-                            {bookmarkList}
+                            {combinedList}
                             {createBookmarkItem}
                             {deleteBookmarkItem}
-                        />
+                        />bookmarkList
                     {/each}
                 </div>
             </ScrollArea>
         {:catch}
-            <Error />
+            <ErrorMessage />
         {/await}
     </div>
 {:else}

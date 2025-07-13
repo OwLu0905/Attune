@@ -3,6 +3,7 @@ use crate::{
     query::{
         audio::{AudioItem, AudioListItem},
         bookmark::Bookmark,
+        bookmark_dictation::BookmarkDictationView,
         dictation::Dictation,
     },
     DbState,
@@ -14,6 +15,7 @@ use tokio::fs::remove_dir_all;
 use super::{
     audio::{create_audio, delete_audio, get_audio, get_audios, update_audio_transcribe},
     bookmark::{create_bookmark_item, delete_bookmark_item, get_bookmark_list},
+    bookmark_dictation::get_bookmark_dictation_combined,
     dictation::{create_dictation_item, delete_dictation_item, get_dictation_list},
     oauth::handle_google_auth,
     store::{delete_store_token, get_store_token, set_store_token},
@@ -262,7 +264,7 @@ pub async fn handle_create_bookmark_item(
     token: String,
     audio_id: String,
     bookmark_id: i16,
-) -> Result<Vec<Bookmark>, String> {
+) -> Result<Vec<BookmarkDictationView>, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
@@ -270,10 +272,14 @@ pub async fn handle_create_bookmark_item(
         .expect("create bookmark item failed: invalid user");
 
     if let Some(user) = user_info {
-        let bookmark_item = create_bookmark_item(db, user.user_id, audio_id, bookmark_id)
+        let _ = create_bookmark_item(db, user.user_id.clone(), audio_id.clone(), bookmark_id)
             .await
             .expect("create bookmark item failed: invalid paramsters");
-        return Ok(bookmark_item);
+        
+        let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
+            .await
+            .expect("get bookmark dictation combined failed: invalid paramsters");
+        return Ok(combined_list);
     } else {
         return Err("Failed to create bookmark item".to_string());
     }
@@ -287,7 +293,7 @@ pub async fn handle_delete_bookmark_item(
     token: String,
     audio_id: String,
     bookmark_id: i16,
-) -> Result<Vec<Bookmark>, String> {
+) -> Result<Vec<BookmarkDictationView>, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
@@ -295,38 +301,19 @@ pub async fn handle_delete_bookmark_item(
         .expect("delete bookmark item failed: invalid user");
 
     if let Some(user) = user_info {
-        let bookmark_list = delete_bookmark_item(db, user.user_id, audio_id, bookmark_id)
+        let _ = delete_bookmark_item(db, user.user_id.clone(), audio_id.clone(), bookmark_id)
             .await
             .expect("delete bookmark item failed: invalid paramsters");
-        return Ok(bookmark_list);
+        
+        let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
+            .await
+            .expect("get bookmark dictation combined failed: invalid paramsters");
+        return Ok(combined_list);
     } else {
         return Err("Failed to delete bookmark item".to_string());
     }
 }
 
-#[tauri::command]
-#[specta::specta]
-pub async fn handle_get_bookmark_list(
-    app_handle: AppHandle,
-    state: tauri::State<'_, DbState>,
-    token: String,
-    audio_id: String,
-) -> Result<Vec<Bookmark>, String> {
-    let db = &state.db;
-
-    let user_info = get_user_by_session_token(db, &app_handle, token)
-        .await
-        .expect("get bookmark list failed: invalid user");
-
-    if let Some(user) = user_info {
-        let bookmark_list = get_bookmark_list(db, user.user_id, audio_id)
-            .await
-            .expect("get bookmark list failed: invalid paramsters");
-        return Ok(bookmark_list);
-    } else {
-        return Err("Failed to get bookmark list".to_string());
-    }
-}
 
 #[tauri::command]
 #[specta::specta]
@@ -336,7 +323,7 @@ pub async fn handle_create_dictation_item(
     token: String,
     audio_id: String,
     dictation_id: i16,
-) -> Result<Vec<Dictation>, String> {
+) -> Result<Vec<BookmarkDictationView>, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
@@ -344,10 +331,14 @@ pub async fn handle_create_dictation_item(
         .expect("create dictation item failed: invalid user");
 
     if let Some(user) = user_info {
-        let dictation_item = create_dictation_item(db, user.user_id, audio_id, dictation_id)
+        let _ = create_dictation_item(db, user.user_id.clone(), audio_id.clone(), dictation_id)
             .await
             .expect("create dictation item failed: invalid paramsters");
-        return Ok(dictation_item);
+        
+        let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
+            .await
+            .expect("get bookmark dictation combined failed: invalid paramsters");
+        return Ok(combined_list);
     } else {
         return Err("Failed to create dictation item".to_string());
     }
@@ -361,7 +352,7 @@ pub async fn handle_delete_dictation_item(
     token: String,
     audio_id: String,
     dictation_id: i16,
-) -> Result<Vec<Dictation>, String> {
+) -> Result<Vec<BookmarkDictationView>, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
@@ -369,35 +360,40 @@ pub async fn handle_delete_dictation_item(
         .expect("delete dictation item failed: invalid user");
 
     if let Some(user) = user_info {
-        let dictation_list = delete_dictation_item(db, user.user_id, audio_id, dictation_id)
+        let _ = delete_dictation_item(db, user.user_id.clone(), audio_id.clone(), dictation_id)
             .await
             .expect("delete dictation item failed: invalid paramsters");
-        return Ok(dictation_list);
+        
+        let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
+            .await
+            .expect("get bookmark dictation combined failed: invalid paramsters");
+        return Ok(combined_list);
     } else {
         return Err("Failed to delete dictation item".to_string());
     }
 }
 
+
 #[tauri::command]
 #[specta::specta]
-pub async fn handle_get_dictation_list(
+pub async fn handle_get_bookmark_dictation_combined(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
     token: String,
     audio_id: String,
-) -> Result<Vec<Dictation>, String> {
+) -> Result<Vec<BookmarkDictationView>, String> {
     let db = &state.db;
 
     let user_info = get_user_by_session_token(db, &app_handle, token)
         .await
-        .expect("get dictation list failed: invalid user");
+        .expect("get bookmark dictation combined failed: invalid user");
 
     if let Some(user) = user_info {
-        let dictation_list = get_dictation_list(db, user.user_id, audio_id)
+        let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
             .await
-            .expect("get dictation list failed: invalid paramsters");
-        return Ok(dictation_list);
+            .expect("get bookmark dictation combined failed: invalid paramsters");
+        return Ok(combined_list);
     } else {
-        return Err("Failed to get dictation list".to_string());
+        return Err("Failed to get bookmark dictation combined".to_string());
     }
 }

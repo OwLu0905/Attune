@@ -4,7 +4,7 @@
     import { Eye, EyeOff, Heart, PencilRuler } from "@lucide/svelte";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
-    import type { TBookmarkItem } from "./list-card.svelte";
+    import type { BookmarkDictationView } from "$lib/tauri";
 
     interface Props {
         audioPlayer: AudioPlayer;
@@ -14,7 +14,7 @@
         onPlaySection: (start: number, end: number) => Promise<void>;
         index: number;
         getDictation: (i: number) => void;
-        bookmarkList: TBookmarkItem[];
+        combinedList: BookmarkDictationView[];
         createBookmarkItem: (i: number) => Promise<void>;
         deleteBookmarkItem: (i: number) => Promise<void>;
     }
@@ -26,7 +26,7 @@
         onPlaySection,
         index,
         getDictation,
-        bookmarkList,
+        combinedList,
         createBookmarkItem,
         deleteBookmarkItem,
     }: Props = $props();
@@ -40,7 +40,7 @@
     );
 
     const isLove = $derived.by(
-        () => bookmarkList.findIndex((i) => i.bookmarkId === +index) > -1,
+        () => combinedList.findIndex((i) => i.bookmarkPosition === +index) > -1,
     );
 </script>
 
