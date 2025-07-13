@@ -3,6 +3,7 @@ use crate::{
     query::{
         audio::{AudioItem, AudioListItem},
         bookmark::Bookmark,
+        dictation::Dictation,
     },
     DbState,
 };
@@ -13,6 +14,7 @@ use tokio::fs::remove_dir_all;
 use super::{
     audio::{create_audio, delete_audio, get_audio, get_audios, update_audio_transcribe},
     bookmark::{create_bookmark_item, delete_bookmark_item, get_bookmark_list},
+    dictation::{create_dictation_item, delete_dictation_item, get_dictation_list},
     oauth::handle_google_auth,
     store::{delete_store_token, get_store_token, set_store_token},
     user::{delete_session, get_user_by_session_token, SessionWithUser, Timestamp},
@@ -323,5 +325,79 @@ pub async fn handle_get_bookmark_list(
         return Ok(bookmark_list);
     } else {
         return Err("Failed to get bookmark list".to_string());
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn handle_create_dictation_item(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: String,
+    audio_id: String,
+    dictation_id: i16,
+) -> Result<Vec<Dictation>, String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, &app_handle, token)
+        .await
+        .expect("create dictation item failed: invalid user");
+
+    if let Some(user) = user_info {
+        let dictation_item = create_dictation_item(db, user.user_id, audio_id, dictation_id)
+            .await
+            .expect("create dictation item failed: invalid paramsters");
+        return Ok(dictation_item);
+    } else {
+        return Err("Failed to create dictation item".to_string());
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn handle_delete_dictation_item(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: String,
+    audio_id: String,
+    dictation_id: i16,
+) -> Result<Vec<Dictation>, String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, &app_handle, token)
+        .await
+        .expect("delete dictation item failed: invalid user");
+
+    if let Some(user) = user_info {
+        let dictation_list = delete_dictation_item(db, user.user_id, audio_id, dictation_id)
+            .await
+            .expect("delete dictation item failed: invalid paramsters");
+        return Ok(dictation_list);
+    } else {
+        return Err("Failed to delete dictation item".to_string());
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn handle_get_dictation_list(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: String,
+    audio_id: String,
+) -> Result<Vec<Dictation>, String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, &app_handle, token)
+        .await
+        .expect("get dictation list failed: invalid user");
+
+    if let Some(user) = user_info {
+        let dictation_list = get_dictation_list(db, user.user_id, audio_id)
+            .await
+            .expect("get dictation list failed: invalid paramsters");
+        return Ok(dictation_list);
+    } else {
+        return Err("Failed to get dictation list".to_string());
     }
 }
