@@ -11,7 +11,15 @@
     } from "svelte-tiptap";
     import Color from "@tiptap/extension-color";
     import TextStyle from "@tiptap/extension-text-style";
-    import { Play, RotateCcw, Save } from "@lucide/svelte";
+    import {
+        ChevronLeft,
+        ChevronRight,
+        Eye,
+        Pause,
+        Play,
+        RotateCcw,
+        Save,
+    } from "@lucide/svelte";
     import Badge from "../ui/badge/badge.svelte";
     import {
         createDir,
@@ -21,46 +29,65 @@
         saveFile,
     } from "@/file";
     import type { Content } from "@tiptap/core";
+    import { fade } from "svelte/transition";
+
+    import type { SubtitleSegment } from "../audio/types";
+    import type { AudioPlayer } from "../audio/audio-player.svelte";
+    import Button from "../ui/button/button.svelte";
 
     interface Props {
         audioId: string;
         index: number;
+        length: number;
+        dictationItem: SubtitleSegment;
+        audioPlayer: AudioPlayer;
+        onPause: () => Promise<void>;
+        onPlaySection: (start: number, end: number) => Promise<void>;
     }
 
-    let { audioId, index }: Props = $props();
+    let {
+        audioId,
+        length,
+        index = $bindable(),
+        audioPlayer,
+        dictationItem,
+        onPause,
+        onPlaySection,
+    }: Props = $props();
+
+    let currentTime = $derived(audioPlayer.currentTime);
+
+    let isInbound = $derived.by(() => {
+        if (dictationItem) {
+            return (
+                currentTime > dictationItem.start &&
+                currentTime <= dictationItem.end
+            );
+        }
+        return false;
+    });
+
     let editor = $state() as Readable<Editor>;
 
     async function load() {
         const dataPath = `${audioId}/${index}/answer`;
         const file = await getFile(dataPath, "json");
 
+        let data: Content | string = "";
         if (file) {
-            const data = decodeJSON<Content>(file);
-
-            editor = createEditor({
-                extensions: [StarterKit, Color, TextStyle],
-                content: data,
-                editorProps: {
-                    attributes: {
-                        class: "border-1 border-black p-3 overflow-auto h-40",
-                    },
-                },
-            });
-        } else {
-            editor = createEditor({
-                extensions: [StarterKit, Color, TextStyle],
-                content: `<div>hi</div>`,
-                editorProps: {
-                    attributes: {
-                        class: "border-1 border-black p-3 overflow-auto h-40",
-                    },
-                },
-            });
+            data = decodeJSON<Content>(file);
         }
+
+        editor = createEditor({
+            extensions: [StarterKit, Color, TextStyle],
+            content: data,
+            editorProps: {
+                attributes: {
+                    class: "transitino-all duration-150 rounded-md focus:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 border-1 border-input p-3 overflow-auto h-40",
+                },
+            },
+        });
     }
-    // onMount(() => {
-    //     load();
-    // });
 
     const toggleBold = () => {
         $editor.chain().focus().toggleBold().run();
@@ -94,10 +121,32 @@
         const file = await encodeJSON(data);
         const filename = `${id}/${index}/answer`;
         await saveFile(file, filename, "json");
+
+        // TODO: invoke create dictation_item
+    }
+
+    function onPlay() {
+        if (!dictationItem) return;
+
+        // Handle floating-point precision: if currentTime is very close to item.end, start from beginning
+        const epsilon = 0.01; // 100ms tolerance
+        const start =
+            Math.abs(currentTime - dictationItem.end) < epsilon ||
+            currentTime >= dictationItem.end
+                ? dictationItem.start
+                : currentTime;
+
+        onPlaySection(start, dictationItem.end);
     }
 </script>
 
-<h5 class="my-2 font-bold">Dictation</h5>
+<div class="flex items-center justify-between">
+    <h5 class="my-2 font-bold">Dictation</h5>
+
+    <Badge variant="secondary" class="text-primary tabular-nums">
+        <div in:fade>{index} / {length - 1}</div>
+    </Badge>
+</div>
 
 {#await load() then _}
     {#if editor}
@@ -155,18 +204,12 @@
 
     <EditorContent editor={$editor} class="border-none" />
 
-    <div class="text-xs">
-        TODO: add playback to current selected segment, play replay save
-    </div>
-
-    <div class="flex items-center justify-evenly gap-1">
-        <div>
-            <Badge variant="secondary">{index} / 200</Badge>
-        </div>
-
-        <div class="ml-auto flex items-center gap-1">
-            <Save
-                class="h-4 w-4"
+    <div class="mt-2 flex items-center justify-evenly gap-1">
+        <div class="flex w-full items-center gap-1">
+            <Button
+                class="mr-auto"
+                variant="ghost"
+                size="sm"
                 onclick={() => {
                     storeAnswer(
                         $state.snapshot($editor.getJSON()),
@@ -174,9 +217,77 @@
                         index,
                     );
                 }}
-            />
-            <Play class="h-4 w-4" />
-            <RotateCcw class="h-4 w-4" />
+            >
+                <Eye class="h-6 w-6" />
+            </Button>
+            <div class="mx-auto flex items-center gap-2.5">
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    onclick={() => {
+                        if (index === 0) {
+                            index = length - 1;
+                        } else {
+                            index--;
+                        }
+                    }}
+                >
+                    <ChevronLeft />
+                </Button>
+                <Button
+                    size="sm"
+                    tabindex={0}
+                    onclick={() => {
+                        if (audioPlayer?.isPlaying && isInbound) {
+                            onPause();
+                        } else {
+                            onPlay();
+                        }
+                    }}
+                >
+                    {#if audioPlayer?.isPlaying && isInbound}
+                        <Pause class="h-6 w-6" />
+                    {:else}
+                        <Play class="h-6 w-6" />
+                    {/if}
+                </Button>
+                <Button
+                    size="sm"
+                    variant="outline"
+                    onclick={() => {
+                        onPlay();
+                    }}
+                >
+                    <RotateCcw class="h-6 w-6" />
+                </Button>
+                <Button
+                    size="sm"
+                    variant="secondary"
+                    onclick={() => {
+                        if (index === length - 1) {
+                            index = 0;
+                        } else {
+                            index++;
+                        }
+                    }}
+                >
+                    <ChevronRight />
+                </Button>
+            </div>
+            <Button
+                class="ml-auto"
+                variant="outline"
+                size="sm"
+                onclick={() => {
+                    storeAnswer(
+                        $state.snapshot($editor.getJSON()),
+                        audioId,
+                        index,
+                    );
+                }}
+            >
+                <Save class="stroke-primary h-6 w-6" />
+            </Button>
         </div>
     </div>
 {/await}
