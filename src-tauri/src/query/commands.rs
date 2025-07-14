@@ -14,7 +14,7 @@ use tokio::fs::remove_dir_all;
 
 use super::{
     audio::{create_audio, delete_audio, get_audio, get_audios, update_audio_transcribe},
-    bookmark::{create_bookmark_item, delete_bookmark_item, get_bookmark_list},
+    bookmark::{create_bookmark_item, delete_bookmark_item},
     bookmark_dictation::get_bookmark_dictation_combined,
     dictation::{create_dictation_item, delete_dictation_item, get_dictation_list},
     oauth::handle_google_auth,
@@ -275,7 +275,7 @@ pub async fn handle_create_bookmark_item(
         let _ = create_bookmark_item(db, user.user_id.clone(), audio_id.clone(), bookmark_id)
             .await
             .expect("create bookmark item failed: invalid paramsters");
-        
+
         let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
             .await
             .expect("get bookmark dictation combined failed: invalid paramsters");
@@ -304,7 +304,7 @@ pub async fn handle_delete_bookmark_item(
         let _ = delete_bookmark_item(db, user.user_id.clone(), audio_id.clone(), bookmark_id)
             .await
             .expect("delete bookmark item failed: invalid paramsters");
-        
+
         let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
             .await
             .expect("get bookmark dictation combined failed: invalid paramsters");
@@ -313,7 +313,6 @@ pub async fn handle_delete_bookmark_item(
         return Err("Failed to delete bookmark item".to_string());
     }
 }
-
 
 #[tauri::command]
 #[specta::specta]
@@ -334,7 +333,7 @@ pub async fn handle_create_dictation_item(
         let _ = create_dictation_item(db, user.user_id.clone(), audio_id.clone(), dictation_id)
             .await
             .expect("create dictation item failed: invalid paramsters");
-        
+
         let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
             .await
             .expect("get bookmark dictation combined failed: invalid paramsters");
@@ -363,7 +362,7 @@ pub async fn handle_delete_dictation_item(
         let _ = delete_dictation_item(db, user.user_id.clone(), audio_id.clone(), dictation_id)
             .await
             .expect("delete dictation item failed: invalid paramsters");
-        
+
         let combined_list = get_bookmark_dictation_combined(db, user.user_id, audio_id)
             .await
             .expect("get bookmark dictation combined failed: invalid paramsters");
@@ -372,7 +371,6 @@ pub async fn handle_delete_dictation_item(
         return Err("Failed to delete dictation item".to_string());
     }
 }
-
 
 #[tauri::command]
 #[specta::specta]

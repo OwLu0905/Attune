@@ -1,8 +1,7 @@
 <script lang="ts">
-    import { commands } from "$lib/tauri";
-    import type { BookmarkDictationView } from "$lib/tauri";
-    import { getUserContext } from "@/user/userService.svelte";
     import { fade } from "svelte/transition";
+    import { commands } from "$lib/tauri";
+    import { getUserContext } from "@/user/userService.svelte";
 
     import ScrollArea from "@/components/ui/scroll-area/scroll-area.svelte";
     import SegmentField from "./segment-field.svelte";
@@ -14,14 +13,20 @@
     import type { AudioItem } from "$lib/tauri";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
+    import type { BookmarkDictationView } from "$lib/tauri";
 
     interface Props {
+        dictationId: number;
+        combinedList: BookmarkDictationView[];
         audioItem: AudioItem;
         subtitles: SubtitleSegment[];
         audioPlayer: AudioPlayer | undefined;
         onPause: () => Promise<void>;
-        onPlaySection: (start: number, end: number) => Promise<void>;
-        dictationId: number;
+        onPlaySection: (
+            start: number,
+            end: number,
+            setEnd?: boolean,
+        ) => Promise<void>;
     }
     let {
         audioItem,
@@ -29,15 +34,15 @@
         audioPlayer,
         onPause,
         onPlaySection,
-
         dictationId = $bindable(),
+        combinedList = $bindable(),
     }: Props = $props();
 
+    // TODO: lift this to parent and pass into dictation-editor
     let hidden = $state(true);
 
     const { getUser } = getUserContext();
     const user = getUser();
-    let combinedList = $state<BookmarkDictationView[]>([]);
 
     async function getCombinedList() {
         if (!user.accessToken) return;
@@ -96,8 +101,10 @@
         }
     }
 
-    function getDictation(index: number) {
+    function getDictation(index: number, startTime: number) {
         dictationId = index;
+        audioPlayer?.onPause();
+        audioPlayer?.onSetTime(startTime);
     }
 </script>
 
@@ -125,8 +132,8 @@
             {/if}
         </div>
         {#await getCombinedList() then _}
-            <ScrollArea class="px-4 tabular-nums">
-                <div class="mx-2 flex flex-col gap-4.5">
+            <ScrollArea class="px-4 pb-2 tabular-nums">
+                <div class="flex flex-col gap-2.5">
                     {#each subtitles as segment, index (index)}
                         <SegmentField
                             {audioPlayer}
@@ -135,11 +142,12 @@
                             {onPause}
                             {onPlaySection}
                             {index}
+                            {dictationId}
                             {getDictation}
                             {combinedList}
                             {createBookmarkItem}
                             {deleteBookmarkItem}
-                        />bookmarkList
+                        />
                     {/each}
                 </div>
             </ScrollArea>

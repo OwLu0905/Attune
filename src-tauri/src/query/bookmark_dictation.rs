@@ -8,25 +8,25 @@ use crate::db::Db;
 pub struct BookmarkDictationView {
     #[sqlx(rename = "userId")]
     pub user_id: String,
-    
+
     #[sqlx(rename = "audioId")]
     pub audio_id: String,
-    
+
     #[sqlx(rename = "bookmark_id")]
     pub bookmark_id: Option<i64>,
-    
+
     #[sqlx(rename = "bookmarkId")]
     pub bookmark_position: Option<i16>,
-    
+
     #[sqlx(rename = "bookmark_created_at")]
     pub bookmark_created_at: Option<String>,
-    
+
     #[sqlx(rename = "dictation_id")]
     pub dictation_id: Option<i64>,
-    
+
     #[sqlx(rename = "dictationId")]
     pub dictation_position: Option<i16>,
-    
+
     #[sqlx(rename = "dictation_created_at")]
     pub dictation_created_at: Option<String>,
 }

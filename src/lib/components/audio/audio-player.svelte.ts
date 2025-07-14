@@ -95,18 +95,23 @@ export class AudioPlayer {
     onStop() {
         this.ws!.stop();
     }
-    async onPlaySection(start: number, end: number) {
+    async onPlaySection(start: number, end: number, setEnd?: boolean) {
         this.ws!.play(start, end);
 
-        this.ws!.once("pause", () => {
-            this.ws?.setTime(end);
-        });
+        if (setEnd) {
+            this.ws!.once("pause", () => {
+                this.ws?.setTime(end);
+            });
+        }
     }
     getVolume() {
         return this.ws!.getVolume();
     }
     onSetVolume(sv: number) {
         this.ws!.setVolume(sv);
+    }
+    onSetTime(t: number) {
+        this.ws!.setTime(t);
     }
     onMuted() {
         this.onSetVolume(0);

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { onMount } from "svelte";
     import type { Readable } from "svelte/store";
     import StarterKit from "@tiptap/starter-kit";
     import { cn } from "@/utils";
@@ -33,11 +32,14 @@
 
     import type { SubtitleSegment } from "../audio/types";
     import type { AudioPlayer } from "../audio/audio-player.svelte";
-    import Button from "../ui/button/button.svelte";
+    import Button from "$lib/components/ui/button/button.svelte";
+    import { getUserContext } from "@/user/userService.svelte";
+    import { commands, type BookmarkDictationView } from "$lib/tauri";
 
     interface Props {
         audioId: string;
-        index: number;
+        dictationId: number;
+        combinedList: BookmarkDictationView[];
         length: number;
         dictationItem: SubtitleSegment;
         audioPlayer: AudioPlayer;
@@ -47,30 +49,24 @@
 
     let {
         audioId,
+        dictationId = $bindable(),
+        combinedList = $bindable(),
         length,
-        index = $bindable(),
-        audioPlayer,
         dictationItem,
+        audioPlayer,
         onPause,
         onPlaySection,
     }: Props = $props();
 
-    let currentTime = $derived(audioPlayer.currentTime);
+    const { getUser } = getUserContext();
+    const user = getUser();
 
-    let isInbound = $derived.by(() => {
-        if (dictationItem) {
-            return (
-                currentTime > dictationItem.start &&
-                currentTime <= dictationItem.end
-            );
-        }
-        return false;
-    });
+    let currentTime = $derived(audioPlayer.currentTime);
 
     let editor = $state() as Readable<Editor>;
 
     async function load() {
-        const dataPath = `${audioId}/${index}/answer`;
+        const dataPath = `${audioId}/${dictationId}/answer`;
         const file = await getFile(dataPath, "json");
 
         let data: Content | string = "";
@@ -114,27 +110,58 @@
     const isActive = (name: string, attrs = {}) =>
         $editor.isActive(name, attrs);
 
-    async function storeAnswer(data: {}, id: string, index: number) {
-        const dirPath = `${id}/${index}`;
+    async function storeAnswer(data: {}, id: string, dictationId: number) {
+        const dirPath = `${id}/${dictationId}`;
 
         await createDir(dirPath);
         const file = await encodeJSON(data);
-        const filename = `${id}/${index}/answer`;
+        const filename = `${id}/${dictationId}/answer`;
         await saveFile(file, filename, "json");
 
-        // TODO: invoke create dictation_item
+        // Create dictation item
+        if (user?.accessToken) {
+            try {
+                const result = await commands.handleCreateDictationItem(
+                    user.accessToken,
+                    id,
+                    dictationId,
+                );
+
+                if (result.status === "error") {
+                    throw new Error(result.error);
+                }
+                combinedList = result.data;
+
+                // Success - dictation item created
+                console.log("Dictation item created successfully");
+            } catch (error) {
+                console.error("Failed to create dictation item:", error);
+            }
+        }
     }
 
     function onPlay() {
         if (!dictationItem) return;
 
         // Handle floating-point precision: if currentTime is very close to item.end, start from beginning
-        const epsilon = 0.01; // 100ms tolerance
-        const start =
-            Math.abs(currentTime - dictationItem.end) < epsilon ||
-            currentTime >= dictationItem.end
-                ? dictationItem.start
-                : currentTime;
+        const epsilon = 0.01; // 10ms tolerance
+
+        let start = dictationItem.start;
+        let end = dictationItem.end - epsilon;
+        // if (currentTime >= start && (Math.abs(currentTime - dictationItem.end) < epsilon || currentTime >= dictationItem.end)) {
+        //
+        // }
+        if (currentTime >= start && currentTime <= end) {
+            start = currentTime;
+        } else {
+            start = Math.max(dictationItem.start - epsilon, 0);
+        }
+
+        // start =
+        //    Math.abs(currentTime - dictationItem.end) < epsilon ||
+        //    currentTime >= dictationItem.end
+        //        ? dictationItem.start
+        //        : currentTime;
 
         onPlaySection(start, dictationItem.end);
     }
@@ -144,7 +171,7 @@
     <h5 class="my-2 font-bold">Dictation</h5>
 
     <Badge variant="secondary" class="text-primary tabular-nums">
-        <div in:fade>{index} / {length - 1}</div>
+        <span in:fade>{dictationId} </span>/ {length - 1}
     </Badge>
 </div>
 
@@ -214,7 +241,7 @@
                     storeAnswer(
                         $state.snapshot($editor.getJSON()),
                         audioId,
-                        index,
+                        dictationId,
                     );
                 }}
             >
@@ -225,10 +252,11 @@
                     size="sm"
                     variant="secondary"
                     onclick={() => {
-                        if (index === 0) {
-                            index = length - 1;
+                        onPause();
+                        if (dictationId === 0) {
+                            dictationId = length - 1;
                         } else {
-                            index--;
+                            dictationId--;
                         }
                     }}
                 >
@@ -238,14 +266,14 @@
                     size="sm"
                     tabindex={0}
                     onclick={() => {
-                        if (audioPlayer?.isPlaying && isInbound) {
+                        if (audioPlayer?.isPlaying) {
                             onPause();
                         } else {
                             onPlay();
                         }
                     }}
                 >
-                    {#if audioPlayer?.isPlaying && isInbound}
+                    {#if audioPlayer?.isPlaying}
                         <Pause class="h-6 w-6" />
                     {:else}
                         <Play class="h-6 w-6" />
@@ -255,7 +283,12 @@
                     size="sm"
                     variant="outline"
                     onclick={() => {
-                        onPlay();
+                        const epsilon = 0.1;
+                        const start = Math.max(
+                            dictationItem.start - epsilon,
+                            0,
+                        );
+                        onPlaySection(start, dictationItem.end);
                     }}
                 >
                     <RotateCcw class="h-6 w-6" />
@@ -264,10 +297,11 @@
                     size="sm"
                     variant="secondary"
                     onclick={() => {
-                        if (index === length - 1) {
-                            index = 0;
+                        onPause();
+                        if (dictationId === length - 1) {
+                            dictationId = 0;
                         } else {
-                            index++;
+                            dictationId++;
                         }
                     }}
                 >
@@ -282,7 +316,7 @@
                     storeAnswer(
                         $state.snapshot($editor.getJSON()),
                         audioId,
-                        index,
+                        dictationId,
                     );
                 }}
             >

@@ -4,26 +4,18 @@
     import { onDestroy, onMount } from "svelte";
     import { getUserContext } from "@/user/userService.svelte";
 
-    import Button from "$lib/components/ui/button/button.svelte";
-
     import * as Card from "$lib/components/ui/card/index.js";
-    import * as DropdownMenu from "@/components/ui/dropdown-menu";
-    import {
-        Bot,
-        Languages,
-        LoaderCircle,
-        Mic,
-        Settings,
-    } from "@lucide/svelte";
+
+    import { LoaderCircle, Mic } from "@lucide/svelte";
     import { AudioPlayer } from "./audio-player.svelte";
     import ListCard from "./list-card.svelte";
 
     import { getSubtitleFile } from "@/utils";
 
     import type { SubtitleSegment } from "./types";
-    import type { AudioItem } from "@/types/audio";
-
+    import type { AudioItem, BookmarkDictationView } from "$lib/tauri";
     import DictationEditor from "../editor/dictation-editor.svelte";
+    import AudioDropdown from "./audio-dropdown.svelte";
 
     interface Props {
         videoPath: BlobPart;
@@ -50,32 +42,42 @@
     let dictationId = $state(0);
     let prog = $state("");
 
+    let combinedList = $state<BookmarkDictationView[]>([]);
+
+    let dictationItem = $derived.by(() => {
+        if (subtitles.length > 0) {
+            return subtitles?.[dictationId] || undefined;
+        }
+        return undefined;
+    });
+
     async function getSubtitle() {
         try {
             if (!user.accessToken) {
                 throw new Error("User not authenticated");
             }
-            
+
             isTranscribing = true;
 
             // TODO:
-            const transcribe_result = await commands.startTranscribeServiceStreaming(
-                audioItem.id,
-                "small.en"
-            );
-            
+            const transcribe_result =
+                await commands.startTranscribeServiceStreaming(
+                    audioItem.id,
+                    "small.en",
+                );
+
             if (transcribe_result.status === "error") {
                 throw new Error(transcribe_result.error);
-            };
+            }
             const update_result = await commands.handleUpdateAudioTranscribe(
                 user.accessToken,
-                audioItem.id
+                audioItem.id,
             );
-            
+
             if (update_result.status === "error") {
                 throw new Error(update_result.error);
             }
-            
+
             audioItem = update_result.data;
             subtitles = await getSubtitleFile(audioItem.id);
         } catch (error) {
@@ -85,9 +87,9 @@
         }
     }
 
-    async function onPlaySection(start: number, end: number) {
+    async function onPlaySection(start: number, end: number, setEnd?: boolean) {
         if (!audioPlayer) return;
-        audioPlayer.onPlaySection(start, end);
+        audioPlayer.onPlaySection(start, end, setEnd);
     }
     async function onPause() {
         if (!audioPlayer) return;
@@ -154,51 +156,11 @@
                 >{audioItem.id} - {audioItem.url}</Card.Description
             >
         </div>
-        <div>
-            {#if audioItem.transcribe === 0 && !isTranscribing}
-                <Button
-                    disabled={isTranscribing}
-                    onclick={() => {
-                        getSubtitle();
-                    }}
-                >
-                    {#if isTranscribing}
-                        <LoaderCircle
-                            class="text-primary mx-auto animate-spin"
-                        />
-                    {:else}
-                        <Bot />
-                    {/if}
-                    Get Transcribe
-                </Button>
-            {:else}
-                <DropdownMenu.Root>
-                    <DropdownMenu.Trigger
-                        class="transition-transform duration-200 hover:rotate-30 data-[state=open]:rotate-30"
-                    >
-                        <Settings size={20} />
-                    </DropdownMenu.Trigger>
-                    <DropdownMenu.Content side="left" align="start">
-                        <DropdownMenu.Group>
-                            <DropdownMenu.Item
-                                onclick={() => {
-                                    // TODO: update subtitle => add alert modal
-                                    // getSubtitle();
-                                }}
-                                disabled={isTranscribing}
-                            >
-                                {#snippet child({ props })}
-                                    <span {...props}>
-                                        <Languages />
-                                        Transcribe
-                                    </span>
-                                {/snippet}
-                            </DropdownMenu.Item>
-                        </DropdownMenu.Group>
-                    </DropdownMenu.Content>
-                </DropdownMenu.Root>
-            {/if}
-        </div>
+        <AudioDropdown
+            isTranscribed={audioItem.transcribe === 1 && !isTranscribing}
+            {isTranscribing}
+            {getSubtitle}
+        />
     </Card.Header>
 
     <Card.Content class="@container shrink grow overflow-hidden">
@@ -214,27 +176,45 @@
                     style="width: 480px; height: 270px; margin: 4px auto; display: block;"
                 >
                 </video>
+
                 <div
                     bind:this={container}
                     style="width:480px; height: 40px"
                 ></div>
 
-                {#key dictationId}
-                    <DictationEditor
-                        audioId={audioItem.id}
-                        index={dictationId}
-                    />
-                {/key}
+                {#if audioPlayer && dictationItem}
+                    {#key dictationId}
+                        <DictationEditor
+                            audioId={audioItem.id}
+                            bind:dictationId
+                            bind:combinedList
+                            length={subtitles.length}
+                            {dictationItem}
+                            {audioPlayer}
+                            {onPause}
+                            {onPlaySection}
+                        />
+                    {/key}
+                {/if}
             </div>
+            {#if audioItem.transcribe === 1}
+                <ListCard
+                    bind:dictationId
+                    bind:combinedList
+                    {audioItem}
+                    {subtitles}
+                    {audioPlayer}
+                    {onPause}
+                    {onPlaySection}
+                />
+            {/if}
 
-            <ListCard
-                {audioItem}
-                {subtitles}
-                {audioPlayer}
-                {onPause}
-                {onPlaySection}
-                bind:dictationId
-            />
+            {#if audioItem.transcribe === 0 && isTranscribing}
+                <LoaderCircle
+                    class="text-primary m-auto h-12 w-12 animate-spin"
+                />
+                {prog}
+            {/if}
         </div>
     </Card.Content>
 

@@ -45,6 +45,10 @@
         }
       ]
     },
-    "fs:default"
+    "fs:default",
+    "clipboard-manager:default",
+		{
+			"identifier": "clipboard-manager:allow-write-text"
+		}
   ]
 }
