@@ -1,6 +1,6 @@
 <script lang="ts">
     import { cn } from "@/utils";
-    import { Check } from "@lucide/svelte";
+    import { Check, MousePointerClick, SquarePen } from "@lucide/svelte";
 
     interface Props {
         isDictation: boolean;
@@ -12,9 +12,14 @@
 
 {#snippet active(isDictation: boolean, isActive: boolean)}
     {#if isDictation}
-        <Check class="h-6 w-5 stroke-emerald-400" />
+        <Check class="h-6 w-4 stroke-emerald-400" />
     {:else}
-        <Check class="h-6 w-5 stroke-1 opacity-30" />
+        <SquarePen
+            class={cn(
+                "h-6 w-4 cursor-pointer stroke-2 opacity-10",
+                isActive && "stroke-primary stroke-2 opacity-100",
+            )}
+        />
     {/if}
 {/snippet}
 

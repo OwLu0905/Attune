@@ -1,11 +1,12 @@
 <script lang="ts">
     import { cn } from "@/utils";
     import { fade } from "svelte/transition";
-    import { Clipboard, Eye, EyeOff, Heart, Star, Check } from "@lucide/svelte";
+    import { Clipboard, Eye, EyeOff, Star, Check } from "@lucide/svelte";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { BookmarkDictationView } from "$lib/tauri";
     import BookOpenIcon from "./book-open-icon.svelte";
+    import AudioLinesIcon from "./audio-lines-icon.svelte";
     import { writeText } from "@tauri-apps/plugin-clipboard-manager";
 
     interface Props {
@@ -57,55 +58,51 @@
     );
 </script>
 
-<!-- prettier-ignore -->
+<!--prettier-ignore-->
 <div
     bind:this={container}
     class={cn(
-        "rounded-md px-2 py-2",
-        "group relative flex  items-center",
-        "before:top-0 before:-translate-x-2 before:-translate-y-4",
+        "rounded-md py-2 pr-2 pl-0",
+        "group relative flex items-center",
         !hidden && "hover:underline",
-        isCurrentLine &&
-            "before:text-primary before:transform-transform ease-in before:absolute before:translate-y-1.5 before:duration-300 before:content-['>']",
-
         isSelected &&
-            "bg-gradient-to-br from-rose-100/60 via-pink-50 to-rose-100",
+            "bg-gradient-to-br from-rose-100/60 via-pink-50 to-rose-100 transition-all duration-150 ease-linear",
     )}
+    {@attach (node) => {
+    			$effect(() => {
 
-	{@attach (node) => {
-				$effect(() => {
+    				if(dictationId !== index )  return
+    				const observer = new IntersectionObserver(
+    					(entries, observer) => {
+    						const entry = entries[0];
 
-					if(dictationId !== index )  return 
-					const observer = new IntersectionObserver(
-						(entries, observer) => {
-							const entry = entries[0];
+    						if (
+    							!entry.isIntersecting &&
+    								dictationId === index
+    						) {
+    							node.scrollIntoView({
+    								behavior: "smooth",
+    								block: "center",
+    							});
+    							observer.unobserve(node);
+    						}
+    					},
+    					{
+    						threshold: 1.0,
+    						rootMargin: "120px",
+    					},
+    				);
+    				observer.observe(node);
+    				return () => {
 
-							if (
-								!entry.isIntersecting &&
-									dictationId === index 
-							) {
-								node.scrollIntoView({
-									behavior: "smooth",
-									block: "center",
-								});
-								observer.unobserve(node);
-							}
-						},
-						{
-							threshold: 1.0,
-							rootMargin: "120px",
-						},
-					);
-					observer.observe(node);
-					return () => {
-
-						observer.disconnect();
-					}
-				});
-	}}
+    					observer.disconnect();
+    				}
+    			});
+    }}
 >
     <div class={cn("ml-2 flex shrink items-start gap-2")}>
         <div class="mx-0.5 flex items-center gap-1.5">
+            <AudioLinesIcon {isCurrentLine} isPlaying={audioPlayer.isPlaying} />
             <button
                 onclick={() => {
                     container.scrollIntoView({
@@ -118,25 +115,25 @@
                 <BookOpenIcon {isDictation} isActive={isSelected} />
             </button>
             {#if isBookMark}
-                <div in:fade class="h-6 w-5">
+                <div in:fade class="h-6 w-4">
                     <button
                         onclick={() => {
                             deleteBookmarkItem(index);
                         }}
                     >
                         <Star
-                            class="h-6 w-5 fill-yellow-300 stroke-amber-300 stroke-1"
+                            class="h-6 w-4 fill-yellow-300 stroke-amber-300 stroke-1"
                         />
                     </button>
                 </div>
             {:else}
-                <div in:fade class="h-6 w-5">
+                <div in:fade class="h-6 w-4">
                     <button
                         onclick={() => {
                             createBookmarkItem(index);
                         }}
                     >
-                        <Star class="h-6 w-5 stroke-1 opacity-30" />
+                        <Star class="h-6 w-4 stroke-1 opacity-30" />
                     </button>
                 </div>
             {/if}
@@ -173,13 +170,15 @@
 
             <div
                 class={cn(
-                    "flex shrink-0 gap-2 pl-4",
-                    isCopied ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                    "flex shrink-0 items-center gap-2 pt-0.5 pl-4",
+                    isCopied
+                        ? "opacity-100"
+                        : "opacity-0 group-hover:opacity-100",
                 )}
             >
                 {#if hidden}
                     <Eye
-                        class="stoke-1 h-6 w-5"
+                        class="stoke-1 h-4 w-4"
                         onclick={(e) => {
                             e.stopPropagation();
                             hidden = false;
@@ -187,34 +186,34 @@
                     />
                 {:else}
                     <EyeOff
-                        class="opacity-80 stoke-1 h-6 w-5"
+                        class="stoke-1 h-4 w-4 opacity-80"
                         onclick={(e) => {
                             e.stopPropagation();
                             hidden = true;
                         }}
                     />
                 {/if}
-								<button
-									onclick={async()=>{
-										try {
-											await writeText(segment.text);
-											isCopied = true;
-											setTimeout(() => {
-												isCopied = false;
-											}, 1000);
-										} catch (error) {
-											throw new Error("clip failed")
-										}
-									}}
-								>
-									{#if isCopied}
-										<div in:fade>
-											<Check class="h-4 w-4 text-green-500" />
-										</div>
-									{:else}
-										<Clipboard class="h-4 w-4" />
-									{/if}
-								</button>
+                <button
+                    onclick={async () => {
+                        try {
+                            await writeText(segment.text);
+                            isCopied = true;
+                            setTimeout(() => {
+                                isCopied = false;
+                            }, 1000);
+                        } catch (error) {
+                            throw new Error("clip failed");
+                        }
+                    }}
+                >
+                    {#if isCopied}
+                        <div in:fade>
+                            <Check class="h-4 w-4 text-green-500" />
+                        </div>
+                    {:else}
+                        <Clipboard class="h-4 w-4" />
+                    {/if}
+                </button>
             </div>
         </div>
     </div>
