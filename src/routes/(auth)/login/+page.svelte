@@ -92,8 +92,8 @@
                 </div>
             </div>
         </div>
-        <div class="hidden bg-muted lg:flex lg:items-center lg:justify-center">
-            <h5 class="truncate text-3xl font-semibold text-primary">
+        <div class="bg-muted hidden lg:flex lg:items-center lg:justify-center">
+            <h5 class="text-primary truncate text-3xl font-semibold">
                 Lorem ipsum dolor sit amet.
             </h5>
         </div>

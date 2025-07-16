@@ -25,7 +25,7 @@
                         class="data-[state=open]:bg-sidebar-accent data-[state=open]:text-sidebar-accent-foreground"
                     >
                         <div
-                            class="flex aspect-square size-8 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground"
+                            class="bg-sidebar-primary text-sidebar-primary-foreground flex aspect-square size-8 items-center justify-center rounded-lg"
                         >
                             <activeTeam.logo class="size-4" />
                         </div>
@@ -49,7 +49,7 @@
                 side={sidebar.isMobile ? "bottom" : "right"}
                 sideOffset={4}
             >
-                <DropdownMenu.Label class="text-xs text-muted-foreground"
+                <DropdownMenu.Label class="text-muted-foreground text-xs"
                     >Teams</DropdownMenu.Label
                 >
                 {#each teams as team, index (team.name)}
@@ -71,11 +71,11 @@
                 <DropdownMenu.Separator />
                 <DropdownMenu.Item class="gap-2 p-2">
                     <div
-                        class="flex size-6 items-center justify-center rounded-md border bg-background"
+                        class="bg-background flex size-6 items-center justify-center rounded-md border"
                     >
                         <Plus class="size-4" />
                     </div>
-                    <div class="font-medium text-muted-foreground">
+                    <div class="text-muted-foreground font-medium">
                         Add team
                     </div>
                 </DropdownMenu.Item>

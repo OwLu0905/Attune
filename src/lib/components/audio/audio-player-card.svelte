@@ -136,8 +136,12 @@
     onMount(() => {
         listen("transcription-progress", (event) => {
             // TODO: fix types
-            const { status, message, progress } = event.payload;
-            prog = status + message;
+            const { status, message, progress } = event.payload as {
+                status: string;
+                message: string;
+                progress: string;
+            };
+            prog = message;
         });
     });
 

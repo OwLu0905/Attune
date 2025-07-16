@@ -58,11 +58,11 @@ export class YtDownloadManager {
         url,
     }: DownloadSectionParam): Promise<string> {
         const result = await commands.downloadYtSections(url, start, end);
-        
+
         if (result.status === "error") {
             throw new Error(result.error);
         }
-        
+
         return result.data;
     }
 

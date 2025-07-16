@@ -86,7 +86,7 @@
 </script>
 
 <div
-    class="grid grid-cols-12 justify-items-stretch gap-8 overflow-hidden px-4 @container"
+    class="@container grid grid-cols-12 justify-items-stretch gap-8 overflow-hidden px-4"
 >
     <Card.Root class="col-span-12 @5xl:col-span-6">
         <Card.Content class="w-full">
@@ -112,13 +112,13 @@
                             Load</Button
                         >
                     </div>
-                    <span class="text-xs text-destructive">{errMsg}</span>
+                    <span class="text-destructive text-xs">{errMsg}</span>
                 </form>
             </div>
         {:else}
             <PlayOrYt videoId={videoUrlId}>
                 <Button
-                    class="absolute right-0 top-0"
+                    class="absolute top-0 right-0"
                     onclick={() => {
                         handleStateReset();
                     }}
