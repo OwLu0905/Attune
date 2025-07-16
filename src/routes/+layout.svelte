@@ -14,6 +14,10 @@
         setUserContext,
         type UserInfo,
     } from "$lib/user/userService.svelte";
+    import {
+        createAudioListContext,
+        setAudioListContext,
+    } from "$lib/audio/audioListService.svelte";
 
     let { children } = $props();
     let url = $derived(page.url);
@@ -37,16 +41,19 @@
         },
     });
 
+    const audioListContext = createAudioListContext();
+    setAudioListContext(audioListContext);
+
     onMount(async () => {
         try {
             const result = await commands.checkPersistUser();
-            
+
             if (result.status === "error") {
                 throw new Error(result.error);
             }
-            
+
             const userData = result.data;
-            
+
             if (!userData) {
                 console.log("No persisted user session found");
                 return;

@@ -1,6 +1,7 @@
 <script lang="ts">
     import { commands } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
+    import { getAudioListContext } from "@/audio/audioListService.svelte";
     import Button from "@/components/ui/button/button.svelte";
     import Badge from "@/components/ui/badge/badge.svelte";
     import * as Card from "$lib/components/ui/card/index.js";
@@ -8,18 +9,11 @@
     import Invalid from "@/components/error/invalid.svelte";
     import ErrorMessage from "@/components/error/error-message.svelte";
     import { Trash, Upload } from "@lucide/svelte";
-    import { getAudioList } from "$lib/audio.js";
-    import type { AudioListItem } from "$lib/tauri";
 
     const { getUser } = getUserContext();
+    const audioApi = getAudioListContext();
 
     const user = getUser();
-
-    let audioList: AudioListItem[] = $state([]);
-
-    async function getList(token: string) {
-        audioList = await getAudioList(token);
-    }
 </script>
 
 {#if !user.accessToken}
@@ -33,12 +27,12 @@
     </a>
 
     <div class="@container grid grid-cols-12 gap-2">
-        {#await getList(user.accessToken)}
+        {#await audioApi.refreshAudioList(user.accessToken)}
             <span>
                 <div class="bg-muted/50 aspect-video rounded-xl"></div>
             </span>
         {:then _}
-            {#each audioList as audio (audio.id)}
+            {#each audioApi.audioList as audio (audio.id)}
                 <Card.Root
                     class="col-span-12 @sm:col-span-6 @xl:col-span-4 @3xl:col-span-3"
                 >
@@ -108,7 +102,9 @@
                                                     );
                                                 }
 
-                                                audioList = result.data;
+                                                audioApi.removeAudioItem(
+                                                    audio.id,
+                                                );
                                             } catch (error) {
                                                 console.error(error);
                                             }

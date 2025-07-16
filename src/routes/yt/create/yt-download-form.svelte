@@ -19,6 +19,7 @@
     import { commands } from "$lib/tauri";
     import type { CreateAudioData } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
+    import { getAudioListContext } from "@/audio/audioListService.svelte";
     import { toast } from "svelte-sonner";
     interface Props {
         sliderValues: TSLIDER_VALUES;
@@ -28,6 +29,7 @@
     let { sliderValues = $bindable(), urlInfo = $bindable() }: Props = $props();
 
     let { getUser } = getUserContext();
+    const audioApi = getAudioListContext();
 
     const user = getUser();
 
@@ -70,6 +72,8 @@
                     if (result.status === "error") {
                         throw new Error(result.error);
                     }
+
+                    await audioApi.refreshAudioList(user.accessToken);
 
                     toast.success("Download completed!!", {
                         description: "check",
