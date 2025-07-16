@@ -66,38 +66,33 @@
         "group relative flex items-center",
         !hidden && "hover:underline",
         isSelected &&
-            "bg-gradient-to-br from-rose-100/60 via-pink-50 to-rose-100 transition-all duration-150 ease-linear",
+            "from-primary/10 to-primary/10 bg-gradient-to-br transition-all duration-150 ease-linear",
     )}
     {@attach (node) => {
-    			$effect(() => {
+        $effect(() => {
+            if (dictationId !== index) return;
+            const observer = new IntersectionObserver(
+                (entries, observer) => {
+                    const entry = entries[0];
 
-    				if(dictationId !== index )  return
-    				const observer = new IntersectionObserver(
-    					(entries, observer) => {
-    						const entry = entries[0];
-
-    						if (
-    							!entry.isIntersecting &&
-    								dictationId === index
-    						) {
-    							node.scrollIntoView({
-    								behavior: "smooth",
-    								block: "center",
-    							});
-    							observer.unobserve(node);
-    						}
-    					},
-    					{
-    						threshold: 1.0,
-    						rootMargin: "120px",
-    					},
-    				);
-    				observer.observe(node);
-    				return () => {
-
-    					observer.disconnect();
-    				}
-    			});
+                    if (!entry.isIntersecting && dictationId === index) {
+                        node.scrollIntoView({
+                            behavior: "smooth",
+                            block: "center",
+                        });
+                        observer.unobserve(node);
+                    }
+                },
+                {
+                    threshold: 1.0,
+                    rootMargin: "120px",
+                },
+            );
+            observer.observe(node);
+            return () => {
+                observer.disconnect();
+            };
+        });
     }}
 >
     <div class={cn("ml-2 flex shrink items-start gap-2")}>
@@ -150,18 +145,18 @@
                     }}
                     class={cn(
                         "rounded-sm",
-                        "text-neutral-700 transition-all duration-150 ease-in",
+                        "text-foreground transition-all duration-150 ease-in",
                         hidden &&
-                            "bg-neutral-400 text-neutral-400 opacity-10 selection:text-neutral-400",
+                            "text-foreground/60 selection:text-foreground bg-foreground opacity-10",
                         !hidden &&
                             seg.end >= currentTime &&
                             currentTime >= seg.start &&
-                            "text-primary bg-neutral-400/10",
+                            "text-primary bg-transparent",
 
                         hidden &&
                             seg.end >= currentTime &&
                             currentTime >= seg.start &&
-                            "text-neutral-400/50 opacity-50 selection:text-neutral-400/50",
+                            "selection:text-foreground/50 text-foreground/50 opacity-50",
                     )}
                 >
                     {seg.word}

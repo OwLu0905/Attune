@@ -20,7 +20,7 @@
     async function logout() {
         try {
             const result = await commands.logoutUser();
-            
+
             if (result.status === "error") {
                 throw new Error(result.error);
             }

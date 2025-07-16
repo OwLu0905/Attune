@@ -9,6 +9,7 @@
     import Invalid from "@/components/error/invalid.svelte";
     import ErrorMessage from "@/components/error/error-message.svelte";
     import { Trash, Upload } from "@lucide/svelte";
+    import { fade } from "svelte/transition";
 
     const { getUser } = getUserContext();
     const audioApi = getAudioListContext();
@@ -38,6 +39,7 @@
                 >
                     <Card.Header>
                         <img
+                            out:fade
                             class="aspect-video h-full w-full object-cover"
                             src={audio.thumbnail}
                             alt={audio.title}

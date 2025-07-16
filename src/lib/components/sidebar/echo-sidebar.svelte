@@ -8,6 +8,7 @@
     import Invalid from "@/components/error/invalid.svelte";
     import ErrorMessage from "@/components/error/error-message.svelte";
     import { cn } from "@/utils";
+    import { fade } from "svelte/transition";
 
     const { getUser } = getUserContext();
     const audioApi = getAudioListContext();
@@ -61,7 +62,7 @@
                                         class={cn(
                                             "",
                                             echoId === audio.id &&
-                                                "!text-sidebar-primary",
+                                                "text-primary",
                                         )}
                                     >
                                         {#snippet child({ props })}
@@ -70,7 +71,7 @@
                                                 class="truncate font-mono"
                                                 {...props}
                                             >
-                                                <span>
+                                                <span out:fade|global>
                                                     {audio.title}
                                                 </span>
                                             </a>

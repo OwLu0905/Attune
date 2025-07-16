@@ -111,7 +111,7 @@
 {#if audioPlayer}
     <div
         transition:fade
-        class="relative h-full shrink grow overflow-auto bg-white ring"
+        class="bg-background border-input relative h-full shrink grow overflow-auto rounded-md border-1"
     >
         <div class="sticky top-0 z-5 flex w-full gap-2 bg-inherit px-4 py-2">
             <Settings size={16} />

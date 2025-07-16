@@ -3,6 +3,7 @@
     import { page } from "$app/state";
     import { onMount } from "svelte";
     import { commands } from "$lib/tauri";
+    import { ModeWatcher } from "mode-watcher";
     import type { SessionWithUser } from "$lib/tauri";
 
     import AppSidebar from "$lib/components/app-sidebar.svelte";
@@ -81,6 +82,7 @@
     let isAuth = $derived(pathname.includes("/login"));
 </script>
 
+<ModeWatcher />
 {#if isAuth && !user.accessToken}
     <div class="flex flex-col gap-4">
         {@render children()}

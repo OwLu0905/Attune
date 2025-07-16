@@ -179,7 +179,7 @@
     {#if editor}
         <BubbleMenu
             editor={$editor}
-            class="outline-foreground/20 rounded-lg bg-white px-2 py-1.5 text-sm shadow-lg outline"
+            class="outline-foreground/20 bg-background rounded-lg px-2 py-1.5 text-sm shadow-lg outline"
         >
             <div class="flex gap-1">
                 <button
@@ -250,7 +250,7 @@
             <div class="mx-auto flex items-center gap-2.5">
                 <Button
                     size="sm"
-                    variant="secondary"
+                    variant="outline"
                     onclick={() => {
                         onPause();
                         if (dictationId === 0) {
@@ -295,7 +295,7 @@
                 </Button>
                 <Button
                     size="sm"
-                    variant="secondary"
+                    variant="outline"
                     onclick={() => {
                         onPause();
                         if (dictationId === length - 1) {

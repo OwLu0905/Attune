@@ -17,7 +17,7 @@
     stroke-linecap="round"
     stroke-linejoin="round"
     class={cn(
-        "h-4 w-4 stroke-2 leading-8 text-pink-400 opacity-0",
+        "text-primary h-4 w-4 stroke-2 leading-8 opacity-0",
         "audio-lines",
         isCurrentLine ? "opacity-100" : "",
         isPlaying && "playing",

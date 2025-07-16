@@ -1,5 +1,7 @@
 <script>
     import * as Select from "@/components/ui/select/";
+    import ThemeSwitch from "@/components/theme-switch.svelte";
+
     const models = [
         { id: 0, label: "base", value: "base" },
         { id: 1, label: "base.en", value: "base.en" },
@@ -32,3 +34,7 @@
         </Select.Group>
     </Select.Content>
 </Select.Root>
+
+<div class="p-4">
+    <ThemeSwitch />
+</div>

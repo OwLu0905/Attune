@@ -12,12 +12,12 @@
 
 {#snippet active(isDictation: boolean, isActive: boolean)}
     {#if isDictation}
-        <Check class="h-6 w-4 stroke-emerald-400" />
+        <Check class="stroke-primary-foreground h-6 w-4" />
     {:else}
         <SquarePen
             class={cn(
-                "h-6 w-4 cursor-pointer stroke-2 opacity-10",
-                isActive && "stroke-primary stroke-2 opacity-100",
+                "stroke-primary-foreground/10 h-6 w-4 cursor-pointer stroke-2",
+                isActive && "stroke-primary-foreground stroke-1",
             )}
         />
     {/if}
