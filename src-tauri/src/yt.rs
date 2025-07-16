@@ -1,5 +1,5 @@
 use serde::Serialize;
-use tauri::{AppHandle, Emitter};
+use tauri::{AppHandle, Emitter, Manager};
 use tauri_plugin_shell::{process::CommandEvent, ShellExt};
 use uuid::Uuid;
 
@@ -45,24 +45,12 @@ pub async fn download_yt_sections(
 
     let yt_command_copy = app_handle.clone();
 
-    let handle = tauri::async_runtime::spawn(async move {
-        // let (mut rx, _child) = yt_command
-        //     .args([
-        //         "--download-sections",
-        //         &format!("*{}-{}", start, end),
-        //         // "-f",
-        //         // "mp4",
-        //         // "-k",
-        //         "--extract-audio",
-        //         "--audio-format",
-        //         "mp3",
-        //         "-o",
-        //         &format!("{}/{}/audio.%(ext)s", data_path, uuid),
-        //         &url,
-        //     ])
-        //     .spawn()
-        //     .map_err(|e| e.to_string())?;
+    let ffmpeg_path = app_handle
+        .path()
+        .resolve("ffmpeg", tauri::path::BaseDirectory::Resource)
+        .expect("failed to resolve ffmpeg path");
 
+    let handle = tauri::async_runtime::spawn(async move {
         let (mut rx, _child) = yt_command
             .args([
                 "--download-sections",
@@ -73,6 +61,8 @@ pub async fn download_yt_sections(
                 "--extract-audio",
                 "--audio-format",
                 "m4a",
+                "--ffmpeg-location",
+                &ffmpeg_path.to_string_lossy(),
                 "-o",
                 &format!("{}/{}/audio.%(ext)s", data_path, uuid),
                 &url,

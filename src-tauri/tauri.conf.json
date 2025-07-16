@@ -20,10 +20,14 @@
     "security": {
 			"csp": {
 				"default-src": "'self' customprotocol: asset:",
-				"connect-src": "ipc: http://ipc.localhost",
+				"connect-src": "ipc: http://ipc.localhost https://www.youtube.com blob:",
 				"font-src": ["https://fonts.gstatic.com"],
-				"img-src": "'self' asset: http://asset.localhost blob: data:",
-				"style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com"
+        "img-src": "'self' asset: http://asset.localhost blob: data: https://i.ytimg.com https://s.ytimg.com https://yt3.ggpht.com https://lh3.googleusercontent.com https://googleusercontent.com",
+				"style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com",
+				"media-src": "'self' blob: data:",
+				"script-src": "'self' 'unsafe-inline' https://www.youtube.com https://www.googleapis.com https://s.ytimg.com",
+        "frame-src": "https://www.youtube.com https://www.youtube-nocookie.com",
+        "child-src": "https://www.youtube.com https://www.youtube-nocookie.com"
 			}
     }
   },
@@ -37,6 +41,7 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ],
-		"externalBin": [ "bin/yt-dlp/yt-dlp", "bin/whisper/whip_v2" ]
+		"externalBin": [ "bin/yt-dlp/yt-dlp", "bin/ffmpeg/ffmpeg", "bin/whisper/whip_v2" ],
+		"resources":  {"bin/ffmpeg/ffmpeg": "ffmpeg"}
   }
 }

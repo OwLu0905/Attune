@@ -81,6 +81,7 @@
                 videoId,
                 playerVars: {
                     autoplay: !action && liteLoaded ? 1 : 0,
+                    origin: "https://www.youtube.com",
                 },
                 events: {
                     onReady: (event) => {
