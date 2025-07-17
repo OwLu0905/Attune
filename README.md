@@ -1,4 +1,4 @@
-# Owletc
+# Attune
 
 - Tauri + SvelteKit + TypeScript
 - shadcn
@@ -11,5 +11,3 @@
 
 - [ ] alert when do dictation exercise when user leave
 - [ ] modify tabindex
-- [x] automatically saving, debounce => with use:action ? 
-- [x] maybe we can auto foucs on the latest dictation dictationCreatedAt?

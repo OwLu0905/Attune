@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "owletc",
+  "productName": "attune",
   "version": "0.1.0",
-  "identifier": "com.owletc.app",
+  "identifier": "com.attune.app",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -12,7 +12,7 @@
   "app": {
     "windows": [
       {
-        "title": "owletc",
+        "title": "attune",
         "width": 1280,
         "height": 880
       }
