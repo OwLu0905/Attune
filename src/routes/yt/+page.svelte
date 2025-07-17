@@ -56,12 +56,16 @@
                             <p
                                 class="text-secondary-foreground truncate text-sm"
                             >
-                                {audio.description || "none"}
+                                {audio.description || ""}
                             </p>
                             <div>
                                 {#if audio.transcribe === 1}
                                     <Badge variant="outline">
-                                        <span>script</span>
+                                        <span>Done</span>
+                                    </Badge>
+                                {:else}
+                                    <Badge variant="outline">
+                                        <span>Uninitialize</span>
                                     </Badge>
                                 {/if}
                             </div>
@@ -70,7 +74,9 @@
                     <Card.Footer>
                         <AlertDialog.Root>
                             <AlertDialog.Trigger>
-                                <Trash class="text-destructive w-4" />
+                                <Button size="sm" variant="outline">
+                                    <Trash class="text-destructive w-4" />
+                                </Button>
                             </AlertDialog.Trigger>
                             <AlertDialog.Content>
                                 <AlertDialog.Header>

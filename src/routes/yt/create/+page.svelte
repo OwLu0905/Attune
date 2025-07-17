@@ -20,6 +20,7 @@
         TSLIDER_VALUES,
     } from "@/components/youtue/types";
     import type { YtOembUrlInfo } from "./types";
+    import { fade, slide } from "svelte/transition";
 
     let sliderValues: TSLIDER_VALUES = $state([0, 100]);
     let videoUrlId = $state("");
@@ -86,16 +87,20 @@
 </script>
 
 <div
-    class="@container grid grid-cols-12 justify-items-stretch gap-8 overflow-hidden px-4"
+    class="@container grid h-full grid-cols-12 justify-items-stretch gap-8 overflow-hidden px-4"
 >
-    <Card.Root class="col-span-12 @5xl:col-span-6">
-        <Card.Content class="w-full">
-            <YtDownloadForm bind:sliderValues bind:urlInfo />
-        </Card.Content>
-    </Card.Root>
+    {#if videoUrlId !== "" && urlInfo !== null}
+        <div in:fade class="col-span-12 @4xl:col-span-6">
+            <Card.Root class="col-span-12 @4xl:col-span-6">
+                <Card.Content class="w-full">
+                    <YtDownloadForm bind:sliderValues bind:urlInfo />
+                </Card.Content>
+            </Card.Root>
+        </div>
+    {/if}
 
-    <div class="col-span-12 self-center @5xl:col-span-6">
-        {#if videoUrlId === "" || urlInfo === null}
+    {#if videoUrlId === "" || urlInfo === null}
+        <div class="col-span-8 col-start-3 mt-40 items-stretch" in:fade>
             <div class="my-2">
                 <form class="flex flex-col gap-2" onsubmit={handleSubmit}>
                     <Label
@@ -115,7 +120,9 @@
                     <span class="text-destructive text-xs">{errMsg}</span>
                 </form>
             </div>
-        {:else}
+        </div>
+    {:else}
+        <div class="col-span-12 @4xl:col-span-6" in:fade>
             <PlayOrYt videoId={videoUrlId}>
                 <Button
                     class="absolute top-0 right-0"
@@ -129,6 +136,6 @@
                     <ActionOrYt bind:sliderValues />
                 {/snippet}
             </PlayOrYt>
-        {/if}
-    </div>
+        </div>
+    {/if}
 </div>

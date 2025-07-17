@@ -71,7 +71,7 @@
                                                 class="truncate font-mono"
                                                 {...props}
                                             >
-                                                <span out:fade|global>
+                                                <span out:fade>
                                                     {audio.title}
                                                 </span>
                                             </a>

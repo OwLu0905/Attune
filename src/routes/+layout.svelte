@@ -114,7 +114,7 @@
                     <div
                         class="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min"
                     ></div>
-                {:else}
+                {:else if user.accessToken}
                     {@render children()}
                 {/if}
             </div>

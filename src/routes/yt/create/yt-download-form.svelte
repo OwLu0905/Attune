@@ -75,6 +75,7 @@
 
                     await audioApi.refreshAudioList(user.accessToken);
 
+                    urlInfo = null;
                     toast.success("Download completed!!", {
                         description: "check",
                         action: {
@@ -113,7 +114,7 @@
         }
 
         // NOTE: find better way to bind these values
-        untrack(() => ($formData.url = urlInfo.url));
+        untrack(() => ($formData.url = urlInfo!.url));
         if (urlInfo?.embedInfo?.provider_name) {
             untrack(() => ($formData.privoder = "YouTube"));
         } else {
@@ -123,7 +124,7 @@
             urlInfo?.embedInfo?.title &&
             untrack(() => $formData.title === "")
         ) {
-            untrack(() => ($formData.title = urlInfo?.embedInfo?.title));
+            untrack(() => ($formData.title = urlInfo!.embedInfo!.title));
         }
     });
 </script>
@@ -136,9 +137,6 @@
                 <Input {...props} bind:value={$formData.title} />
             {/snippet}
         </Form.Control>
-        <Form.Description>
-            video title : {urlInfo?.embedInfo?.title}
-        </Form.Description>
         <Form.FieldErrors />
     </Form.Field>
 
