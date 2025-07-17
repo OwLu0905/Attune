@@ -159,6 +159,30 @@ async handleGetBookmarkDictationCombined(token: string, audioId: string) : Promi
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+async handleGetAppSettings(token: string) : Promise<Result<AppSettings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("handle_get_app_settings", { token }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async handleUpdateAppSettings(token: string, request: UpdateSettingsRequest) : Promise<Result<AppSettings, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("handle_update_app_settings", { token, request }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async handleUpdateUserName(token: string, newName: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("handle_update_user_name", { token, newName }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
 }
 }
 
@@ -172,12 +196,14 @@ async handleGetBookmarkDictationCombined(token: string, audioId: string) : Promi
 
 /** user-defined types **/
 
+export type AppSettings = { id: number; currentUserId: string | null; theme: string; language: string; selectedModel: string; modelProxy: string | null; lastLogin: string | null; autoLogin: boolean }
 export type AudioItem = ({ id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; lastUsedAt: string }) & { exerciseType: string | null }
 export type AudioListItem = { id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; lastUsedAt: string }
 export type BookmarkDictationView = { userId: string; audioId: string; bookmarkId: number | null; bookmarkPosition: number | null; bookmarkCreatedAt: string | null; dictationId: number | null; dictationPosition: number | null; dictationCreatedAt: string | null }
 export type CreateAudioData = { audio_id: string; token: string; title: string; description: string | null; url: string; thumbnail: string; start_time: number; end_time: number; provider: string; tag: string | null }
 export type SessionWithUser = { userId: string; accessToken: string; name: string; email: string; picture: string | null }
 export type TokenData = { access_token: string | null; access_token_expires_at: number | null; refresh_token: string | null; refresh_token_expires_at: number | null }
+export type UpdateSettingsRequest = { theme: string | null; language: string | null; selectedModel: string | null; modelProxy: string | null; autoLogin: boolean | null }
 
 /** tauri-specta globals **/
 

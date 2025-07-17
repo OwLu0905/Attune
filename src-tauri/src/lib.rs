@@ -51,7 +51,10 @@ pub fn run() {
         query::commands::handle_delete_bookmark_item,
         query::commands::handle_create_dictation_item,
         query::commands::handle_delete_dictation_item,
-        query::commands::handle_get_bookmark_dictation_combined
+        query::commands::handle_get_bookmark_dictation_combined,
+        query::commands::handle_get_app_settings,
+        query::commands::handle_update_app_settings,
+        query::commands::handle_update_user_name,
     ]);
     #[cfg(debug_assertions)] // <- Only export on non-release builds
     ts_build

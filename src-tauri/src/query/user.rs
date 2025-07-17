@@ -105,16 +105,6 @@ pub struct Verification {
     updated_at: String,
 }
 
-#[derive(Debug, Serialize, Deserialize, FromRow)]
-struct AppSettings {
-    id: i64,
-    current_user_id: Option<String>,
-    theme: String,
-    language: String,
-    last_login: Option<String>,
-    auto_login: bool,
-}
-
 #[derive(Debug, Serialize, Deserialize, FromRow, specta::Type)]
 #[serde(rename_all = "camelCase")]
 pub struct SessionWithUser {
@@ -275,6 +265,26 @@ pub async fn delete_session(db: &Db, session_token: String) -> Result<(), sqlx::
         "#,
     )
     .bind(&session_token)
+    .execute(db)
+    .await?;
+
+    Ok(())
+}
+
+pub async fn update_user_name(
+    db: &Db,
+    user_id: &str,
+    new_name: String,
+) -> Result<(), sqlx::Error> {
+    sqlx::query(
+        r#"
+        UPDATE user 
+        SET name = ?, updatedAt = CURRENT_TIMESTAMP
+        WHERE id = ?
+        "#,
+    )
+    .bind(&new_name)
+    .bind(user_id)
     .execute(db)
     .await?;
 

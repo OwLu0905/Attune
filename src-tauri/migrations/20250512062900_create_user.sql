@@ -61,6 +61,8 @@ CREATE TABLE IF NOT EXISTS app_settings (
     currentUserId TEXT,
     theme TEXT DEFAULT 'light',
     language TEXT DEFAULT 'en',
+    selectedModel TEXT DEFAULT 'base.en',
+    modelProxy TEXT,
     lastLogin TIMESTAMP,
     autoLogin BOOLEAN DEFAULT 0,
     FOREIGN KEY (currentUserId) REFERENCES user(id) ON DELETE SET NULL

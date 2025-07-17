@@ -5,6 +5,7 @@ use crate::{
         bookmark::Bookmark,
         bookmark_dictation::BookmarkDictationView,
         dictation::Dictation,
+        setting::{AppSettings, UpdateSettingsRequest},
     },
     DbState,
 };
@@ -18,8 +19,9 @@ use super::{
     bookmark_dictation::get_bookmark_dictation_combined,
     dictation::{create_dictation_item, delete_dictation_item, get_dictation_list},
     oauth::handle_google_auth,
+    setting::{get_or_create_settings, update_app_settings},
     store::{delete_store_token, get_store_token, set_store_token},
-    user::{delete_session, get_user_by_session_token, SessionWithUser, Timestamp},
+    user::{delete_session, get_user_by_session_token, update_user_name, SessionWithUser, Timestamp},
 };
 
 async fn remove_dir_all_safe(path: &str) -> tokio::io::Result<()> {
@@ -393,5 +395,76 @@ pub async fn handle_get_bookmark_dictation_combined(
         return Ok(combined_list);
     } else {
         return Err("Failed to get bookmark dictation combined".to_string());
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn handle_get_app_settings(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: String,
+) -> Result<AppSettings, String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, &app_handle, token)
+        .await
+        .expect("get app settings failed: invalid user");
+
+    if let Some(_user) = user_info {
+        match get_or_create_settings(db).await {
+            Ok(settings) => Ok(settings),
+            Err(e) => Err(format!("Failed to get app settings: {}", e)),
+        }
+    } else {
+        return Err("Failed to get app settings".to_string());
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn handle_update_app_settings(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: String,
+    request: UpdateSettingsRequest,
+) -> Result<AppSettings, String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, &app_handle, token)
+        .await
+        .expect("update app settings failed: invalid user");
+
+    if let Some(_user) = user_info {
+        match update_app_settings(db, request).await {
+            Ok(settings) => Ok(settings),
+            Err(e) => Err(format!("Failed to update app settings: {}", e)),
+        }
+    } else {
+        return Err("Failed to update app settings".to_string());
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn handle_update_user_name(
+    app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
+    token: String,
+    new_name: String,
+) -> Result<(), String> {
+    let db = &state.db;
+
+    let user_info = get_user_by_session_token(db, &app_handle, token)
+        .await
+        .expect("update user name failed: invalid user");
+
+    if let Some(user) = user_info {
+        match update_user_name(db, &user.user_id, new_name).await {
+            Ok(_) => Ok(()),
+            Err(e) => Err(format!("Failed to update user name: {}", e)),
+        }
+    } else {
+        return Err("Failed to update user name".to_string());
     }
 }

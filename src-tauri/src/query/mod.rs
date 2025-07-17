@@ -4,5 +4,6 @@ pub mod bookmark_dictation;
 pub mod commands;
 pub mod dictation;
 pub mod oauth;
+pub mod setting;
 pub mod store;
 pub mod user;
