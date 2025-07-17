@@ -4,13 +4,10 @@
     import { onMount } from "svelte";
     import { commands } from "$lib/tauri";
     import { ModeWatcher } from "mode-watcher";
-    import type { SessionWithUser } from "$lib/tauri";
-
     import AppSidebar from "$lib/components/app-sidebar.svelte";
-    import { Separator } from "$lib/components/ui/separator";
     import { Toaster } from "$lib/components/ui/sonner/index.js";
     import * as Sidebar from "$lib/components/ui/sidebar";
-    import * as Breadcrumb from "$lib/components/ui/breadcrumb";
+
     import {
         setUserContext,
         type UserInfo,
@@ -93,12 +90,12 @@
         <AppSidebar />
         <Sidebar.Inset>
             <header
-                class="mx-4 flex h-16 shrink-0 items-center gap-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
+                class="mx-4 flex h-12 shrink-0 items-center gap-2 pt-2 transition-[width,height] ease-linear group-has-data-[collapsible=icon]/sidebar-wrapper:h-12"
             >
                 <div class="ml-2 flex items-center">
                     <Sidebar.Trigger class="-ml-1" />
                 </div>
-                <h1 class="text-primary py-2 text-3xl font-bold">
+                <h1 class="text-primary py-1 text-3xl font-bold">
                     {mainRoute}
                 </h1>
             </header>

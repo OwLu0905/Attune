@@ -1,2 +1,4 @@
 service/wpx/**
 src-tauri/**
+
+src/lib/tauri.ts

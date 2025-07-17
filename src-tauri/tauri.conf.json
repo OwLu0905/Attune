@@ -13,8 +13,8 @@
     "windows": [
       {
         "title": "owletc",
-        "width": 1200,
-        "height": 960
+        "width": 1280,
+        "height": 880
       }
     ],
     "security": {

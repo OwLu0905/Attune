@@ -47,33 +47,38 @@
         animation-delay: 0s;
     }
     .audio-lines.playing path:nth-child(2) {
-        animation-delay: 0.2;
+        animation-delay: 0.1;
     }
     .audio-lines.playing path:nth-child(3) {
-        animation-delay: 0.1s;
+        animation-delay: 0.2s;
     }
     .audio-lines.playing path:nth-child(4) {
-        animation-delay: 0.3s;
+        animation-delay: 0.1s;
     }
     .audio-lines.playing path:nth-child(5) {
         animation-delay: 0.4s;
     }
     .audio-lines.playing path:nth-child(6) {
-        animation-delay: 0.1s;
+        animation-delay: 0.2s;
     }
 
     @keyframes audioWave {
         0% {
-            opacity: 0.3;
+            opacity: 0.6;
             transform: scaleY(0.6);
+            transform-origin: center;
         }
         50% {
-            opacity: 1;
-            transform: scaleY(1.2);
+            opacity: 0.8;
+            transform: scaleY(1.1);
+
+            transform-origin: center;
         }
         100% {
-            opacity: 0.6;
+            opacity: 1;
             transform: scaleY(0.8);
+
+            transform-origin: center;
         }
     }
 </style>

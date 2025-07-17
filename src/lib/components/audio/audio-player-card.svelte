@@ -183,7 +183,7 @@
 
                 <div
                     bind:this={container}
-                    style="width:480px; height: 40px"
+                    style="width:480px; height: 32px; margin:auto"
                 ></div>
 
                 {#if audioPlayer && dictationItem}

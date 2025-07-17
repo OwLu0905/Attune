@@ -18,6 +18,7 @@
         Play,
         RotateCcw,
         Save,
+        SquareCheckBig,
     } from "@lucide/svelte";
     import Badge from "../ui/badge/badge.svelte";
     import {
@@ -27,7 +28,7 @@
         getFile,
         saveFile,
     } from "@/file";
-    import type { Content } from "@tiptap/core";
+    import type { Content, JSONContent } from "@tiptap/core";
     import { fade } from "svelte/transition";
 
     import type { SubtitleSegment } from "../audio/types";
@@ -65,6 +66,23 @@
 
     let editor = $state() as Readable<Editor>;
 
+    let dictationState = $derived.by(() => {
+        return (
+            combinedList.find((i) => i.dictationPosition === dictationId) ??
+            undefined
+        );
+    });
+    let saveTimeoutId: number | undefined = undefined;
+    let isSaved = $state(false);
+
+    const debouncedSave = (cb: () => void, delay = 600) => {
+        if (saveTimeoutId) {
+            clearTimeout(saveTimeoutId);
+        }
+
+        saveTimeoutId = setTimeout(() => cb(), delay);
+    };
+
     async function load() {
         const dataPath = `${audioId}/${dictationId}/answer`;
         const file = await getFile(dataPath, "json");
@@ -79,8 +97,12 @@
             content: data,
             editorProps: {
                 attributes: {
-                    class: "transitino-all duration-150 rounded-md focus:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 border-1 border-input p-3 overflow-auto h-40",
+                    class: "relative transitino-all duration-150 rounded-md focus:outline-none focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] aria-invalid:ring-destructive/20 border-1 border-input p-3 overflow-auto h-40",
                 },
+            },
+            onUpdate(props) {
+                const data = props.editor.getJSON();
+                debouncedSave(() => storeAnswer(data, audioId, dictationId));
             },
         });
     }
@@ -110,14 +132,25 @@
     const isActive = (name: string, attrs = {}) =>
         $editor.isActive(name, attrs);
 
-    async function storeAnswer(data: {}, id: string, dictationId: number) {
+    async function storeAnswer(
+        data: JSONContent,
+        id: string,
+        dictationId: number,
+    ) {
         const dirPath = `${id}/${dictationId}`;
 
         await createDir(dirPath);
         const file = await encodeJSON(data);
         const filename = `${id}/${dictationId}/answer`;
         await saveFile(file, filename, "json");
+        isSaved = true;
 
+        setTimeout(() => {
+            isSaved = false;
+        }, 1000);
+    }
+
+    async function saveAsCompleted(id: string, dictationId: number) {
         // Create dictation item
         if (user?.accessToken) {
             try {
@@ -148,20 +181,11 @@
 
         let start = dictationItem.start;
         let end = dictationItem.end - epsilon;
-        // if (currentTime >= start && (Math.abs(currentTime - dictationItem.end) < epsilon || currentTime >= dictationItem.end)) {
-        //
-        // }
         if (currentTime >= start && currentTime <= end) {
             start = currentTime;
         } else {
             start = Math.max(dictationItem.start - epsilon, 0);
         }
-
-        // start =
-        //    Math.abs(currentTime - dictationItem.end) < epsilon ||
-        //    currentTime >= dictationItem.end
-        //        ? dictationItem.start
-        //        : currentTime;
 
         onPlaySection(start, dictationItem.end);
     }
@@ -229,7 +253,15 @@
         </BubbleMenu>
     {/if}
 
-    <EditorContent editor={$editor} class="border-none" />
+    <div class="relative">
+        <EditorContent editor={$editor} class="" />
+
+        <!-- {#if isSaved} -->
+        <!--     <div in:fade out:fade class="absolute right-2 bottom-2"> -->
+        <!--         <Badge variant="outline" class="">Save</Badge> -->
+        <!--     </div> -->
+        <!-- {/if} -->
+    </div>
 
     <div class="mt-2 flex items-center justify-evenly gap-1">
         <div class="flex w-full items-center gap-1">
@@ -308,20 +340,38 @@
                     <ChevronRight />
                 </Button>
             </div>
-            <Button
-                class="ml-auto"
-                variant="outline"
-                size="sm"
-                onclick={() => {
-                    storeAnswer(
-                        $state.snapshot($editor.getJSON()),
-                        audioId,
-                        dictationId,
-                    );
-                }}
-            >
-                <Save class="stroke-primary h-6 w-6" />
-            </Button>
+            {#if !dictationState}
+                <Button
+                    class="ml-auto"
+                    variant="default"
+                    size="sm"
+                    onclick={async () => {
+                        await storeAnswer(
+                            $state.snapshot($editor.getJSON()),
+                            audioId,
+                            dictationId,
+                        );
+                        await saveAsCompleted(audioId, dictationId);
+                    }}
+                >
+                    <SquareCheckBig class="h-6 w-6" />
+                </Button>
+            {:else}
+                <Button
+                    class="ml-auto"
+                    variant="outline"
+                    size="sm"
+                    onclick={async () => {
+                        await storeAnswer(
+                            $state.snapshot($editor.getJSON()),
+                            audioId,
+                            dictationId,
+                        );
+                    }}
+                >
+                    <Save class="h-6 w-6" />
+                </Button>
+            {/if}
         </div>
     </div>
 {/await}
