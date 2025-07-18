@@ -7,7 +7,10 @@
     import { getUserContext } from "@/user/userService.svelte";
     import { getAppSettingsContext } from "../../../routes/setting/app-setting-context.svelte";
     import { commands } from "@/tauri";
+    import { onMount } from "svelte";
 
+    let isHealthy: boolean | null = $state(null); // null = unknown, true = healthy, false = unhealthy
+    let isCheckingHealth = $state(false);
     let { getUser } = getUserContext();
     let user = getUser();
     const appSettingsApi = getAppSettingsContext();
@@ -90,6 +93,21 @@
 
         appSettingsApi.appSettings = result.data;
     }
+
+    async function checkModelHealthy() {
+        isCheckingHealth = true;
+        try {
+            const result = await commands.checkModelHealth();
+            isHealthy = result.status === "ok" ? result.data : false;
+        } catch (error) {
+            isHealthy = false;
+        } finally {
+            isCheckingHealth = false;
+        }
+    }
+    onMount(() => {
+        checkModelHealthy();
+    });
 </script>
 
 <Card class="p-6">
@@ -165,6 +183,38 @@
                 Optional: URL for model service proxy (e.g., local or remote
                 inference server)
             </p>
+        </div>
+        <div>
+            <div class="mb-2 flex items-center justify-between">
+                <Label class="text-sm font-medium">Model Health Status</Label>
+                <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onclick={checkModelHealthy}
+                    disabled={isCheckingHealth}
+                    class="h-8"
+                >
+                    {isCheckingHealth ? "Checking..." : "Check Health"}
+                </Button>
+            </div>
+            <div class="flex items-center space-x-2">
+                <div
+                    class="h-3 w-3 rounded-full"
+                    class:bg-green-500={isHealthy === true}
+                    class:bg-red-500={isHealthy === false}
+                    class:bg-gray-400={isHealthy === null}
+                ></div>
+                <span class="text-sm">
+                    {#if isHealthy === true}
+                        <span class="text-green-600">Service is healthy</span>
+                    {:else if isHealthy === false}
+                        <span class="text-red-600">Service is not healthy</span>
+                    {:else}
+                        <span class="text-gray-600">Status unknown</span>
+                    {/if}
+                </span>
+            </div>
         </div>
         {#if isDirty}
             <div class="flex justify-end pt-4">

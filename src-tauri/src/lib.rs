@@ -37,6 +37,7 @@ pub fn run() {
         model::start_transcribe,
         model::start_transcribe_service,
         model::start_transcribe_service_streaming,
+        model::check_model_health,
         server::start_oauth_server,
         server::stop_oauth_server,
         query::commands::handle_login,

@@ -6,7 +6,9 @@ use std::io::ErrorKind;
 
 use crate::{
     config::{get_data_path, get_model_path},
+    query::setting::get_app_settings,
     service::wx::{TranscriptionComplete, TranscriptionProgress, WhisperXClient},
+    DbState,
 };
 
 async fn remove_file_safe(path: &str) -> tokio::io::Result<()> {
@@ -151,10 +153,12 @@ pub async fn start_transcribe_service(
 
     Ok(())
 }
+
 #[tauri::command]
 #[specta::specta]
 pub async fn start_transcribe_service_streaming(
     app_handle: AppHandle,
+    state: tauri::State<'_, DbState>,
     audio_id: String,
     model: String,
 ) -> Result<(), String> {
@@ -163,7 +167,17 @@ pub async fn start_transcribe_service_streaming(
     let check_data = &format!("{}/{}/subtitle.json", data_path, audio_id);
     remove_file_safe(check_data).await.unwrap();
 
-    let client = WhisperXClient::new("http://localhost:8081");
+    let db = &state.db;
+
+    // Get the proxy URL from app_settings table
+    let proxy_url = match get_app_settings(db).await {
+        Ok(settings) => settings
+            .model_proxy
+            .unwrap_or_else(|| "http://localhost:8081".to_string()),
+        Err(_) => "http://localhost:8081".to_string(), // Fallback to default
+    };
+
+    let client = WhisperXClient::new(&proxy_url);
 
     // Health check
     match client.health_check().await {
@@ -260,6 +274,37 @@ pub async fn start_transcribe_service_streaming(
                 .unwrap();
 
             Err(format!("Transcription failed: {}", e))
+        }
+    }
+}
+
+#[tauri::command]
+#[specta::specta]
+pub async fn check_model_health(state: tauri::State<'_, DbState>) -> Result<bool, String> {
+    let db = &state.db;
+
+    // Get the proxy URL from app_settings table
+    let proxy_url = match get_app_settings(db).await {
+        Ok(settings) => settings
+            .model_proxy
+            .unwrap_or_else(|| "http://localhost:8081".to_string()),
+        Err(_) => "http://localhost:8081".to_string(), // Fallback to default
+    };
+
+    let client = WhisperXClient::new(&proxy_url);
+    // Health check
+    match client.health_check().await {
+        Ok(true) => {
+            println!("✅ AI Model service is healthy");
+            Ok(true)
+        }
+        Ok(false) => {
+            println!("❌ AI Model service is not healthy");
+            Ok(false)
+        }
+        Err(e) => {
+            println!("❌ Failed to check AI Model health: {}", e);
+            Err(format!("Failed to check AI Model health: {}", e))
         }
     }
 }

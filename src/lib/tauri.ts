@@ -40,6 +40,14 @@ async startTranscribeServiceStreaming(audioId: string, model: string) : Promise<
     else return { status: "error", error: e  as any };
 }
 },
+async checkModelHealth() : Promise<Result<boolean, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("check_model_health") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async startOauthServer(state: string) : Promise<Result<number, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("start_oauth_server", { state }) };
