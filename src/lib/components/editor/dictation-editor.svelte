@@ -342,7 +342,7 @@
             </div>
             {#if !dictationState}
                 <Button
-                    class="ml-auto"
+                    class="ml-auto border-1"
                     variant="default"
                     size="sm"
                     onclick={async () => {

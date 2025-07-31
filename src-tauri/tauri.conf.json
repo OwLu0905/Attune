@@ -20,7 +20,7 @@
     "security": {
 			"csp": {
 				"default-src": "'self' customprotocol: asset:",
-				"connect-src": "ipc: http://ipc.localhost https://www.youtube.com blob:",
+				"connect-src": "ipc: http://ipc.localhost https://www.googleapis.com https://oauth2.googleapis.com https://accounts.google.com https://www.youtube.com blob:",
 				"font-src": ["https://fonts.gstatic.com"],
         "img-src": "'self' asset: http://asset.localhost blob: data: https://i.ytimg.com https://s.ytimg.com https://yt3.ggpht.com https://lh3.googleusercontent.com https://googleusercontent.com",
 				"style-src": "'unsafe-inline' 'self' https://fonts.googleapis.com",

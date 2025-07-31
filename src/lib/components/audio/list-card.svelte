@@ -8,12 +8,15 @@
     import ErrorMessage from "../error/error-message.svelte";
     import { Skeleton } from "@/components/ui/skeleton";
 
-    import { Eye, EyeOff, Settings } from "@lucide/svelte";
+    import { ChevronsDownUp, Eye, EyeOff, Settings } from "@lucide/svelte";
 
     import type { AudioItem } from "$lib/tauri";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { BookmarkDictationView } from "$lib/tauri";
+    import Checkbox from "../ui/checkbox/checkbox.svelte";
+    import Label from "../ui/label/label.svelte";
+    import Button from "../ui/button/button.svelte";
 
     interface Props {
         dictationId: number;
@@ -40,6 +43,7 @@
 
     // TODO: lift this to parent and pass into dictation-editor
     let hidden = $state(true);
+    let autoScroll = $state(false);
 
     const { getUser } = getUserContext();
     const user = getUser();
@@ -110,30 +114,106 @@
         audioPlayer?.onPause();
         audioPlayer?.onSetTime(startTime);
     }
+
+    function scrollToCurrent(list: SubtitleSegment[]) {
+        if (!audioPlayer) return;
+
+        dictationId = list.findIndex((i) => {
+            return (
+                i.start <= audioPlayer.currentTime &&
+                audioPlayer.currentTime <= i.end
+            );
+        });
+    }
+
+    $effect(() => {
+        let frameId: number;
+
+        function scrollToCurrent(list: SubtitleSegment[]) {
+            if (!audioPlayer) return;
+
+            dictationId = list.findIndex((i) => {
+                return (
+                    i.start <= audioPlayer.currentTime &&
+                    audioPlayer.currentTime <= i.end
+                );
+            });
+
+            frameId = requestAnimationFrame(() => {
+                scrollToCurrent(list);
+            });
+        }
+
+        if (autoScroll && audioPlayer?.isPlaying) {
+            scrollToCurrent(subtitles);
+        }
+
+        return () => {
+            if (frameId) {
+                cancelAnimationFrame(frameId);
+            }
+        };
+    });
 </script>
+
+{#snippet scrollToArea(list: SubtitleSegment[])}
+    <Button
+        size="sm"
+        variant="ghost"
+        onclick={() => {
+            scrollToCurrent(list);
+        }}
+        class="group"
+    >
+        <ChevronsDownUp
+            class="size-3.5 transition-transform duration-150 ease-in group-active:scale-125"
+        />
+    </Button>
+{/snippet}
 
 {#if audioPlayer}
     <div
         transition:fade
         class="bg-background border-input relative h-full shrink grow overflow-auto rounded-md border-1"
     >
-        <div class="sticky top-0 z-5 flex w-full gap-2 bg-inherit px-4 py-2">
-            <Settings size={16} />
+        <div
+            class="sticky top-0 z-5 flex w-full items-center gap-1 bg-inherit px-4 py-2"
+        >
             {#if hidden}
-                <Eye
-                    class="h-4 w-4"
+                <Button
+                    size="sm"
+                    variant="ghost"
                     onclick={() => {
                         hidden = false;
                     }}
-                />
+                    class="group"
+                >
+                    <Eye
+                        class="size-3.5 transition-transform duration-100 ease-in group-active:scale-110"
+                    />
+                </Button>
             {:else}
-                <EyeOff
-                    class="h-4 w-4"
+                <Button
+                    size="sm"
+                    variant="ghost"
                     onclick={() => {
                         hidden = true;
                     }}
-                />
+                    class="group"
+                >
+                    <EyeOff
+                        class="size-3.5 transition-transform duration-100 ease-in group-active:scale-110"
+                    />
+                </Button>
             {/if}
+
+            {@render scrollToArea(subtitles)}
+            <div class="ml-auto">
+                <div class="flex items-center space-x-2">
+                    <Checkbox bind:checked={autoScroll} id="auto-scroll" />
+                    <Label for="auto-scroll">Auto Scroll</Label>
+                </div>
+            </div>
         </div>
         {#await getCombinedList() then _}
             <ScrollArea class="px-4 pb-2 tabular-nums">

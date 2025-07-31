@@ -169,7 +169,7 @@
 
     <Card.Content class="@container shrink grow overflow-hidden">
         <div class="flex h-full flex-col gap-6 py-6 @3xl:flex-row">
-            <div class="w-full shrink-0 @3xl:w-120 @4xl:w-140">
+            <div class="w-full shrink-0 @3xl:w-120 @4xl:w-1/2">
                 <!-- svelte-ignore a11y_media_has_caption -->
                 <video
                     bind:this={videoRef}

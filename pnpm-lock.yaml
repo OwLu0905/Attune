@@ -63,8 +63,8 @@ importers:
                 specifier: ^3.8.2
                 version: 3.8.2
             "@lucide/svelte":
-                specifier: ^0.513.0
-                version: 0.513.0(svelte@5.34.1)
+                specifier: ^0.515.0
+                version: 0.515.0(svelte@5.34.1)
             "@sveltejs/adapter-static":
                 specifier: ^3.0.6
                 version: 3.0.8(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))
@@ -488,10 +488,10 @@ packages:
                 integrity: sha512-vNk6aEwybGtawWmy/PzwnGDOjCkLWSD2wqvjGGAgOAwCGWySYXfYoxt00IJkTF+8Lb57DwOb3Aa0o9CApepiYQ==,
             }
 
-    "@lucide/svelte@0.513.0":
+    "@lucide/svelte@0.515.0":
         resolution:
             {
-                integrity: sha512-XwBQMQkMlr9qp9yVg+epx5MzhBBrqul8atO00y/ZfhlKRJuQZVmq3ELibApqyBtj9ys0Ai4FH/SZcODTUFYXig==,
+                integrity: sha512-CEAyqcZmNBfYzVgaRmK2RFJP5tnbXxekRyDk0XX/eZQRfsJmkDvmQwXNX8C869BgNeryzmrRyjHhUL6g9ZOHNA==,
             }
         peerDependencies:
             svelte: ^5
@@ -2850,7 +2850,7 @@ snapshots:
             "@jridgewell/resolve-uri": 3.1.2
             "@jridgewell/sourcemap-codec": 1.5.0
 
-    "@lucide/svelte@0.513.0(svelte@5.34.1)":
+    "@lucide/svelte@0.515.0(svelte@5.34.1)":
         dependencies:
             svelte: 5.34.1
 
