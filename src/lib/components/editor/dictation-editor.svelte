@@ -1,7 +1,7 @@
 <script lang="ts">
     import type { Readable } from "svelte/store";
     import StarterKit from "@tiptap/starter-kit";
-    import { cn } from "@/utils";
+    import { cn, PLAYBACK_BUFFER } from "@/utils";
     import {
         Editor,
         EditorContent,
@@ -184,7 +184,7 @@
         if (currentTime >= start && currentTime <= end) {
             start = currentTime;
         } else {
-            start = Math.max(dictationItem.start - epsilon, 0);
+            start = Math.max(dictationItem.start - PLAYBACK_BUFFER, 0);
         }
 
         onPlaySection(start, dictationItem.end);
@@ -315,9 +315,8 @@
                     size="sm"
                     variant="outline"
                     onclick={() => {
-                        const epsilon = 0.1;
                         const start = Math.max(
-                            dictationItem.start - epsilon,
+                            dictationItem.start - PLAYBACK_BUFFER,
                             0,
                         );
                         onPlaySection(start, dictationItem.end);
