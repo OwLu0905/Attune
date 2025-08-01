@@ -9,6 +9,7 @@
     import ErrorMessage from "@/components/error/error-message.svelte";
     import { cn } from "@/utils";
     import { fade } from "svelte/transition";
+    import EchoSidebarItem from "./echo-sidebar-item.svelte";
 
     const { getUser } = getUserContext();
     const audioApi = getAudioListContext();
@@ -44,54 +45,15 @@
             </Sidebar.Menu>
         </Sidebar.Group>
         <Sidebar.Group>
-            <Sidebar.GroupLabel>List</Sidebar.GroupLabel>
-
-            <Sidebar.Menu>
-                {#await audioApi.refreshAudioList(user.accessToken)}
-                    <span>
-                        <div class="bg-muted/50 aspect-video rounded-xl"></div>
-                    </span>
-                {:then _}
-                    {#each audioApi.audioList as audio (audio.id)}
-                        <Sidebar.MenuItem
-                            class="min-w-0 group-data-[collapsible=icon]:hidden"
-                        >
-                            <HoverCard.Root>
-                                <HoverCard.Trigger>
-                                    <Sidebar.MenuButton
-                                        class={cn(
-                                            "",
-                                            echoId === audio.id &&
-                                                "text-primary",
-                                        )}
-                                    >
-                                        {#snippet child({ props })}
-                                            <a
-                                                href="/echo/{audio.id}"
-                                                class="truncate font-mono"
-                                                {...props}
-                                            >
-                                                <span out:fade>
-                                                    {audio.title}
-                                                </span>
-                                            </a>
-                                        {/snippet}
-                                    </Sidebar.MenuButton>
-                                </HoverCard.Trigger>
-                                <HoverCard.Content side="right">
-                                    <img
-                                        class="aspect-video h-20 object-cover"
-                                        src={audio.thumbnail}
-                                        alt={audio.title}
-                                    />
-                                </HoverCard.Content>
-                            </HoverCard.Root>
-                        </Sidebar.MenuItem>
-                    {/each}
-                {:catch error}
-                    <ErrorMessage />
-                {/await}
-            </Sidebar.Menu>
+            {#await audioApi.refreshAudioList(user.accessToken)}
+                <span>
+                    <div class="bg-muted/50 aspect-video rounded-xl"></div>
+                </span>
+            {:then _}
+                <EchoSidebarItem {echoId} audioList={audioApi.audioList} />
+            {:catch error}
+                <ErrorMessage />
+            {/await}
         </Sidebar.Group>
     </Sidebar.Content>
 {/if}
