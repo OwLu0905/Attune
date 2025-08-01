@@ -50,12 +50,8 @@ pub struct AudioListItem {
     pub provider: String,
     pub tag: Option<String>,
     pub transcribe: i16,
-    #[sqlx(rename = "lastUsedAt")]
-    last_used_at: String,
-    // #[sqlx(rename = "createdAt")]
-    // created_at: String,
-    // #[sqlx(rename = "updatedAt")]
-    // updated_at: String,
+    #[sqlx(rename = "updatedAt")]
+    updated_at: String,
 }
 
 // Audio with exercise types
@@ -129,7 +125,7 @@ pub async fn create_audio(
 }
 
 pub async fn get_audios(db: &Db, user_id: String) -> Result<Vec<AudioListItem>, sqlx::Error> {
-    let audios = sqlx::query_as::<_, AudioListItem>("SELECT id, title, description, url, thumbnail, startTime, endTime, provider, tag, transcribe, lastUsedAt FROM audio WHERE userId = ?  ORDER BY lastUsedAt DESC")
+    let audios = sqlx::query_as::<_, AudioListItem>("SELECT id, title, description, url, thumbnail, startTime, endTime, provider, tag, transcribe, updatedAt FROM audio WHERE userId = ?  ORDER BY updatedAt DESC")
         .bind(&user_id)
         .fetch_all(db)
         .await?;
@@ -155,13 +151,13 @@ pub async fn get_audio(
             a.provider,
             a.tag,
             a.transcribe,
-            a.lastUsedAt,
+            a.updatedAt,
             GROUP_CONCAT(aet.exerciseType) as exerciseType
         FROM audio a
         LEFT JOIN audio_exercise_types aet ON a.id = aet.audioId
         WHERE a.userId = ? AND a.id = ?  
-        GROUP BY a.id, a.title, a.description, a.url, a.thumbnail, a.startTime, a.endTime, a.provider, a.tag, a.transcribe, a.lastUsedAt
-        ORDER BY lastUsedAt DESC
+        GROUP BY a.id, a.title, a.description, a.url, a.thumbnail, a.startTime, a.endTime, a.provider, a.tag, a.transcribe, a.updatedAt
+        ORDER BY updatedAt DESC
         "#
 
     )
@@ -171,6 +167,22 @@ pub async fn get_audio(
         .await.map_err(|e| e.to_string());
 
     Ok(audio.unwrap())
+}
+
+pub async fn update_audio_updated_at(
+    db: &Db,
+    user_id: String,
+    audio_id: String,
+) -> Result<AudioItem, sqlx::Error> {
+    sqlx::query("UPDATE audio SET updatedAt = CURRENT_TIMESTAMP WHERE userId = ? AND id = ?")
+        .bind(&user_id)
+        .bind(&audio_id)
+        .execute(db)
+        .await?;
+
+    let audio = get_audio(db, user_id, audio_id).await?;
+
+    Ok(audio)
 }
 
 pub async fn update_audio_transcribe(

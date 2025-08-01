@@ -205,8 +205,8 @@ async handleUpdateUserName(token: string, newName: string) : Promise<Result<null
 /** user-defined types **/
 
 export type AppSettings = { id: number; currentUserId: string | null; theme: string; language: string; selectedModel: string; modelProxy: string | null; lastLogin: string | null; autoLogin: boolean }
-export type AudioItem = ({ id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; lastUsedAt: string }) & { exerciseType: string | null }
-export type AudioListItem = { id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; lastUsedAt: string }
+export type AudioItem = ({ id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; updatedAt: string }) & { exerciseType: string | null }
+export type AudioListItem = { id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; updatedAt: string }
 export type BookmarkDictationView = { userId: string; audioId: string; bookmarkId: number | null; bookmarkPosition: number | null; bookmarkCreatedAt: string | null; dictationId: number | null; dictationPosition: number | null; dictationCreatedAt: string | null }
 export type CreateAudioData = { audio_id: string; token: string; title: string; description: string | null; url: string; thumbnail: string; start_time: number; end_time: number; provider: string; tag: string | null }
 export type SessionWithUser = { userId: string; accessToken: string; name: string; email: string; picture: string | null }

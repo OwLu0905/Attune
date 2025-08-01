@@ -15,7 +15,7 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 // Audio playback constants
-export const PLAYBACK_BUFFER = 0.5; // Buffer time in seconds for clearer audio playback
+export const PLAYBACK_BUFFER = 0.25; // Buffer time in seconds for clearer audio playback
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type WithoutChild<T> = T extends { child?: any } ? Omit<T, "child"> : T;

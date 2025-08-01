@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 use sqlx::prelude::FromRow;
 
 use crate::db::Db;
+use super::audio::update_audio_updated_at;
 
 #[derive(Debug, Serialize, Deserialize, FromRow, specta::Type)]
 #[serde(rename_all = "camelCase")]
@@ -25,6 +26,9 @@ pub async fn create_dictation_item(
         .bind(&audio_id)
         .execute(db)
         .await?;
+
+    // Update audio updatedAt
+    let _ = update_audio_updated_at(db, user_id.clone(), audio_id.clone()).await;
 
     let dictation_list = get_dictation_list(db, user_id, audio_id).await?;
     Ok(dictation_list)
@@ -55,6 +59,9 @@ pub async fn delete_dictation_item(
         .bind(&audio_id)
         .execute(db)
         .await?;
+
+    // Update audio updatedAt
+    let _ = update_audio_updated_at(db, user_id.clone(), audio_id.clone()).await;
 
     let dictation_list = get_dictation_list(db, user_id, audio_id).await?;
     Ok(dictation_list)

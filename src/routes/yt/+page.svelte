@@ -122,7 +122,7 @@
                             </AlertDialog.Content>
                         </AlertDialog.Root>
                         <span class="ml-auto text-xs">
-                            {audio.lastUsedAt}
+                            {audio.updatedAt}
                         </span>
                     </Card.Footer>
                 </Card.Root>
