@@ -1,7 +1,14 @@
 <script lang="ts">
-    import { cn } from "@/utils";
+    import { cn, PLAYBACK_BUFFER } from "@/utils";
     import { fade } from "svelte/transition";
-    import { Clipboard, Eye, EyeOff, Star, Check } from "@lucide/svelte";
+    import {
+        Clipboard,
+        Eye,
+        EyeOff,
+        Star,
+        Check,
+        RotateCcw,
+    } from "@lucide/svelte";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { BookmarkDictationView } from "$lib/tauri";
@@ -208,6 +215,18 @@
                     {:else}
                         <Clipboard class="h-4 w-4" />
                     {/if}
+                </button>
+
+                <button
+                    onclick={() => {
+                        const start = Math.max(
+                            segment.start - PLAYBACK_BUFFER,
+                            0,
+                        );
+                        onPlaySection(start, segment.end);
+                    }}
+                >
+                    <RotateCcw class="h-4 w-4" />
                 </button>
             </div>
         </div>
