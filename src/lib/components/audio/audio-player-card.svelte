@@ -16,6 +16,7 @@
     import type { AudioItem, BookmarkDictationView } from "$lib/tauri";
     import DictationEditor from "../editor/dictation-editor.svelte";
     import AudioDropdown from "./audio-dropdown.svelte";
+    import { getAppSettingsContext } from "../../../routes/setting/app-setting-context.svelte";
 
     interface Props {
         videoPath: BlobPart;
@@ -27,10 +28,14 @@
     const { getUser } = getUserContext();
     const user = getUser();
 
+    const appSettingsApi = getAppSettingsContext();
+
     let audioPlayer: AudioPlayer | undefined = $state.raw(undefined);
     let container: HTMLElement | undefined = $state.raw(undefined);
     let volume = $state(10);
     let subtitles: SubtitleSegment[] = $state([]);
+
+    let isCheckingHealth = $state(false);
     let isTranscribing = $state(false);
 
     let videoRef: HTMLVideoElement;
@@ -51,6 +56,18 @@
         return undefined;
     });
 
+    async function checkModelHealthy() {
+        isCheckingHealth = true;
+        try {
+            const result = await commands.checkModelHealth();
+            return result.status === "ok" ? result.data : false;
+        } catch (error) {
+            return false;
+        } finally {
+            isCheckingHealth = false;
+        }
+    }
+
     async function getSubtitle() {
         try {
             if (!user.accessToken) {
@@ -59,11 +76,17 @@
 
             isTranscribing = true;
 
-            // TODO:
+            const isHealthy = await checkModelHealthy();
+            if (!isHealthy) {
+                isTranscribing = false;
+                return;
+            }
+
+            // TODO: read from setting
             const transcribe_result =
                 await commands.startTranscribeServiceStreaming(
                     audioItem.id,
-                    "small.en",
+                    appSettingsApi?.appSettings?.selectedModel ?? "small.en",
                 );
 
             if (transcribe_result.status === "error") {
