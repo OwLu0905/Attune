@@ -3,20 +3,21 @@
     import { commands } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
 
+    import Checkbox from "@/components/ui/checkbox/checkbox.svelte";
+    import Label from "@/components/ui/label/label.svelte";
+    import Button from "@/components/ui/button/button.svelte";
     import ScrollArea from "@/components/ui/scroll-area/scroll-area.svelte";
-    import SegmentField from "./segment-field.svelte";
-    import ErrorMessage from "../error/error-message.svelte";
     import { Skeleton } from "@/components/ui/skeleton";
 
-    import { ChevronsDownUp, Eye, EyeOff, Settings } from "@lucide/svelte";
+    import SegmentField from "./segment-field.svelte";
+    import ErrorMessage from "../error/error-message.svelte";
+
+    import { ChevronsDownUp, Eye, EyeOff } from "@lucide/svelte";
 
     import type { AudioItem } from "$lib/tauri";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { BookmarkDictationView } from "$lib/tauri";
-    import Checkbox from "../ui/checkbox/checkbox.svelte";
-    import Label from "../ui/label/label.svelte";
-    import Button from "../ui/button/button.svelte";
 
     interface Props {
         dictationId: number;
@@ -118,12 +119,21 @@
     function scrollToCurrent(list: SubtitleSegment[]) {
         if (!audioPlayer) return;
 
-        dictationId = list.findIndex((i) => {
+        const id = list.findIndex((i) => {
             return (
                 i.start <= audioPlayer.currentTime &&
                 audioPlayer.currentTime <= i.end
             );
         });
+        if (id === dictationId) {
+            // TODO:
+            dictationId = -1;
+            setTimeout(() => {
+                dictationId = id;
+            }, 0);
+        } else {
+            dictationId = id;
+        }
     }
 
     $effect(() => {
@@ -132,12 +142,16 @@
         function scrollToCurrent(list: SubtitleSegment[]) {
             if (!audioPlayer) return;
 
-            dictationId = list.findIndex((i) => {
+            const id = list.findIndex((i) => {
                 return (
                     i.start <= audioPlayer.currentTime &&
                     audioPlayer.currentTime <= i.end
                 );
             });
+
+            if (id > -1) {
+                dictationId = id;
+            }
 
             frameId = requestAnimationFrame(() => {
                 scrollToCurrent(list);

@@ -80,9 +80,9 @@
             if (dictationId !== index) return;
             const observer = new IntersectionObserver(
                 (entries, observer) => {
-                    const entry = entries[0];
+                    const _entry = entries[0];
 
-                    if (!entry.isIntersecting && dictationId === index) {
+                    if (dictationId === index) {
                         node.scrollIntoView({
                             behavior: "smooth",
                             block: "center",

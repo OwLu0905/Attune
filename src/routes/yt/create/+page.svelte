@@ -1,4 +1,5 @@
 <script lang="ts">
+    import { fade } from "svelte/transition";
     import { setContext } from "svelte";
 
     import { z } from "zod";
@@ -20,7 +21,6 @@
         TSLIDER_VALUES,
     } from "@/components/youtue/types";
     import type { YtOembUrlInfo } from "./types";
-    import { fade, slide } from "svelte/transition";
 
     let sliderValues: TSLIDER_VALUES = $state([0, 100]);
     let videoUrlId = $state("");
