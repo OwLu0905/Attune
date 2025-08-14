@@ -39,7 +39,7 @@ type FileType = "m4a" | "mp4";
 export async function getAudioFile(
     id: string,
     file: FileType | undefined = "m4a",
-) {
+): Promise<Uint8Array<ArrayBuffer> | undefined> {
     try {
         return await readFile(`data/${id}/audio.${file}`, {
             baseDir: BaseDirectory.AppLocalData,
@@ -65,9 +65,9 @@ export async function getSubtitleFile(id: string) {
     }
 }
 
-export async function getRecordHistory(audioId: string, index: string) {
+export async function getRecordHistory(audioId: string, index: number) {
     try {
-        return await readDir(`data/${audioId}/${index}/`, {
+        return await readDir(`data/${audioId}/${index}/record`, {
             baseDir: BaseDirectory.AppLocalData,
         });
     } catch (error) {
@@ -77,11 +77,11 @@ export async function getRecordHistory(audioId: string, index: string) {
 
 export async function getRecordItem(
     audioId: string,
-    index: string,
+    index: number,
     filename: string,
 ) {
     try {
-        return await readFile(`data/${audioId}/${index}/${filename}`, {
+        return await readFile(`data/${audioId}/${index}/record/${filename}`, {
             baseDir: BaseDirectory.AppLocalData,
         });
     } catch (error) {
@@ -90,11 +90,11 @@ export async function getRecordItem(
 }
 export async function getRecordItemMetadata(
     audioId: string,
-    index: string,
+    index: number,
     filename: string,
 ) {
     try {
-        return await stat(`data/${audioId}/${index}/${filename}`, {
+        return await stat(`data/${audioId}/${index}/record/${filename}`, {
             baseDir: BaseDirectory.AppLocalData,
         });
     } catch (error) {
@@ -104,11 +104,11 @@ export async function getRecordItemMetadata(
 
 export async function deleteRecordItem(
     audioId: string,
-    index: string,
+    index: number,
     filename: string,
 ) {
     try {
-        return await remove(`data/${audioId}/${index}/${filename}`, {
+        return await remove(`data/${audioId}/${index}/record/${filename}`, {
             baseDir: BaseDirectory.AppLocalData,
         });
     } catch (error) {

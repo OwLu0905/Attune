@@ -36,6 +36,10 @@
     import Button from "$lib/components/ui/button/button.svelte";
     import { getUserContext } from "@/user/userService.svelte";
     import { commands, type BookmarkDictationView } from "$lib/tauri";
+    import * as Tabs from "$lib/components/ui/tabs";
+    import RecordRegion from "../audio/record/record-region.svelte";
+    import { RecordHistoryData } from "../audio/record/record-history-data.svelte";
+    import RecordHistoryCard from "../audio/record/record-history-card.svelte";
 
     interface Props {
         audioId: string;
@@ -61,6 +65,7 @@
 
     const { getUser } = getUserContext();
     const user = getUser();
+    const recordData = new RecordHistoryData();
 
     let currentTime = $derived(audioPlayer.currentTime);
 
@@ -191,186 +196,203 @@
     }
 </script>
 
-<div class="flex items-center justify-between">
-    <h5 class="my-2 font-bold">Dictation</h5>
-
+<div class="mb-2 flex items-center justify-end">
     <Badge variant="secondary" class="text-primary tabular-nums">
         <span in:fade>{dictationId} </span>/ {length - 1}
     </Badge>
 </div>
 
-{#await load() then _}
-    {#if editor}
-        <BubbleMenu
-            editor={$editor}
-            class="outline-foreground/20 bg-background rounded-lg px-2 py-1.5 text-sm shadow-lg outline"
-        >
-            <div class="flex gap-1">
-                <button
-                    class={cn(
-                        "rounded-sm px-2",
-                        isActive("bold") &&
-                            "bg-primary text-primary-foreground",
-                    )}
-                    type="button"
-                    onclick={toggleBold}
-                >
-                    bold
-                </button>
-                <button
-                    class={cn(
-                        "rounded-sm px-2",
-                        isActive("strike") &&
-                            "bg-primary text-primary-foreground",
-                    )}
-                    type="button"
-                    onclick={toggleStrike}
-                >
-                    S
-                </button>
-                <button
-                    class={cn(
-                        "rounded-sm px-2",
-                        isActive("italic") &&
-                            "bg-primary text-primary-foreground",
-                    )}
-                    type="button"
-                    onclick={toggleItalic}
-                >
-                    italic
-                </button>
-                <button
-                    class={cn(
-                        "rounded-sm px-2",
-                        isColor() && "bg-primary text-primary-foreground",
-                    )}
-                    type="button"
-                    onclick={toggleRed}
-                >
-                    red
-                </button>
-            </div>
-        </BubbleMenu>
-    {/if}
+<Tabs.Root value="dictation">
+    <Tabs.List>
+        <Tabs.Trigger value="dictation">Dictation</Tabs.Trigger>
+        <Tabs.Trigger value="echoing">Echoing</Tabs.Trigger>
+    </Tabs.List>
 
-    <div class="relative">
-        <EditorContent editor={$editor} class="" />
-
-        <!-- {#if isSaved} -->
-        <!--     <div in:fade out:fade class="absolute right-2 bottom-2"> -->
-        <!--         <Badge variant="outline" class="">Save</Badge> -->
-        <!--     </div> -->
-        <!-- {/if} -->
-    </div>
-
-    <div class="mt-2 flex items-center justify-evenly gap-1">
-        <div class="flex w-full items-center gap-1">
-            <Button
-                class="mr-auto"
-                variant="ghost"
-                size="sm"
-                onclick={() => {
-                    storeAnswer(
-                        $state.snapshot($editor.getJSON()),
-                        audioId,
-                        dictationId,
-                    );
-                }}
-            >
-                <Eye class="h-6 w-6" />
-            </Button>
-            <div class="mx-auto flex items-center gap-2.5">
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onclick={() => {
-                        onPause();
-                        if (dictationId === 0) {
-                            dictationId = length - 1;
-                        } else {
-                            dictationId--;
-                        }
-                    }}
+    <Tabs.Content value="dictation">
+        {#await load() then _}
+            {#if editor}
+                <BubbleMenu
+                    editor={$editor}
+                    class="outline-foreground/20 bg-background rounded-lg px-2 py-1.5 text-sm shadow-lg outline"
                 >
-                    <ChevronLeft />
-                </Button>
-                <Button
-                    size="sm"
-                    tabindex={0}
-                    onclick={() => {
-                        if (audioPlayer?.isPlaying) {
-                            onPause();
-                        } else {
-                            onPlay();
-                        }
-                    }}
-                >
-                    {#if audioPlayer?.isPlaying}
-                        <Pause class="h-6 w-6" />
-                    {:else}
-                        <Play class="h-6 w-6" />
-                    {/if}
-                </Button>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onclick={() => {
-                        const start = Math.max(
-                            dictationItem.start - PLAYBACK_BUFFER,
-                            0,
-                        );
-                        onPlaySection(start, dictationItem.end);
-                    }}
-                >
-                    <RotateCcw class="h-6 w-6" />
-                </Button>
-                <Button
-                    size="sm"
-                    variant="outline"
-                    onclick={() => {
-                        onPause();
-                        if (dictationId === length - 1) {
-                            dictationId = 0;
-                        } else {
-                            dictationId++;
-                        }
-                    }}
-                >
-                    <ChevronRight />
-                </Button>
-            </div>
-            {#if !dictationState}
-                <Button
-                    class="ml-auto border-1"
-                    variant="default"
-                    size="sm"
-                    onclick={async () => {
-                        await storeAnswer(
-                            $state.snapshot($editor.getJSON()),
-                            audioId,
-                            dictationId,
-                        );
-                        await saveAsCompleted(audioId, dictationId);
-                    }}
-                >
-                    <SquareCheckBig class="h-6 w-6" />
-                </Button>
-            {:else}
-                <Button
-                    class="ml-auto"
-                    variant="outline"
-                    size="sm"
-                    onclick={async () => {
-                        await storeAnswer(
-                            $state.snapshot($editor.getJSON()),
-                            audioId,
-                            dictationId,
-                        );
-                    }}
-                >
-                    <Save class="h-6 w-6" />
-                </Button>
+                    <div class="flex gap-1">
+                        <button
+                            class={cn(
+                                "rounded-sm px-2",
+                                isActive("bold") &&
+                                    "bg-primary text-primary-foreground",
+                            )}
+                            type="button"
+                            onclick={toggleBold}
+                        >
+                            bold
+                        </button>
+                        <button
+                            class={cn(
+                                "rounded-sm px-2",
+                                isActive("strike") &&
+                                    "bg-primary text-primary-foreground",
+                            )}
+                            type="button"
+                            onclick={toggleStrike}
+                        >
+                            S
+                        </button>
+                        <button
+                            class={cn(
+                                "rounded-sm px-2",
+                                isActive("italic") &&
+                                    "bg-primary text-primary-foreground",
+                            )}
+                            type="button"
+                            onclick={toggleItalic}
+                        >
+                            italic
+                        </button>
+                        <button
+                            class={cn(
+                                "rounded-sm px-2",
+                                isColor() &&
+                                    "bg-primary text-primary-foreground",
+                            )}
+                            type="button"
+                            onclick={toggleRed}
+                        >
+                            red
+                        </button>
+                    </div>
+                </BubbleMenu>
             {/if}
+
+            <div class="relative">
+                <EditorContent editor={$editor} class="" />
+
+                <!-- {#if isSaved} -->
+                <!--     <div in:fade out:fade class="absolute right-2 bottom-2"> -->
+                <!--         <Badge variant="outline" class="">Save</Badge> -->
+                <!--     </div> -->
+                <!-- {/if} -->
+            </div>
+
+            <div class="mt-2 flex items-center justify-evenly gap-1">
+                <div class="flex w-full items-center gap-1">
+                    <Button
+                        class="mr-auto"
+                        variant="ghost"
+                        size="sm"
+                        onclick={() => {
+                            storeAnswer(
+                                $state.snapshot($editor.getJSON()),
+                                audioId,
+                                dictationId,
+                            );
+                        }}
+                    >
+                        <Eye class="h-6 w-6" />
+                    </Button>
+                    <div class="mx-auto flex items-center gap-2.5">
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onclick={() => {
+                                onPause();
+                                if (dictationId === 0) {
+                                    dictationId = length - 1;
+                                } else {
+                                    dictationId--;
+                                }
+                            }}
+                        >
+                            <ChevronLeft />
+                        </Button>
+                        <Button
+                            size="sm"
+                            tabindex={0}
+                            onclick={() => {
+                                if (audioPlayer?.isPlaying) {
+                                    onPause();
+                                } else {
+                                    onPlay();
+                                }
+                            }}
+                        >
+                            {#if audioPlayer?.isPlaying}
+                                <Pause class="h-6 w-6" />
+                            {:else}
+                                <Play class="h-6 w-6" />
+                            {/if}
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onclick={() => {
+                                const start = Math.max(
+                                    dictationItem.start - PLAYBACK_BUFFER,
+                                    0,
+                                );
+                                onPlaySection(start, dictationItem.end);
+                            }}
+                        >
+                            <RotateCcw class="h-6 w-6" />
+                        </Button>
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onclick={() => {
+                                onPause();
+                                if (dictationId === length - 1) {
+                                    dictationId = 0;
+                                } else {
+                                    dictationId++;
+                                }
+                            }}
+                        >
+                            <ChevronRight />
+                        </Button>
+                    </div>
+                    {#if !dictationState}
+                        <Button
+                            class="ml-auto border-1"
+                            variant="default"
+                            size="sm"
+                            onclick={async () => {
+                                await storeAnswer(
+                                    $state.snapshot($editor.getJSON()),
+                                    audioId,
+                                    dictationId,
+                                );
+                                await saveAsCompleted(audioId, dictationId);
+                            }}
+                        >
+                            <SquareCheckBig class="h-6 w-6" />
+                        </Button>
+                    {:else}
+                        <Button
+                            class="ml-auto"
+                            variant="outline"
+                            size="sm"
+                            onclick={async () => {
+                                await storeAnswer(
+                                    $state.snapshot($editor.getJSON()),
+                                    audioId,
+                                    dictationId,
+                                );
+                            }}
+                        >
+                            <Save class="h-6 w-6" />
+                        </Button>
+                    {/if}
+                </div>
+            </div>
+        {/await}
+    </Tabs.Content>
+
+    <Tabs.Content value="echoing">
+        <div class="text-muted-foreground p-4 text-center">
+            <RecordRegion {audioId} {dictationId} {recordData} />
         </div>
-    </div>
-{/await}
+        <section class="my-2 flex shrink grow flex-col gap-2">
+            <RecordHistoryCard {audioId} {dictationId} {recordData} />
+        </section>
+    </Tabs.Content>
+</Tabs.Root>

@@ -56,8 +56,8 @@ importers:
                 specifier: 1.0.0-next.7
                 version: 1.0.0-next.7(svelte@5.34.1)
             wavesurfer.js:
-                specifier: ^7.9.9
-                version: 7.9.9
+                specifier: ^7.10.1
+                version: 7.10.1
         devDependencies:
             "@internationalized/date":
                 specifier: ^3.8.2
@@ -97,7 +97,7 @@ importers:
                 version: 2.1.1
             formsnap:
                 specifier: ^2.0.1
-                version: 2.0.1(svelte@5.34.1)(sveltekit-superforms@2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.6.3))
+                version: 2.0.1(svelte@5.34.1)(sveltekit-superforms@2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.7.3))
             husky:
                 specifier: ^9.1.7
                 version: 9.1.7
@@ -118,13 +118,13 @@ importers:
                 version: 5.34.1
             svelte-check:
                 specifier: ^4.0.0
-                version: 4.2.1(picomatch@4.0.2)(svelte@5.34.1)(typescript@5.6.3)
+                version: 4.2.1(picomatch@4.0.2)(svelte@5.34.1)(typescript@5.7.3)
             svelte-sonner:
                 specifier: ^1.0.5
                 version: 1.0.5(svelte@5.34.1)
             sveltekit-superforms:
                 specifier: ^2.26.1
-                version: 2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.6.3)
+                version: 2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.7.3)
             tailwind-merge:
                 specifier: ^3.3.1
                 version: 3.3.1
@@ -138,8 +138,8 @@ importers:
                 specifier: ^1.3.4
                 version: 1.3.4
             typescript:
-                specifier: ~5.6.2
-                version: 5.6.3
+                specifier: ~5.7.3
+                version: 5.7.3
             vite:
                 specifier: ^6.0.3
                 version: 6.3.5(jiti@2.4.2)(lightningcss@1.30.1)
@@ -2550,10 +2550,10 @@ packages:
             }
         engines: { node: ">=12.20" }
 
-    typescript@5.6.3:
+    typescript@5.7.3:
         resolution:
             {
-                integrity: sha512-hjcS1mhfuyi4WW8IWtjP7brDrG2cuDZukyrYrSauoXGNgx0S7zceP07adYkJycEr56BOUTNPzbInooiN3fn1qw==,
+                integrity: sha512-84MVSjMEHP+FQRPy3pX9sTVV/INIex71s9TL2Gm5FG/WG1SqXeKyZ0k7/blY/4FdOzI12CBy1vGc4og/eus0fw==,
             }
         engines: { node: ">=14.17" }
         hasBin: true
@@ -2663,10 +2663,10 @@ packages:
                 integrity: sha512-dpojBhNsCNN7T82Tm7k26A6G9ML3NkhDsnw9n/eoxSRlVBB4CEtIQ/KTCLI2Fwf3ataSXRhYFkQi3SlnFwPvPQ==,
             }
 
-    wavesurfer.js@7.9.9:
+    wavesurfer.js@7.10.1:
         resolution:
             {
-                integrity: sha512-8O/zu+RC7yjikxiuhsXzRZ8vvjV+Qq4PUKZBQsLLcq6fqbrSF3Vh99l7fT8zeEjKjDBNH2Qxsxq5mRJIuBmM3Q==,
+                integrity: sha512-tF1ptFCAi8SAqKbM1e7705zouLC3z4ulXCg15kSP5dQ7VDV30Q3x/xFRcuVIYTT5+jB/PdkhiBRCfsMshZG1Ug==,
             }
 
     yallist@5.0.0:
@@ -3560,11 +3560,11 @@ snapshots:
         optionalDependencies:
             picomatch: 4.0.2
 
-    formsnap@2.0.1(svelte@5.34.1)(sveltekit-superforms@2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.6.3)):
+    formsnap@2.0.1(svelte@5.34.1)(sveltekit-superforms@2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.7.3)):
         dependencies:
             svelte: 5.34.1
             svelte-toolbelt: 0.5.0(svelte@5.34.1)
-            sveltekit-superforms: 2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.6.3)
+            sveltekit-superforms: 2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.7.3)
 
     fsevents@2.3.3:
         optional: true
@@ -3927,7 +3927,7 @@ snapshots:
     superstruct@2.0.2:
         optional: true
 
-    svelte-check@4.2.1(picomatch@4.0.2)(svelte@5.34.1)(typescript@5.6.3):
+    svelte-check@4.2.1(picomatch@4.0.2)(svelte@5.34.1)(typescript@5.7.3):
         dependencies:
             "@jridgewell/trace-mapping": 0.3.25
             chokidar: 4.0.3
@@ -3935,7 +3935,7 @@ snapshots:
             picocolors: 1.1.1
             sade: 1.8.1
             svelte: 5.34.1
-            typescript: 5.6.3
+            typescript: 5.7.3
         transitivePeerDependencies:
             - picomatch
 
@@ -3989,7 +3989,7 @@ snapshots:
             magic-string: 0.30.17
             zimmerframe: 1.1.2
 
-    sveltekit-superforms@2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.6.3):
+    sveltekit-superforms@2.26.1(@sveltejs/kit@2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(@types/json-schema@7.0.15)(svelte@5.34.1)(typescript@5.7.3):
         dependencies:
             "@sveltejs/kit": 2.21.5(@sveltejs/vite-plugin-svelte@5.1.0(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1)))(svelte@5.34.1)(vite@6.3.5(jiti@2.4.2)(lightningcss@1.30.1))
             devalue: 5.1.1
@@ -4008,7 +4008,7 @@ snapshots:
             joi: 17.13.3
             json-schema-to-ts: 3.1.1
             superstruct: 2.0.2
-            valibot: 1.1.0(typescript@5.6.3)
+            valibot: 1.1.0(typescript@5.7.3)
             yup: 1.6.1
             zod: 3.25.64
             zod-to-json-schema: 3.24.5(zod@3.25.64)
@@ -4072,7 +4072,7 @@ snapshots:
     type-fest@2.19.0:
         optional: true
 
-    typescript@5.6.3: {}
+    typescript@5.7.3: {}
 
     uc.micro@2.1.0: {}
 
@@ -4081,9 +4081,9 @@ snapshots:
     valibot@0.31.1:
         optional: true
 
-    valibot@1.1.0(typescript@5.6.3):
+    valibot@1.1.0(typescript@5.7.3):
         optionalDependencies:
-            typescript: 5.6.3
+            typescript: 5.7.3
         optional: true
 
     validator@13.15.15:
@@ -4114,7 +4114,7 @@ snapshots:
 
     w3c-keyname@2.2.8: {}
 
-    wavesurfer.js@7.9.9: {}
+    wavesurfer.js@7.10.1: {}
 
     yallist@5.0.0: {}
 

@@ -17,7 +17,7 @@ export class RecordPlayer {
         continuousWaveformDuration: 30, // optional
     });
 
-    currentTime = $state(0);
+    currentTime = $state("00:00:00");
 
     isPlaying = $state(false);
     isReady = $state(false);
@@ -50,7 +50,7 @@ export class RecordPlayer {
             waveColor: `${this.destructiveOklch}`,
             barWidth: 2,
             barGap: 1,
-            height: 62,
+            height: 64,
             backend: WAVESURFER_BACKEND,
         });
 
@@ -62,6 +62,15 @@ export class RecordPlayer {
                 continuousWaveformDuration: 30, // optional
             }),
         );
+        this.record.on("record-progress", (time) => {
+            this.currentTime = [
+                Math.floor((time % 3600000) / 60000), // minutes
+                Math.floor((time % 60000) / 1000), // seconds
+                Math.floor((time % 1000) / 10), // milliseconds (in centiseconds, 0-99)
+            ]
+                .map((v) => (v < 10 ? "0" + v : v))
+                .join(":");
+        });
 
         this.record.on("record-end", (blob) => {
             this.isRecording = false;
@@ -76,7 +85,7 @@ export class RecordPlayer {
                 waveColor: `${this.secondaryOklch}`,
                 barWidth: 2,
                 barGap: 1,
-                height: 62,
+                height: 64,
                 backend: WAVESURFER_BACKEND,
                 url: this.recordedUrl,
             });
@@ -90,7 +99,7 @@ export class RecordPlayer {
         this.isRecording = true;
         await this.record.startRecording({ deviceId });
     }
-    async onSaveFile(index: string, id: string) {
+    async onSaveFile(index: number, id: string) {
         if (!this.blobData || !this.recordedUrl) return;
 
         const arrayBuffer = await this.blobData.arrayBuffer();
@@ -102,7 +111,7 @@ export class RecordPlayer {
             this.recordedUrl.lastIndexOf("/") + 1,
         ); // Extract UUID from existing URL
 
-        const dirPath = `data/${id}/${index}`;
+        const dirPath = `data/${id}/${index}/record`;
         try {
             await mkdir(dirPath, {
                 baseDir: BaseDirectory.AppLocalData,
@@ -114,7 +123,7 @@ export class RecordPlayer {
         }
 
         await writeFile(
-            `data/${id}/${index}/${uuid}.${fileExtension}`,
+            `data/${id}/${index}/record/${uuid}.${fileExtension}`,
             uint8Array,
             {
                 baseDir: BaseDirectory.AppLocalData,
@@ -151,9 +160,20 @@ export class RecordPlayer {
         this.ws!.setPlaybackRate(speed, true);
     }
     empty() {
+        this.currentTime = "00:00:00";
         this.ws?.empty();
     }
     destroy() {
+        this.currentTime = "00:00:00";
         this.ws?.destroy();
+    }
+
+    deleteRecord() {
+        if (this.recordedUrl) {
+            URL.revokeObjectURL(this.recordedUrl);
+            this.recordedUrl = null;
+        }
+        this.blobData = null;
+        this.empty();
     }
 }

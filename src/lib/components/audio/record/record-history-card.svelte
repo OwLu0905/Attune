@@ -4,20 +4,20 @@
 
     interface Props {
         audioId: string;
-        questionId: string;
+        dictationId: number;
         recordData: RecordHistoryData;
     }
-    let { audioId, questionId, recordData }: Props = $props();
+    let { audioId, dictationId, recordData }: Props = $props();
 </script>
 
-{#await recordData.getData(audioId, questionId)}
+{#await recordData.getData(audioId, dictationId)}
     <p>...loading</p>
 {:then recordFiles}
-    <div class="flex flex-wrap gap-2">
+    <div class="flex flex-col gap-2 overflow-scroll">
         {#each recordFiles as file (file.name)}
             <RecordHistoryItem
                 {audioId}
-                {questionId}
+                {dictationId}
                 data={file.data}
                 name={file.name}
                 {recordData}

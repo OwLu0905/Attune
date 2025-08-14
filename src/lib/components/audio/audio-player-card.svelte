@@ -19,7 +19,7 @@
     import { getAppSettingsContext } from "../../../routes/setting/app-setting-context.svelte";
 
     interface Props {
-        videoPath: BlobPart;
+        videoPath: Uint8Array<ArrayBuffer>;
         audioItem: AudioItem;
     }
 

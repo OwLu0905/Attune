@@ -1,23 +1,23 @@
 <script lang="ts">
     import { onMount } from "svelte";
-    import { fade, fly } from "svelte/transition";
     import { cn } from "@/utils";
     import Button from "@/components/ui/button/button.svelte";
     import { RecordPlayer } from "./record-player.svelte";
-    import RecordPlugin from "wavesurfer.js/dist/plugins/record.esm.js";
-    import { Disc, Mic, Save } from "@lucide/svelte";
+    import { Disc, Headphones, Mic, Save, Trash2 } from "@lucide/svelte";
     import type { RecordHistoryData } from "./record-history-data.svelte";
+    import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
 
     let rc: HTMLElement;
     let ws: RecordPlayer | undefined = $state(undefined);
     let micSelect: MediaDeviceInfo[] = $state([]);
+    let selectedDeviceId: string = $state("");
 
     interface Props {
         audioId: string;
-        questionId: string;
+        dictationId: number;
         recordData: RecordHistoryData;
     }
-    let { audioId, questionId, recordData }: Props = $props();
+    let { audioId, dictationId, recordData }: Props = $props();
 
     let isSaving = $state(false);
 
@@ -33,85 +33,138 @@
 
     onMount(() => {
         async function getAudioDevices() {
-            RecordPlugin.getAvailableAudioDevices().then((devices) => {
-                micSelect = devices;
-            });
-        }
-        getAudioDevices();
-    });
+            try {
+                // Request permission first (required for device labels)
+                await navigator.mediaDevices.getUserMedia({ audio: true });
 
-    const triggerContent = $derived(micSelect[0]?.label ?? "Select mic");
+                // Get all media devices
+                const devices = await navigator.mediaDevices.enumerateDevices();
+
+                // Filter for audio input devices (microphones)
+                const audioInputs = devices.filter(
+                    (device) => device.kind === "audioinput",
+                );
+
+                // Filter for audio output devices (speakers/headphones)
+                const audioOutputs = devices.filter(
+                    (device) => device.kind === "audiooutput",
+                );
+
+                return { audioInputs, audioOutputs };
+            } catch (error) {
+                console.error("Error accessing media devices:", error);
+            }
+        }
+        getAudioDevices().then((devices) => {
+            micSelect =
+                devices?.audioInputs.filter(
+                    (device) => device.kind === "audioinput",
+                ) ?? [];
+            selectedDeviceId = micSelect[0]?.deviceId ?? "";
+        });
+    });
 </script>
 
-<div class="relative flex w-full">
+<div class="relative flex w-full flex-col">
     <div
         bind:this={rc}
         class={cn(
-            "border-border box-border w-full rounded-md border shadow-xs",
+            "border-border box-border w-full grow rounded-md border shadow-xs",
         )}
     ></div>
 
-    <div class="z-5 flex w-60 items-center justify-end gap-2 py-2">
+    <div class="flex shrink-0 items-center justify-center gap-2 py-2">
+        <span class="text-xs tabular-nums">
+            {ws?.currentTime}
+        </span>
         {#if isRecording}
-            <div in:fade>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    class="text-destructive"
-                    onclick={() => {
+            <Button
+                variant="ghost"
+                size="sm"
+                class="text-destructive"
+                onclick={() => {
+                    if (!ws) return;
+                    ws.onFinish();
+                }}
+            >
+                <Disc />
+            </Button>
+        {:else if !ws?.blobData}
+            <Button
+                variant="ghost"
+                size="sm"
+                class="text-primary"
+                onclick={async () => {
+                    try {
                         if (!ws) return;
-                        ws.onFinish();
-                    }}
-                >
-                    <Disc />
-                </Button>
-            </div>
-        {:else}
-            <div in:fade>
-                <Button
-                    variant="ghost"
-                    size="sm"
-                    class="text-primary"
-                    onclick={async () => {
-                        try {
-                            if (!ws) return;
-                            ws.createRecord(rc);
+                        ws.createRecord(rc);
 
-                            ws.onRecord(micSelect[0]?.deviceId ?? "");
-                        } catch (error) {
-                            console.error(error);
-                        }
-                    }}
-                >
-                    <Mic />
-                </Button>
-            </div>
+                        ws.onRecord(selectedDeviceId);
+                    } catch (error) {
+                        console.error(error);
+                    }
+                }}
+            >
+                <Mic />
+            </Button>
         {/if}
 
         {#if ws?.blobData}
-            <div out:fly={{ y: -20, duration: 600 }}>
-                <Button
-                    disabled={isSaving}
-                    variant="ghost"
-                    size="sm"
-                    class="text-primary"
-                    onclick={async () => {
-                        if (!ws) return;
-                        if (!ws?.blobData || !ws?.recordedUrl) return;
-                        isSaving = true;
-                        await ws.onSaveFile(questionId, audioId);
+            <Button
+                variant="ghost"
+                size="sm"
+                class="text-destructive"
+                onclick={() => {
+                    if (!ws) return;
+                    ws.deleteRecord();
+                }}
+            >
+                <Trash2 />
+            </Button>
+            <Button
+                disabled={isSaving}
+                variant="ghost"
+                size="sm"
+                class="text-primary"
+                onclick={async () => {
+                    if (!ws) return;
+                    if (!ws?.blobData || !ws?.recordedUrl) return;
+                    isSaving = true;
+                    await ws.onSaveFile(dictationId, audioId);
 
-                        if (ws && ws.blobData) {
-                            ws.blobData = null;
-                            ws.empty();
-                        }
-                        isSaving = false;
-                        recordData.updateData(audioId, questionId);
-                    }}
-                >
-                    <Save />
-                </Button>
-            </div>
+                    if (ws && ws.blobData) {
+                        ws.blobData = null;
+                        ws.empty();
+                    }
+                    isSaving = false;
+                    recordData.updateData(audioId, dictationId);
+                }}
+            >
+                <Save />
+            </Button>
         {/if}
+        <DropdownMenu.Root>
+            <DropdownMenu.Trigger>
+                {#snippet child({ props })}
+                    <Button {...props} variant="ghost" size="sm">
+                        <Headphones />
+                    </Button>
+                {/snippet}
+            </DropdownMenu.Trigger>
+            <DropdownMenu.Content class="w-56">
+                <DropdownMenu.Group>
+                    <DropdownMenu.Label>Select Microphone</DropdownMenu.Label>
+                    <DropdownMenu.Separator />
+                    <DropdownMenu.RadioGroup bind:value={selectedDeviceId}>
+                        {#each micSelect as mic}
+                            <DropdownMenu.RadioItem value={mic.deviceId}>
+                                {mic.label ||
+                                    `Microphone ${mic.deviceId.slice(0, 8)}...`}
+                            </DropdownMenu.RadioItem>
+                        {/each}
+                    </DropdownMenu.RadioGroup>
+                </DropdownMenu.Group>
+            </DropdownMenu.Content>
+        </DropdownMenu.Root>
     </div>
 </div>

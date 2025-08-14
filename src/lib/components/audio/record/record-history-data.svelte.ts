@@ -9,26 +9,26 @@ import {
 
 export type TRecordItem = {
     name: string;
-    data: Uint8Array;
+    data: Uint8Array<ArrayBuffer>;
     modifiedTime: Date | null;
 };
 
-export type RecordMap = SvelteMap<string, TRecordItem[]>;
+export type RecordMap = SvelteMap<number, TRecordItem[]>;
 
 export class RecordHistoryData {
     data: RecordMap = new SvelteMap();
     constructor() {}
 
-    async fetchData(audioId: string, questionId: string) {
+    async fetchData(audioId: string, dictationId: number) {
         try {
-            const data = await getRecordHistory(audioId, questionId);
+            const data = await getRecordHistory(audioId, dictationId);
             if (!data) return [];
 
             const filesPromise = data.map((i) => {
-                return getRecordItem(audioId, questionId, i.name);
+                return getRecordItem(audioId, dictationId, i.name);
             });
             const filesMetadataPromise = data.map((i) => {
-                return getRecordItemMetadata(audioId, questionId, i.name);
+                return getRecordItemMetadata(audioId, dictationId, i.name);
             });
 
             const resolveFiles = await Promise.all(filesPromise);
@@ -68,7 +68,7 @@ export class RecordHistoryData {
 
                 return timeB - timeA; // Sort most recent first
             });
-            this.data.set(questionId, files);
+            this.data.set(dictationId, files);
 
             return files;
         } catch (error) {
@@ -76,24 +76,27 @@ export class RecordHistoryData {
             return [];
         }
     }
-    async getData(audioId: string, questionId: string): Promise<TRecordItem[]> {
+    async getData(
+        audioId: string,
+        dictationId: number,
+    ): Promise<TRecordItem[]> {
         try {
-            if (this.data.get(questionId)) {
-                return this.data.get(questionId) ?? [];
+            if (this.data.get(dictationId)) {
+                return this.data.get(dictationId) ?? [];
             } else {
-                return this.fetchData(audioId, questionId);
+                return this.fetchData(audioId, dictationId);
             }
         } catch (error) {
             console.error(error);
             return [];
         }
     }
-    async updateData(audioId: string, questionId: string) {
-        return this.fetchData(audioId, questionId);
+    async updateData(audioId: string, dictationId: number) {
+        return this.fetchData(audioId, dictationId);
     }
-    async deleteData(audioId: string, questionId: string, filename: string) {
-        await deleteRecordItem(audioId, questionId, filename);
+    async deleteData(audioId: string, dictationId: number, filename: string) {
+        await deleteRecordItem(audioId, dictationId, filename);
 
-        return this.fetchData(audioId, questionId);
+        return this.fetchData(audioId, dictationId);
     }
 }

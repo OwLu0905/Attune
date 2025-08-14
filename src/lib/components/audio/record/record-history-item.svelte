@@ -6,13 +6,13 @@
     import RecordAudioPlayer from "./record-audio-player.svelte";
 
     interface Props {
-        data: Uint8Array;
+        data: Uint8Array<ArrayBuffer>;
         audioId: string;
-        questionId: string;
+        dictationId: number;
         name: string;
         recordData: RecordHistoryData;
     }
-    let { audioId, questionId, data, name, recordData }: Props = $props();
+    let { audioId, dictationId, data, name, recordData }: Props = $props();
 
     let url = $derived.by(() => {
         const blob = new Blob([data], {
@@ -28,14 +28,13 @@
 </script>
 
 <div
-    out:fade
-    class="bg-card border-foreground/20 text-foreground hover:border-primary/20 w-1/4 gap-1 rounded-xl border text-xs transition-all duration-150 ease-linear"
+    class="bg-card border-foreground/20 text-foreground hover:border-primary/20 w-full gap-1 rounded-xl border text-xs transition-all duration-150 ease-linear"
 >
     <RecordAudioPlayer
         src={url}
         title={name}
         onDelete={() => {
-            recordData.deleteData(audioId, questionId, name);
+            recordData.deleteData(audioId, dictationId, name);
         }}
     />
 </div>

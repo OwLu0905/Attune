@@ -12,7 +12,7 @@
 
     let audioId = $derived(page.params.id);
     let audioItem: AudioItem | undefined = $state.raw(undefined);
-    let videoPath: Uint8Array | undefined = $state.raw(undefined);
+    let videoPath: Uint8Array<ArrayBuffer> | undefined = $state.raw(undefined);
 
     async function getAudioItem() {
         try {
