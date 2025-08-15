@@ -97,7 +97,7 @@ export class RecordPlayer {
     }
     async onRecord(deviceId: ConstrainDOMString) {
         this.isRecording = true;
-        await this.record.startRecording({ deviceId });
+        await this.record.startRecording({ deviceId, echoCancellation: false });
     }
     async onSaveFile(index: number, id: string) {
         if (!this.blobData || !this.recordedUrl) return;

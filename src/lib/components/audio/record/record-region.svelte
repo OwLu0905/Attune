@@ -6,6 +6,7 @@
     import { Disc, Headphones, Mic, Save, Trash2 } from "@lucide/svelte";
     import type { RecordHistoryData } from "./record-history-data.svelte";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
+    import NextButton from "@/components/editor/next-button.svelte";
 
     let rc: HTMLElement;
     let ws: RecordPlayer | undefined = $state(undefined);
@@ -16,8 +17,10 @@
         audioId: string;
         dictationId: number;
         recordData: RecordHistoryData;
+        onPrev: () => void;
+        onNext: () => void;
     }
-    let { audioId, dictationId, recordData }: Props = $props();
+    let { audioId, dictationId, recordData, onPrev, onNext }: Props = $props();
 
     let isSaving = $state(false);
 
@@ -32,6 +35,9 @@
     });
 
     onMount(() => {
+        // NOTE: maybe we can use svelte-context here,
+        // create context in the +layout.svelte
+        // set audioInputs and audioOutputs to context if there are null else we can directly get it without initialize it every time the route changes
         async function getAudioDevices() {
             try {
                 // Request permission first (required for device labels)
@@ -77,6 +83,8 @@
         <span class="text-xs tabular-nums">
             {ws?.currentTime}
         </span>
+
+        <NextButton variant="prev" onclick={onNext} />
         {#if isRecording}
             <Button
                 variant="ghost"
@@ -143,6 +151,8 @@
                 <Save />
             </Button>
         {/if}
+
+        <NextButton variant="next" onclick={onNext} />
         <DropdownMenu.Root>
             <DropdownMenu.Trigger>
                 {#snippet child({ props })}
