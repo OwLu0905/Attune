@@ -14,7 +14,7 @@
 
     import type { SubtitleSegment } from "./types";
     import type { AudioItem, BookmarkDictationView } from "$lib/tauri";
-    import DictationEditor from "../editor/dictation-editor.svelte";
+    import EditorTabContainer from "../editor/editor-tab-container.svelte";
     import AudioDropdown from "./audio-dropdown.svelte";
     import { getAppSettingsContext } from "../../../routes/setting/app-setting-context.svelte";
 
@@ -210,18 +210,16 @@
                 ></div>
 
                 {#if audioPlayer && dictationItem}
-                    {#key dictationId}
-                        <DictationEditor
-                            audioId={audioItem.id}
-                            bind:dictationId
-                            bind:combinedList
-                            length={subtitles.length}
-                            {dictationItem}
-                            {audioPlayer}
-                            {onPause}
-                            {onPlaySection}
-                        />
-                    {/key}
+                    <EditorTabContainer
+                        audioId={audioItem.id}
+                        bind:dictationId
+                        bind:combinedList
+                        length={subtitles.length}
+                        {dictationItem}
+                        {audioPlayer}
+                        {onPause}
+                        {onPlaySection}
+                    />
                 {/if}
             </div>
             {#if audioItem.transcribe === 1}
