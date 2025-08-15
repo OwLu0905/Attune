@@ -7,11 +7,12 @@
     import type { RecordHistoryData } from "./record-history-data.svelte";
     import * as DropdownMenu from "$lib/components/ui/dropdown-menu/index.js";
     import NextButton from "@/components/editor/next-button.svelte";
+    import { getAudioDeviceContext } from "@/audio/audioDeviceService.svelte";
 
     let rc: HTMLElement;
     let ws: RecordPlayer | undefined = $state(undefined);
-    let micSelect: MediaDeviceInfo[] = $state([]);
-    let selectedDeviceId: string = $state("");
+
+    const audioDeviceContext = getAudioDeviceContext();
 
     interface Props {
         audioId: string;
@@ -34,40 +35,8 @@
         return false;
     });
 
-    onMount(() => {
-        // NOTE: maybe we can use svelte-context here,
-        // create context in the +layout.svelte
-        // set audioInputs and audioOutputs to context if there are null else we can directly get it without initialize it every time the route changes
-        async function getAudioDevices() {
-            try {
-                // Request permission first (required for device labels)
-                await navigator.mediaDevices.getUserMedia({ audio: true });
-
-                // Get all media devices
-                const devices = await navigator.mediaDevices.enumerateDevices();
-
-                // Filter for audio input devices (microphones)
-                const audioInputs = devices.filter(
-                    (device) => device.kind === "audioinput",
-                );
-
-                // Filter for audio output devices (speakers/headphones)
-                const audioOutputs = devices.filter(
-                    (device) => device.kind === "audiooutput",
-                );
-
-                return { audioInputs, audioOutputs };
-            } catch (error) {
-                console.error("Error accessing media devices:", error);
-            }
-        }
-        getAudioDevices().then((devices) => {
-            micSelect =
-                devices?.audioInputs.filter(
-                    (device) => device.kind === "audioinput",
-                ) ?? [];
-            selectedDeviceId = micSelect[0]?.deviceId ?? "";
-        });
+    onMount(async () => {
+        await audioDeviceContext.initializeDevices();
     });
 </script>
 
@@ -84,7 +53,7 @@
             {ws?.currentTime}
         </span>
 
-        <NextButton variant="prev" onclick={onNext} />
+        <NextButton variant="prev" onclick={onPrev} />
         {#if isRecording}
             <Button
                 variant="ghost"
@@ -107,7 +76,7 @@
                         if (!ws) return;
                         ws.createRecord(rc);
 
-                        ws.onRecord(selectedDeviceId);
+                        ws.onRecord(audioDeviceContext.selectedDeviceId);
                     } catch (error) {
                         console.error(error);
                     }
@@ -165,8 +134,15 @@
                 <DropdownMenu.Group>
                     <DropdownMenu.Label>Select Microphone</DropdownMenu.Label>
                     <DropdownMenu.Separator />
-                    <DropdownMenu.RadioGroup bind:value={selectedDeviceId}>
-                        {#each micSelect as mic}
+                    <DropdownMenu.RadioGroup
+                        bind:value={
+                            () => audioDeviceContext.selectedDeviceId,
+                            (v) => {
+                                audioDeviceContext.setSelectedDevice(v);
+                            }
+                        }
+                    >
+                        {#each audioDeviceContext.audioInputs ?? [] as mic}
                             <DropdownMenu.RadioItem value={mic.deviceId}>
                                 {mic.label ||
                                     `Microphone ${mic.deviceId.slice(0, 8)}...`}

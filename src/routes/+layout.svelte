@@ -16,6 +16,10 @@
         createAudioListContext,
         setAudioListContext,
     } from "$lib/audio/audioListService.svelte";
+    import {
+        createAudioDeviceContext,
+        setAudioDeviceContext,
+    } from "$lib/audio/audioDeviceService.svelte";
 
     let { children } = $props();
     let url = $derived(page.url);
@@ -41,6 +45,9 @@
 
     const audioListContext = createAudioListContext();
     setAudioListContext(audioListContext);
+    
+    const audioDeviceContext = createAudioDeviceContext();
+    setAudioDeviceContext(audioDeviceContext);
 
     onMount(async () => {
         try {
