@@ -45,7 +45,7 @@
 
     const audioListContext = createAudioListContext();
     setAudioListContext(audioListContext);
-    
+
     const audioDeviceContext = createAudioDeviceContext();
     setAudioDeviceContext(audioDeviceContext);
 

@@ -21,8 +21,11 @@ class AudioDeviceService {
 
         try {
             // Request permission first (required for device labels)
-            await navigator.mediaDevices.getUserMedia({ audio: true });
+            const stream = await navigator.mediaDevices.getUserMedia({
+                audio: true,
+            });
 
+            stream.getTracks().forEach((track) => track.stop());
             // Get all media devices
             const devices = await navigator.mediaDevices.enumerateDevices();
 
@@ -78,4 +81,3 @@ export function setAudioDeviceContext(context: AudioDeviceContext) {
 export function getAudioDeviceContext(): AudioDeviceContext {
     return getContext(AUDIO_DEVICE_CONTEXT_KEY);
 }
-

@@ -1,5 +1,4 @@
 <script lang="ts">
-    import { PLAYBACK_BUFFER } from "@/utils";
     import Badge from "../ui/badge/badge.svelte";
     import { fade } from "svelte/transition";
 
@@ -12,12 +11,13 @@
     import RecordHistoryCard from "../audio/record/record-history-card.svelte";
 
     import DictationTextEditor from "./dictation-text-editor.svelte";
+    import RecordSimple from "../audio/record/record-simple.svelte";
 
     interface Props {
         audioId: string;
         dictationId: number;
         combinedList: BookmarkDictationView[];
-        length: number;
+        subtitles: SubtitleSegment[];
         dictationItem: SubtitleSegment;
         audioPlayer: AudioPlayer;
         onPause: () => Promise<void>;
@@ -28,7 +28,7 @@
         audioId,
         dictationId = $bindable(),
         combinedList = $bindable(),
-        length,
+        subtitles,
         dictationItem,
         audioPlayer,
         onPause,
@@ -36,6 +36,8 @@
     }: Props = $props();
 
     const recordData = new RecordHistoryData();
+
+    const length = $derived(subtitles.length);
 
     let activeTab = $state("dictation");
 
@@ -88,11 +90,15 @@
 
     {#key dictationId}
         <Tabs.Content value="echoing">
-            <div class="text-muted-foreground p-4 text-center">
-                <RecordRegion
+            <div class="text-muted-foreground">
+                <RecordSimple
                     {audioId}
                     {dictationId}
+                    {dictationItem}
                     {recordData}
+                    {audioPlayer}
+                    {onPause}
+                    {onPlaySection}
                     {onPrev}
                     {onNext}
                 />

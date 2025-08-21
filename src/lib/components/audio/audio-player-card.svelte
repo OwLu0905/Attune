@@ -214,7 +214,7 @@
                         audioId={audioItem.id}
                         bind:dictationId
                         bind:combinedList
-                        length={subtitles.length}
+                        {subtitles}
                         {dictationItem}
                         {audioPlayer}
                         {onPause}
@@ -242,19 +242,4 @@
             {/if}
         </div>
     </Card.Content>
-
-    <Card.Footer
-        class="flex w-full shrink-0 basis-10 items-center justify-center gap-2 border-t"
-    >
-        <div class="flex gap-2">
-            <div class="flex items-center gap-1">
-                <div class="bg-primary/60 h-2 w-2 rounded-full"></div>
-                <div class="text-xs">Current Segment</div>
-            </div>
-            <div class="text-xs tabular-nums">
-                {audioPlayer?.currentTime?.toFixed(2)} (sec)
-            </div>
-        </div>
-        <Mic class="h-4 w-4" />
-    </Card.Footer>
 </Card.Root>

@@ -10,9 +10,7 @@
     let { audioId, dictationId, recordData }: Props = $props();
 </script>
 
-{#await recordData.getData(audioId, dictationId)}
-    <p>...loading</p>
-{:then recordFiles}
+{#await recordData.getData(audioId, dictationId) then recordFiles}
     <div class="flex flex-col gap-2 overflow-scroll">
         {#each recordFiles as file (file.name)}
             <RecordHistoryItem

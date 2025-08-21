@@ -64,7 +64,7 @@
 
             combinedList = result.data;
             const latestId =
-                combinedList[combinedList.length - 1].dictationPosition;
+                combinedList[combinedList.length - 1]?.dictationPosition;
 
             dictationId = latestId ?? 0;
         } catch (error) {

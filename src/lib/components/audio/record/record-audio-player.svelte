@@ -45,7 +45,7 @@
 ></audio>
 
 <div class="group flex w-full items-center gap-2 select-none">
-    <div class="flex grow gap-2 px-4 py-1.5">
+    <div class="flex grow gap-2 px-2 py-0.5">
         <Button
             variant="ghost"
             class="play"
@@ -53,12 +53,12 @@
             onclick={() => (paused = !paused)}
         >
             {#if paused}
-                <PlayIcon size={14} class="text-primary" />
+                <PlayIcon size={14} class="text-foreground" />
             {:else}
-                <PauseIcon size={14} class="text-primary" />
+                <PauseIcon size={14} class="text-foreground" />
             {/if}
         </Button>
-        <div class="flex flex-1 items-center justify-center gap-1">
+        <div class="flex flex-1 items-center justify-center gap-1 text-xs">
             <span>{format(time)}</span>
             <div
                 class="flex-1"
@@ -104,13 +104,10 @@
         class={cn(
             "bg-background flex shrink-0 items-center justify-center rounded-r-lg",
             "transition-all duration-300 ease-[cubic-bezier(0.4,0,0.2,1)]",
-            // "w-0 group-hover:w-3.5 hover:w-8",
-            // "hover:*:block",
-            // "opacity-0 group-hover:opacity-100",
         )}
     >
         <X
-            class="text-primary transition-all duration-1000 ease-in"
+            class="text-foreground transition-all duration-1000 ease-in"
             size={12}
         />
     </Button>
