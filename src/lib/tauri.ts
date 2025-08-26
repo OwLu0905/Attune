@@ -32,9 +32,9 @@ async startTranscribeService(audioId: string, model: string) : Promise<Result<nu
     else return { status: "error", error: e  as any };
 }
 },
-async startTranscribeServiceStreaming(audioId: string, model: string) : Promise<Result<null, string>> {
+async startTranscribeServiceStreaming(audioId: string, model: string, initialPrompt: string) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("start_transcribe_service_streaming", { audioId, model }) };
+    return { status: "ok", data: await TAURI_INVOKE("start_transcribe_service_streaming", { audioId, model, initialPrompt }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };

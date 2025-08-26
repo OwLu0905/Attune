@@ -52,9 +52,6 @@ importers:
             svelte-tiptap:
                 specifier: ^2.1.0
                 version: 2.1.0(@tiptap/core@2.25.1(@tiptap/pm@2.25.1))(@tiptap/extension-bubble-menu@2.25.1(@tiptap/core@2.25.1(@tiptap/pm@2.25.1))(@tiptap/pm@2.25.1))(@tiptap/extension-floating-menu@2.25.1(@tiptap/core@2.25.1(@tiptap/pm@2.25.1))(@tiptap/pm@2.25.1))(@tiptap/pm@2.25.1)(svelte@5.34.1)
-            vaul-svelte:
-                specifier: 1.0.0-next.7
-                version: 1.0.0-next.7(svelte@5.34.1)
             wavesurfer.js:
                 specifier: ^7.10.1
                 version: 7.10.1
@@ -140,6 +137,9 @@ importers:
             typescript:
                 specifier: ~5.7.3
                 version: 5.7.3
+            vaul-svelte:
+                specifier: 1.0.0-next.7
+                version: 1.0.0-next.7(svelte@5.34.1)
             vite:
                 specifier: ^6.0.3
                 version: 6.3.5(jiti@2.4.2)(lightningcss@1.30.1)

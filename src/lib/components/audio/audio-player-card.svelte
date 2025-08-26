@@ -37,6 +37,8 @@
 
     let isCheckingHealth = $state(false);
     let isTranscribing = $state(false);
+    let initialPrompt = $state("");
+    let open = $state(false);
 
     let videoRef: HTMLVideoElement;
     let videoUrl = $derived.by(() => {
@@ -76,17 +78,21 @@
 
             isTranscribing = true;
 
+            const prompt = $state.snapshot(initialPrompt);
+
             const isHealthy = await checkModelHealthy();
             if (!isHealthy) {
                 isTranscribing = false;
                 return;
             }
 
-            // TODO: read from setting
+            open = false;
+
             const transcribe_result =
                 await commands.startTranscribeServiceStreaming(
                     audioItem.id,
                     appSettingsApi?.appSettings?.selectedModel ?? "small.en",
+                    prompt,
                 );
 
             if (transcribe_result.status === "error") {
@@ -184,9 +190,11 @@
             >
         </div>
         <AudioDropdown
-            isTranscribed={audioItem.transcribe === 1 && !isTranscribing}
+            isTranscribed={audioItem.transcribe === 1}
             {isTranscribing}
             {getSubtitle}
+            bind:initialPrompt
+            bind:open
         />
     </Card.Header>
 

@@ -64,6 +64,7 @@ impl WhisperXClient {
         lang: Option<&str>,
         model_path: Option<&str>,
         output_dir: Option<&str>,
+        initial_prompt: Option<&str>,
         mut status_callback: impl FnMut(StatusUpdate),
     ) -> Result<TranscriptionResponse> {
         let file_path = file_path.as_ref();
@@ -95,6 +96,9 @@ impl WhisperXClient {
         }
         if let Some(output_dir) = output_dir {
             form = form.text("output_dir", output_dir.to_string());
+        }
+        if let Some(initial_prompt) = initial_prompt {
+            form = form.text("initial_prompt", initial_prompt.to_string());
         }
 
         // Send the request to streaming endpoint
@@ -168,6 +172,7 @@ impl WhisperXClient {
         lang: Option<&str>,
         model_path: Option<&str>,
         output_dir: Option<&str>,
+        initial_prompt: Option<&str>,
     ) -> Result<TranscriptionResponse> {
         let file_path = file_path.as_ref();
 
@@ -198,6 +203,9 @@ impl WhisperXClient {
         }
         if let Some(output_dir) = output_dir {
             form = form.text("output_dir", output_dir.to_string());
+        }
+        if let Some(initial_prompt) = initial_prompt {
+            form = form.text("initial_prompt", initial_prompt.to_string());
         }
 
         // Send the request to sync endpoint

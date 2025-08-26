@@ -122,6 +122,7 @@ pub async fn start_transcribe_service(
             Some("en"),   // language
             Some(&format!("{}/models", model_path)),
             Some(&format!("{}/{}/subtitle", data_path, audio_id)),
+            None, // initial_prompt not used in this function
         )
         .await
     {
@@ -161,6 +162,7 @@ pub async fn start_transcribe_service_streaming(
     state: tauri::State<'_, DbState>,
     audio_id: String,
     model: String,
+    initial_prompt: String,
 ) -> Result<(), String> {
     let model_path = get_model_path(&app_handle).unwrap_or(format!("/"));
     let data_path = get_data_path(&app_handle).unwrap_or(format!("/data/"));
@@ -202,6 +204,7 @@ pub async fn start_transcribe_service_streaming(
             Some("en"),
             Some(&format!("{}/models", model_path)),
             Some(&format!("{}/{}/subtitle", data_path, audio_id)),
+            if initial_prompt.is_empty() { None } else { Some(&initial_prompt) },
             |status_update| {
                 // Emit progress events to the frontend
                 let progress_event = TranscriptionProgress {

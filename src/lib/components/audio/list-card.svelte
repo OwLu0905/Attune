@@ -221,7 +221,8 @@
                 </Button>
             {/if}
 
-            {@render scrollToArea(subtitles)}
+            <!-- BUG:  -->
+            <!-- {@render scrollToArea(subtitles)} -->
             <div class="ml-auto">
                 <div class="flex items-center space-x-2">
                     <Checkbox bind:checked={autoScroll} id="auto-scroll" />

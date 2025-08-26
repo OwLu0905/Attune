@@ -33,7 +33,13 @@ def save_data(filename: str, data):
 
 
 def transcribe_audio_with_status(
-    *, model_size: str, model_path: str, file_path: str, lang: str, output: str
+    *,
+    model_size: str,
+    model_path: str,
+    file_path: str,
+    lang: str,
+    output: str,
+    initial_prompt: Optional[str] = None,
 ) -> Generator[str, None, tuple]:
     """
     Transcribe audio and yield status updates during the process
@@ -44,11 +50,17 @@ def transcribe_audio_with_status(
         # Status: Loading model
         yield f"data: {json.dumps({'status': 'loading_model', 'message': f'Loading {model_size} model...', 'progress': 0.1})}\n\n"
 
+        asr_options = {}
+        if initial_prompt:
+            asr_options["initial_prompt"] = initial_prompt
+
+        print("initial prompt is:", asr_options)
         model = whisperx.load_model(
             model_size,
             device,
             compute_type=compute_type,
             download_root=model_path,
+            asr_options=asr_options,
         )
 
         # Status: Loading audio
@@ -121,6 +133,7 @@ async def transcribe_endpoint(
     model_path: Optional[str] = Form("./models"),
     lang: Optional[str] = Form("en"),
     output_dir: Optional[str] = Form("./outputs"),
+    initial_prompt: Optional[str] = Form(None),
 ):
     """
     Transcribe an audio file using WhisperX with streaming status updates
@@ -153,6 +166,7 @@ async def transcribe_endpoint(
                     file_path=temp_file_path,
                     lang=lang,
                     output=output_dir,
+                    initial_prompt=initial_prompt,
                 ):
                     yield status_update
             finally:
@@ -185,6 +199,7 @@ async def transcribe_sync_endpoint(
     model_path: Optional[str] = Form("./models"),
     lang: Optional[str] = Form("en"),
     output_dir: Optional[str] = Form("./outputs"),
+    initial_prompt: Optional[str] = Form(None),
 ):
     """
     Transcribe an audio file using WhisperX (non-streaming version)
@@ -211,11 +226,16 @@ async def transcribe_sync_endpoint(
 
         # Transcribe the audio (original non-streaming version)
         device, compute_type = get_device_config()
+        asr_options = {}
+        if initial_prompt:
+            asr_options["initial_prompt"] = initial_prompt
+
         model_obj = whisperx.load_model(
             model,
             device,
             compute_type=compute_type,
             download_root=model_path,
+            asr_options=asr_options,
         )
         audio = whisperx.load_audio(temp_file_path)
         result = model_obj.transcribe(audio, batch_size=8, print_progress=True)
