@@ -32,9 +32,9 @@ async startTranscribeService(audioId: string, model: string) : Promise<Result<nu
     else return { status: "error", error: e  as any };
 }
 },
-async startTranscribeServiceStreaming(audioId: string, model: string, initialPrompt: string) : Promise<Result<null, string>> {
+async startTranscribeServiceStreaming(token: string, audioId: string, model: string, initialPrompt: string) : Promise<Result<null, string>> {
     try {
-    return { status: "ok", data: await TAURI_INVOKE("start_transcribe_service_streaming", { audioId, model, initialPrompt }) };
+    return { status: "ok", data: await TAURI_INVOKE("start_transcribe_service_streaming", { token, audioId, model, initialPrompt }) };
 } catch (e) {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
@@ -104,7 +104,7 @@ async handleGetAudioList(token: string) : Promise<Result<AudioListItem[], string
     else return { status: "error", error: e  as any };
 }
 },
-async handleGetAudioItem(token: string, audioId: string) : Promise<Result<AudioItem, string>> {
+async handleGetAudioItem(token: string, audioId: string) : Promise<Result<AudioListItem, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("handle_get_audio_item", { token, audioId }) };
 } catch (e) {
@@ -112,7 +112,7 @@ async handleGetAudioItem(token: string, audioId: string) : Promise<Result<AudioI
     else return { status: "error", error: e  as any };
 }
 },
-async handleUpdateAudioTranscribe(token: string, audioId: string) : Promise<Result<AudioItem, string>> {
+async handleUpdateAudioTranscribe(token: string, audioId: string) : Promise<Result<AudioListItem, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("handle_update_audio_transcribe", { token, audioId }) };
 } catch (e) {
@@ -205,8 +205,7 @@ async handleUpdateUserName(token: string, newName: string) : Promise<Result<null
 /** user-defined types **/
 
 export type AppSettings = { id: number; currentUserId: string | null; theme: string; language: string; selectedModel: string; modelProxy: string | null; lastLogin: string | null; autoLogin: boolean }
-export type AudioItem = ({ id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; updatedAt: string }) & { exerciseType: string | null }
-export type AudioListItem = { id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; updatedAt: string }
+export type AudioListItem = { id: string; title: string; description: string | null; url: string; thumbnail: string | null; startTime: number; endTime: number; provider: string; tag: string | null; transcribe: number; initialPrompt: string | null; updatedAt: string }
 export type BookmarkDictationView = { userId: string; audioId: string; bookmarkId: number | null; bookmarkPosition: number | null; bookmarkCreatedAt: string | null; dictationId: number | null; dictationPosition: number | null; dictationCreatedAt: string | null }
 export type CreateAudioData = { audio_id: string; token: string; title: string; description: string | null; url: string; thumbnail: string; start_time: number; end_time: number; provider: string; tag: string | null }
 export type SessionWithUser = { userId: string; accessToken: string; name: string; email: string; picture: string | null }

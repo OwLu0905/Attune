@@ -6,7 +6,10 @@ use std::io::ErrorKind;
 
 use crate::{
     config::{get_data_path, get_model_path},
-    query::setting::get_app_settings,
+    query::{
+        audio::update_audio_initial_prompt, setting::get_app_settings,
+        user::get_user_by_session_token,
+    },
     service::wx::{TranscriptionComplete, TranscriptionProgress, WhisperXClient},
     DbState,
 };
@@ -160,6 +163,7 @@ pub async fn start_transcribe_service(
 pub async fn start_transcribe_service_streaming(
     app_handle: AppHandle,
     state: tauri::State<'_, DbState>,
+    token: String,
     audio_id: String,
     model: String,
     initial_prompt: String,
@@ -194,6 +198,21 @@ pub async fn start_transcribe_service_streaming(
         }
     }
 
+    let user_info = get_user_by_session_token(db, &app_handle, token)
+        .await
+        .map_err(|e| format!("Failed to get user by session token: {}", e))?;
+
+    if let Err(e) = update_audio_initial_prompt(
+        db,
+        user_info.unwrap().user_id,
+        audio_id.clone(),
+        Some(initial_prompt.clone()),
+    )
+    .await
+    {
+        println!("Failed to update audio initial prompt: {}", e);
+    }
+
     let audio_id_clone = audio_id.clone();
     let app_handle_clone = app_handle.clone();
 
@@ -204,7 +223,11 @@ pub async fn start_transcribe_service_streaming(
             Some("en"),
             Some(&format!("{}/models", model_path)),
             Some(&format!("{}/{}/subtitle", data_path, audio_id)),
-            if initial_prompt.is_empty() { None } else { Some(&initial_prompt) },
+            if initial_prompt.is_empty() {
+                None
+            } else {
+                Some(&initial_prompt)
+            },
             |status_update| {
                 // Emit progress events to the frontend
                 let progress_event = TranscriptionProgress {

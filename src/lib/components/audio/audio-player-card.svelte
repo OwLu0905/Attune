@@ -5,6 +5,7 @@
     import { getUserContext } from "@/user/userService.svelte";
 
     import * as Card from "$lib/components/ui/card/index.js";
+    import { toast } from "svelte-sonner";
 
     import { LoaderCircle, Mic } from "@lucide/svelte";
     import { AudioPlayer } from "./audio-player.svelte";
@@ -13,14 +14,14 @@
     import { getSubtitleFile } from "@/utils";
 
     import type { SubtitleSegment } from "./types";
-    import type { AudioItem, BookmarkDictationView } from "$lib/tauri";
+    import type { AudioListItem, BookmarkDictationView } from "$lib/tauri";
     import EditorTabContainer from "../editor/editor-tab-container.svelte";
     import AudioDropdown from "./audio-dropdown.svelte";
     import { getAppSettingsContext } from "../../../routes/setting/app-setting-context.svelte";
 
     interface Props {
         videoPath: Uint8Array<ArrayBuffer>;
-        audioItem: AudioItem;
+        audioItem: AudioListItem;
     }
 
     let { audioItem = $bindable(), videoPath }: Props = $props();
@@ -37,7 +38,7 @@
 
     let isCheckingHealth = $state(false);
     let isTranscribing = $state(false);
-    let initialPrompt = $state("");
+    let initialPrompt = $derived(audioItem.initialPrompt ?? "");
     let open = $state(false);
 
     let videoRef: HTMLVideoElement;
@@ -81,15 +82,16 @@
             const prompt = $state.snapshot(initialPrompt);
 
             const isHealthy = await checkModelHealthy();
+            open = false;
+
             if (!isHealthy) {
+                toast.warning("Can't get service");
                 isTranscribing = false;
                 return;
             }
-
-            open = false;
-
             const transcribe_result =
                 await commands.startTranscribeServiceStreaming(
+                    user.accessToken,
                     audioItem.id,
                     appSettingsApi?.appSettings?.selectedModel ?? "small.en",
                     prompt,

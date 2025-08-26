@@ -4,14 +4,14 @@
     import { getUserContext } from "@/user/userService.svelte";
     import { getAudioFile } from "@/utils";
     import AudioPlayerCard from "@/components/audio/audio-player-card.svelte";
-    import type { AudioItem } from "$lib/tauri";
+    import type { AudioListItem } from "$lib/tauri";
     import { fade } from "svelte/transition";
 
     const { getUser } = getUserContext();
     const user = getUser();
 
     let audioId = $derived(page.params.id);
-    let audioItem: AudioItem | undefined = $state.raw(undefined);
+    let audioItem: AudioListItem | undefined = $state.raw(undefined);
     let videoPath: Uint8Array<ArrayBuffer> | undefined = $state.raw(undefined);
 
     async function getAudioItem() {

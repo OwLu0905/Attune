@@ -14,7 +14,7 @@
 
     import { ChevronsDownUp, Eye, EyeOff } from "@lucide/svelte";
 
-    import type { AudioItem } from "$lib/tauri";
+    import type { AudioListItem } from "$lib/tauri";
     import type { SubtitleSegment } from "./types";
     import type { AudioPlayer } from "./audio-player.svelte";
     import type { BookmarkDictationView } from "$lib/tauri";
@@ -22,7 +22,7 @@
     interface Props {
         dictationId: number;
         combinedList: BookmarkDictationView[];
-        audioItem: AudioItem;
+        audioItem: AudioListItem;
         subtitles: SubtitleSegment[];
         audioPlayer: AudioPlayer | undefined;
         onPause: () => Promise<void>;
