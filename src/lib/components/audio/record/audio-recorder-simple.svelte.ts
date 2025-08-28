@@ -22,7 +22,7 @@ export class AudioRecorderSimple {
     private mimeType: SupportedMimeType = "audio/webm";
 
     private constraints: MediaTrackConstraints = {
-        echoCancellation: true,
+        echoCancellation: false,
     };
 
     private recordingInterval: number | null = null;

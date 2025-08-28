@@ -2,9 +2,7 @@ use crate::{
     config::get_data_path,
     query::{
         audio::{AudioItem, AudioListItem},
-        bookmark::Bookmark,
         bookmark_dictation::BookmarkDictationView,
-        dictation::Dictation,
         setting::{AppSettings, UpdateSettingsRequest},
     },
     DbState,
@@ -17,11 +15,13 @@ use super::{
     audio::{create_audio, delete_audio, get_audio, get_audios, update_audio_transcribe},
     bookmark::{create_bookmark_item, delete_bookmark_item},
     bookmark_dictation::get_bookmark_dictation_combined,
-    dictation::{create_dictation_item, delete_dictation_item, get_dictation_list},
+    dictation::{create_dictation_item, delete_dictation_item},
     oauth::handle_google_auth,
     setting::{get_or_create_settings, update_app_settings},
     store::{delete_store_token, get_store_token, set_store_token},
-    user::{delete_session, get_user_by_session_token, update_user_name, SessionWithUser, Timestamp},
+    user::{
+        delete_session, get_user_by_session_token, update_user_name, SessionWithUser, Timestamp,
+    },
 };
 
 async fn remove_dir_all_safe(path: &str) -> tokio::io::Result<()> {

@@ -10,6 +10,7 @@
     } from "svelte-tiptap";
     import Color from "@tiptap/extension-color";
     import TextStyle from "@tiptap/extension-text-style";
+    import { BackColor } from "./back-color";
     import {
         Eye,
         Pause,
@@ -89,7 +90,7 @@
         }
 
         editor = createEditor({
-            extensions: [StarterKit, Color, TextStyle],
+            extensions: [StarterKit, Color, TextStyle, BackColor],
             content: data,
             editorProps: {
                 attributes: {
@@ -109,20 +110,36 @@
     const toggleStrike = () => {
         $editor.chain().focus().toggleStrike().run();
     };
-
     const toggleItalic = () => {
         $editor.chain().focus().toggleItalic().run();
     };
+
+    const isRedColor = () => {
+        return $editor.isActive("textStyle", { color: "red" });
+    };
+
     const toggleRed = () => {
-        if (isColor()) {
+        if (isRedColor()) {
             $editor.chain().focus().unsetColor().run();
             return;
         }
 
         $editor.chain().focus().setColor("red").run();
     };
-    const isColor = () => {
-        return $editor.isActive("textStyle", { color: "red" });
+
+    const isHighlighter = () => {
+        return $editor.isActive("textStyle", {
+            backgroundColor: "#1d8573",
+        });
+    };
+
+    const toggleHighlighter = () => {
+        if (isHighlighter()) {
+            $editor.chain().focus().unsetBackColor().unsetColor().run();
+            return;
+        }
+
+        $editor.chain().focus().setBackColor("#1d8573").run();
     };
 
     const isActive = (name: string, attrs = {}) =>
@@ -200,7 +217,7 @@
                     type="button"
                     onclick={toggleBold}
                 >
-                    bold
+                    Bold
                 </button>
                 <button
                     class={cn(
@@ -211,7 +228,7 @@
                     type="button"
                     onclick={toggleStrike}
                 >
-                    S
+                    Strike
                 </button>
                 <button
                     class={cn(
@@ -222,17 +239,27 @@
                     type="button"
                     onclick={toggleItalic}
                 >
-                    italic
+                    Italic
                 </button>
                 <button
                     class={cn(
                         "rounded-sm px-2",
-                        isColor() && "bg-primary text-primary-foreground",
+                        isRedColor() && "bg-primary text-primary-foreground",
                     )}
                     type="button"
                     onclick={toggleRed}
                 >
-                    red
+                    Red
+                </button>
+                <button
+                    class={cn(
+                        "rounded-sm px-2",
+                        isHighlighter() && "bg-primary text-primary-foreground",
+                    )}
+                    type="button"
+                    onclick={toggleHighlighter}
+                >
+                    Mark
                 </button>
             </div>
         </BubbleMenu>
