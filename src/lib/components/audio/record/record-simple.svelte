@@ -12,6 +12,7 @@
     import {
         Loader,
         Mic,
+        MousePointerClick,
         Music,
         Pause,
         Play,
@@ -48,9 +49,14 @@
     let recorder = new AudioRecorderSimple();
 
     let step = $state(0);
+    let html = $derived(`<div>${dictationItem.text}</div>`);
 
     let recordState: "echo" | "record" = $state("record");
     let check = $state(false);
+    let clipMode = $state(false);
+
+    let startTime = $derived(dictationItem.start);
+    let endTime = $derived(dictationItem.end);
 
     const handleRecord = async (): Promise<void> => {
         try {
@@ -60,6 +66,18 @@
             alert("Recording failed. Please check microphone permissions.");
         }
     };
+
+    function wrapSelection(
+        sentence: string,
+        startIndex: number,
+        endIndex: number,
+        selectedText: string,
+    ) {
+        const before = sentence.substring(0, startIndex);
+        const after = sentence.substring(endIndex);
+
+        return `${before}<span style="background-color:oklch(from var(--primary) l c h / 0.5)">${selectedText}</span>${after}`;
+    }
 
     onDestroy(() => {
         recorder.destroy();
@@ -89,12 +107,14 @@
     </button>
 {/snippet}
 
-<div class="w-full py-4">
+<div class="w-full">
     <div class="flex gap-4 pb-4">
         <div
-            class="relative flex max-w-sm shrink-0 flex-col items-center gap-2"
+            class="relative m-1 flex max-w-sm shrink-0 flex-col items-center gap-2 py-2"
         >
-            <div class="absolute top-0 right-0 z-5">
+            <div
+                class="absolute top-0 right-0 z-5 flex flex-col items-center gap-2"
+            >
                 <Checkbox
                     bind:checked={
                         () => check,
@@ -107,6 +127,17 @@
                             }
                         }
                     }
+                />
+                <MousePointerClick
+                    class={cn("select-none", clipMode && "text-primary")}
+                    onclick={() => {
+                        if (clipMode) {
+                            html = `<div>${dictationItem.text}</div>`;
+                            startTime = dictationItem.start;
+                            endTime = dictationItem.end;
+                        }
+                        clipMode = !clipMode;
+                    }}
                 />
             </div>
             <div class="flex flex-col items-center gap-1">
@@ -201,8 +232,8 @@
                             onPause();
                         } else {
                             onPlaySection(
-                                dictationItem.start,
-                                dictationItem.end,
+                                $state.snapshot(startTime),
+                                $state.snapshot(endTime),
                             );
                         }
                     }}
@@ -217,9 +248,134 @@
             </div>
         </div>
         <div class="flex grow flex-col">
-            <div class="grow overflow-hidden px-4 pb-2.5">
-                <div class="text-muted-foreground">
-                    {dictationItem.text}
+            <div class="grow overflow-hidden">
+                <!-- svelte-ignore a11y_no_static_element_interactions -->
+                <div
+                    class={cn(
+                        "m-1 px-4 py-2",
+                        "rounded-lg transition-all duration-300 ease-in",
+                        "outline-border outline",
+                        clipMode && "outline-primary",
+                    )}
+                    onmouseup={(e) => {
+                        if (!clipMode) return;
+
+                        const selection = window.getSelection();
+                        const selectedText = selection?.toString().trim();
+
+                        if (
+                            selection &&
+                            selection.rangeCount > 0 &&
+                            selectedText
+                        ) {
+                            const range = selection.getRangeAt(0);
+
+                            // Adjust for leading and trailing whitespace in selection
+                            const fullSelectedText = selection.toString();
+                            const leadingWhitespaceMatch =
+                                fullSelectedText.match(/^\s*/);
+                            const trailingWhitespaceMatch =
+                                fullSelectedText.match(/\s*$/);
+                            const leadingWhitespaceLength =
+                                leadingWhitespaceMatch
+                                    ? leadingWhitespaceMatch[0].length
+                                    : 0;
+                            const trailingWhitespaceLength =
+                                trailingWhitespaceMatch
+                                    ? trailingWhitespaceMatch[0].length
+                                    : 0;
+                            const containerElement =
+                                e.currentTarget as HTMLElement;
+
+                            // Create a range from the start of the container to the start of selection
+                            const preRange = document.createRange();
+                            preRange.selectNodeContents(containerElement);
+                            preRange.setEnd(
+                                range.startContainer,
+                                range.startOffset,
+                            );
+
+                            // Adjust indices to skip leading and trailing whitespace
+                            const rawStartIndex = preRange.toString().length;
+                            const startIndex =
+                                rawStartIndex + leadingWhitespaceLength;
+                            const endIndex =
+                                rawStartIndex +
+                                fullSelectedText.length -
+                                trailingWhitespaceLength;
+
+                            // Find corresponding words in dictationItem.words
+                            let currentIndex = 0;
+                            let startWordIndex = -1;
+                            let endWordIndex = -1;
+
+                            for (
+                                let i = 0;
+                                i < dictationItem.words.length;
+                                i++
+                            ) {
+                                const word = dictationItem.words[i];
+                                const wordStart = currentIndex;
+
+                                // QUESTION: we don't need to minus 1 because we include the white space between words?
+                                const wordEnd = currentIndex + word.word.length;
+
+                                // Check if this word overlaps with the selection
+                                if (
+                                    startWordIndex === -1 &&
+                                    wordEnd > startIndex
+                                ) {
+                                    startWordIndex = i;
+                                }
+
+                                if (wordStart < endIndex) {
+                                    endWordIndex = i;
+                                }
+
+                                // Move to next word (account for spaces)
+                                currentIndex = wordEnd + 1;
+                            }
+
+                            const selectedWords =
+                                startWordIndex !== -1 && endWordIndex !== -1
+                                    ? dictationItem.words.slice(
+                                          startWordIndex,
+                                          endWordIndex + 1,
+                                      )
+                                    : [];
+
+                            const audioStartTime =
+                                selectedWords.length > 0
+                                    ? selectedWords[0].start
+                                    : null;
+                            const audioEndTime =
+                                selectedWords.length > 0
+                                    ? selectedWords[selectedWords.length - 1]
+                                          .end
+                                    : null;
+
+                            html = wrapSelection(
+                                dictationItem.text,
+                                startIndex,
+                                endIndex,
+                                selectedText.trim(),
+                            );
+                            if (audioStartTime && audioEndTime) {
+                                startTime = audioStartTime;
+                                endTime = audioEndTime;
+                            }
+                            // console.log({
+                            //     selectedText,
+                            //     startIndex,
+                            //     endIndex,
+                            //     selectedWords,
+                            //     audioStartTime,
+                            //     audioEndTime,
+                            // });
+                        }
+                    }}
+                >
+                    {@html html}
                 </div>
             </div>
 
