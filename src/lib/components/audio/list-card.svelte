@@ -3,13 +3,14 @@
     import { commands } from "$lib/tauri";
     import { getUserContext } from "@/user/userService.svelte";
 
+    import { Input } from "@/components/ui/input";
     import Checkbox from "@/components/ui/checkbox/checkbox.svelte";
     import Label from "@/components/ui/label/label.svelte";
     import Button from "@/components/ui/button/button.svelte";
     import ScrollArea from "@/components/ui/scroll-area/scroll-area.svelte";
     import { Skeleton } from "@/components/ui/skeleton";
 
-    import SegmentField from "./segment-field.svelte";
+    import SegmentSearchField from "./segment-search-field.svelte";
     import ErrorMessage from "../error/error-message.svelte";
 
     import { ChevronsDownUp, Eye, EyeOff } from "@lucide/svelte";
@@ -45,6 +46,18 @@
     // TODO: lift this to parent and pass into dictation-editor
     let hidden = $state(true);
     let autoScroll = $state(false);
+
+    let searchText = $state("");
+    let timer: number | null = $state(null);
+
+    const debounce = (v: string) => {
+        if (timer) {
+            clearTimeout(timer);
+        }
+        timer = setTimeout(() => {
+            searchText = v;
+        }, 750);
+    };
 
     const { getUser } = getUserContext();
     const user = getUser();
@@ -220,6 +233,15 @@
                     />
                 </Button>
             {/if}
+            <Input
+                class="h-6 w-28"
+                placeholder="search"
+                oninput={(v) => {
+                    const value = v.currentTarget.value;
+                    debounce(value.toLowerCase());
+                }}
+                autocorrect="off"
+            />
 
             <!-- BUG:  -->
             <!-- {@render scrollToArea(subtitles)} -->
@@ -233,21 +255,19 @@
         {#await getCombinedList() then _}
             <ScrollArea class="px-4 pb-2 tabular-nums">
                 <div class="flex flex-col gap-2.5">
-                    {#each subtitles as segment, index (index)}
-                        <SegmentField
-                            {audioPlayer}
-                            {segment}
-                            {hidden}
-                            {onPause}
-                            {onPlaySection}
-                            {index}
-                            {dictationId}
-                            {getDictation}
-                            {combinedList}
-                            {createBookmarkItem}
-                            {deleteBookmarkItem}
-                        />
-                    {/each}
+                    <SegmentSearchField
+                        {audioPlayer}
+                        {subtitles}
+                        {hidden}
+                        {onPause}
+                        {onPlaySection}
+                        {dictationId}
+                        {getDictation}
+                        {combinedList}
+                        {createBookmarkItem}
+                        {deleteBookmarkItem}
+                        {searchText}
+                    />
                 </div>
             </ScrollArea>
         {:catch}

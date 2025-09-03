@@ -135,7 +135,7 @@
 
     const toggleHighlighter = () => {
         if (isHighlighter()) {
-            $editor.chain().focus().unsetBackColor().unsetColor().run();
+            $editor.chain().focus().unsetBackColor().run();
             return;
         }
 
