@@ -71,6 +71,7 @@
     });
     let saveTimeoutId: number | undefined = undefined;
     let isSaved = $state(false);
+    let dirCreated = $state(false);
 
     const debouncedSave = (cb: () => void, delay = 600) => {
         if (saveTimeoutId) {
@@ -150,17 +151,25 @@
         id: string,
         dictationId: number,
     ) {
-        const dirPath = `${id}/${dictationId}`;
+        try {
+            // Only create directory once per session
+            if (!dirCreated) {
+                const dirPath = `${id}/${dictationId}`;
+                await createDir(dirPath);
+                dirCreated = true;
+            }
 
-        await createDir(dirPath);
-        const file = await encodeJSON(data);
-        const filename = `${id}/${dictationId}/answer`;
-        await saveFile(file, filename, "json");
-        isSaved = true;
+            const file = await encodeJSON(data);
+            const filename = `${id}/${dictationId}/answer`;
+            await saveFile(file, filename, "json");
+            isSaved = true;
 
-        setTimeout(() => {
-            isSaved = false;
-        }, 1000);
+            setTimeout(() => {
+                isSaved = false;
+            }, 1000);
+        } catch (error) {
+            console.error("Error saving answer:", error);
+        }
     }
 
     async function saveAsCompleted(id: string, dictationId: number) {

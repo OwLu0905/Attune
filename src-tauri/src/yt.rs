@@ -70,6 +70,29 @@ pub async fn download_yt_sections(
             .spawn()
             .map_err(|e| e.to_string())?;
 
+        // //  TODO:
+        // let (mut rx, _child) = yt_command
+        //     .args([
+        //         "--download-sections",
+        //         "-f",
+        //         "best[ext=mp4]/best", // 下載最佳 mp4 影片
+        //         "--write-auto-subs",
+        //         "false",
+        //         "--extract-audio", // 同時提取音頻
+        //         "--keep-video",    // 保留原始影片檔！
+        //         "--audio-format",
+        //         "m4a",
+        //         "--audio-quality",
+        //         "0", // 最高音質
+        //         "--ffmpeg-location",
+        //         &ffmpeg_path.to_string_lossy(),
+        //         "-o",
+        //         &format!("{}/{}/audio.%(ext)s", data_path, uuid),
+        //         &url,
+        //     ])
+        //     .spawn()
+        //     .map_err(|e| e.to_string())?;
+
         while let Some(event) = rx.recv().await {
             match event {
                 CommandEvent::Stdout(bytes) => {

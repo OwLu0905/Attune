@@ -7,7 +7,7 @@ import {
     BaseDirectory,
 } from "@tauri-apps/plugin-fs";
 
-type TFileType = "json";
+type TFileType = "json" | "md";
 
 export function decodeJSON<T>(contents: Uint8Array): T {
     const decoder = new TextDecoder("utf-8");

@@ -7,17 +7,20 @@
     import * as Card from "$lib/components/ui/card/index.js";
     import { toast } from "svelte-sonner";
 
-    import { LoaderCircle, Mic } from "@lucide/svelte";
+    import { LoaderCircle, Mic, NotebookPen } from "@lucide/svelte";
     import { AudioPlayer } from "./audio-player.svelte";
     import ListCard from "./list-card.svelte";
 
-    import { getSubtitleFile } from "@/utils";
+    import { cn, getSubtitleFile } from "@/utils";
 
     import type { SubtitleSegment } from "./types";
     import type { AudioListItem, BookmarkDictationView } from "$lib/tauri";
     import EditorTabContainer from "../editor/editor-tab-container.svelte";
     import AudioDropdown from "./audio-dropdown.svelte";
     import { getAppSettingsContext } from "../../../routes/setting/app-setting-context.svelte";
+    import { fade } from "svelte/transition";
+    import CodeMirror from "./markdown/code-mirror.svelte";
+    import Button from "../ui/button/button.svelte";
 
     interface Props {
         videoPath: Uint8Array<ArrayBuffer>;
@@ -39,7 +42,7 @@
     let isCheckingHealth = $state(false);
     let isTranscribing = $state(false);
     let initialPrompt = $derived(audioItem.initialPrompt ?? "");
-    let open = $state(false);
+    let openDropdown = $state(false);
 
     let videoRef: HTMLVideoElement;
     let videoUrl = $derived.by(() => {
@@ -49,6 +52,7 @@
 
     let dictationId = $state(0);
     let prog = $state("");
+    let openNote = $state(false);
 
     let combinedList = $state<BookmarkDictationView[]>([]);
 
@@ -82,7 +86,7 @@
             const prompt = $state.snapshot(initialPrompt);
 
             const isHealthy = await checkModelHealthy();
-            open = false;
+            openDropdown = false;
 
             if (!isHealthy) {
                 toast.warning("Can't get service");
@@ -196,12 +200,12 @@
             {isTranscribing}
             {getSubtitle}
             bind:initialPrompt
-            bind:open
+            bind:open={openDropdown}
         />
     </Card.Header>
 
     <Card.Content class="@container shrink grow overflow-hidden">
-        <div class="flex h-full flex-col gap-6 py-6 @3xl:flex-row">
+        <div class="relative flex h-full flex-col gap-6 @3xl:flex-row">
             <div class="w-full shrink-0 @3xl:w-120 @4xl:w-1/2">
                 <!-- svelte-ignore a11y_media_has_caption -->
                 <video
@@ -232,17 +236,41 @@
                     />
                 {/if}
             </div>
-            {#if audioItem.transcribe === 1}
-                <ListCard
-                    bind:dictationId
-                    bind:combinedList
-                    {audioItem}
-                    {subtitles}
-                    {audioPlayer}
-                    {onPause}
-                    {onPlaySection}
-                />
-            {/if}
+
+            <div class="relative shrink grow">
+                {#if audioItem.transcribe === 1}
+                    <ListCard
+                        bind:dictationId
+                        bind:combinedList
+                        {audioItem}
+                        {subtitles}
+                        {audioPlayer}
+                        {onPause}
+                        {onPlaySection}
+                    />
+                    {#if container && audioPlayer && audioItem && videoRef}
+                        <!-- BUG: will cause layout shifted -->
+                        <div
+                            class={cn(
+                                "bg-background top-0 left-0 z-5 h-full w-full overflow-hidden px-4",
+                                openNote && "absolute",
+                                !openNote && "hidden",
+                            )}
+                        >
+                            <CodeMirror audioId={audioItem.id} />
+                        </div>
+                        <Button
+                            size="icon"
+                            class="absolute right-0 bottom-0 z-10 size-8 rounded-full"
+                            onclick={() => {
+                                openNote = !openNote;
+                            }}
+                        >
+                            <NotebookPen />
+                        </Button>
+                    {/if}
+                {/if}
+            </div>
 
             {#if audioItem.transcribe === 0 && isTranscribing}
                 <LoaderCircle
